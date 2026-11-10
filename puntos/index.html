@@ -80,7 +80,7 @@ e('section',{className:'hero'},e('div',null,e('small',null,'Un detalle para ti')
 error?e('div',{className:'notice error',role:'alert',style:{marginTop:16}},error):null,
 notice?e('div',{className:'notice ok',role:'status',style:{marginTop:16}},notice):null,
 tab==='recompensas'?rewardsView():tab==='perfil'?profileView():tab==='reservas'?e('div',{className:'panel',style:{marginTop:24,textAlign:'center',padding:42}},e('div',{style:{fontSize:48}},'🗓️'),e('h2',null,'Reservas, próximamente'),e('p',{className:'muted'},'Estamos preparando una manera más sencilla de reservar tus servicios.')):isAdmin&&tab==='admin'?adminView():null,
-e('nav',{className:'nav','aria-label':'Navegación'},navButton('recompensas','Recompensas','🎁'),navButton('perfil','Perfil','👤'),navButton('reservas','Reservas','📅'),isAdmin?navButton('admin','Jefa','⚙️'):null))),
+e('nav',{className:'nav','aria-label':'Navegación'},navButton('recompensas','Recompensas','🎁'),navButton('perfil','Perfil','👤'),navButton('reservas','Reservas','📅'),isAdmin?navButton('admin','Jefa','⚙️'):null)),
 e('div',{className:'footer'},'Hecho con ♡ para Manos Monas Home Studio · San Juan de Lurigancho')));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(e(App));
