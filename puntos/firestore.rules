@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+    function owns(uid) { return signedIn() && request.auth.uid == uid; }
+    match /admins/{uid} {
+      allow get: if owns(uid) || isAdmin();
+      allow list, create, update, delete: if false;
+    }
+    match /users/{uid} {
+      allow get: if owns(uid) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if owns(uid)
+        && request.resource.data.keys().hasOnly(['displayName','email','photoURL','points','visits','createdAt'])
+        && request.resource.data.points == 0
+        && request.resource.data.visits == 0
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.createdAt == request.time;
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['points','visits'])
+        && request.resource.data.points is int
+        && request.resource.data.visits is int
+        && request.resource.data.points >= 0
+        && request.resource.data.visits >= resource.data.visits;
+      allow delete: if false;
+    }
+    match /visits/{id} {
+      allow get, list: if signedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(['userId','serviceId','serviceName','points','createdAt','staffId'])
+        && request.resource.data.staffId == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.userId is string
+        && request.resource.data.serviceId in ['manicura','pedicura','pestanas','mechas','alisado']
+        && request.resource.data.points is int
+        && request.resource.data.points > 0;
+      allow update, delete: if false;
+    }
+    match /redemptions/{id} {
+      allow get, list: if signedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['userId','rewardId','status','createdAt'])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.rewardId in ['manicura','pedicura','lifting','alisado']
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time;
+      allow update: if isAdmin()
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','processedBy','processedAt'])
+        && request.resource.data.status in ['approved','rejected']
+        && request.resource.data.processedBy == request.auth.uid
+        && request.resource.data.processedAt == request.time;
+      allow delete: if false;
+    }
+  }
+}
