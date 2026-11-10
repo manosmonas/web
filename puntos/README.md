@@ -3,7 +3,9 @@ MVP React 18 para navegador móvil y escritorio. Disponible en `https://manosmon
 
 ## Estado
 - Maqueta interactiva sin backend si falta configuración: alterna entre clienta/jefa, pero **no guarda datos**.
-- Login Google con Firebase Auth al añadir credenciales.
+- Acceso inicial: **Google (cuentas Gmail) y Facebook**. Ambos botones están maquetados y sus proveedores preparados en Firebase Auth; en modo demo el ingreso es simulado, no se autentica ni almacena información real.
+- Por decisión del negocio, **toda la configuración de backend se deja para el final**. No habilitar accesos reales hasta completar Firebase Authentication, Firestore, reglas y pruebas.
+- Por ahora no hay login por SMS, contraseña, ni recuperación de contraseña propia.
 - Firestore: perfiles de clienta, registros de servicios, puntos, solicitudes de canje y aprobación/rechazo por la jefa.
 - Roles: document `admins/{UID}` (crear manualmente en la consola, NO desde la app).
 - Reservas: placeholder; aún sin sistema de citas.
@@ -12,7 +14,7 @@ MVP React 18 para navegador móvil y escritorio. Disponible en `https://manosmon
 
 ## Configuración Firebase final
 1. Crear proyecto Firebase y agregar una aplicación **Web**.
-2. Authentication > Sign-in method > habilitar Google. En Authorized domains agregar `manosmonas.github.io` y, tras comprarlo, `manosmonas.com`.
+2. Authentication > Sign-in method > habilitar Google y Facebook. Para Facebook, crear una aplicación en Meta for Developers, configurar App ID/App Secret en Firebase y registrar el URI de redirección OAuth indicado por Firebase en Meta. En Authorized domains agregar `manosmonas.github.io` y, tras comprarlo, `manosmonas.com`.
 3. Firestore Database > crear base de datos. Elegir región cercana al negocio y modo producción.
 4. Firestore > Rules > copiar y publicar `puntos/firestore.rules` (no dejar reglas de prueba).
 5. Crear una cuenta Google para la jefa e iniciar sesión en la aplicación una vez. En Authentication > Users copiar su UID. En Firestore > crear colección `admins`, documento con ID igual al UID y campo `enabled` boolean `true`. No crear documentos de admin para clientas.
