@@ -15,7 +15,7 @@ La web comercial existente `/web/` permanece intacta; todo el MVP reside dentro 
 - Historial de visitas y solicitudes, contadores y estados de canje.
 - Modo DEMO por `?demo=1` para recorrer el flujo completo: entrar como clienta → solicitar premio → cambiar a jefa → aprobar → registrar servicio → volver a clienta. No se guarda ningún dato real.
 
-**Actualización 11/11/2026:** el propietario confirmó Firestore Standard `(default)` en **southamerica-west1 (Chile)**, reglas copiadas y publicadas desde Firebase Console, y el documento `admins/{uid}` con `enabled=true`. El asistente aún no ha comprobado esos cambios con acceso directo a Firebase.
+**Actualización 11/11/2026:** el propietario confirmó Firestore Standard `(default)` en **southamerica-west1 (Chile)**, el propietario indicó que publicó las reglas y creó el documento `admins/{uid}` con `enabled=true`. **No se ha verificado el contenido publicado en Firebase**; además el archivo de GitHub fue reemplazado por una plantilla `allow read, write: if false` y restaurado por el asistente al contenido seguro de 7665 caracteres. **Es necesario copiar de nuevo las reglas correctas de GitHub a Firebase y publicarlas antes de probar el enlace `?live=1`.**
 
 **La conexión real está habilitada solo para pruebas** en `https://manosmonas.github.io/web/puntos/?live=1`. La web habitual sigue sin escribir en Firestore; `?demo=1` sigue siendo simulación. Primero probar la cuenta de la jefa y una cuenta de clienta, auditar reglas y confirmar el catálogo antes de permitir escrituras en la URL normal. El archivo de reglas en GitHub **no se publica automáticamente** en Firebase.
 
