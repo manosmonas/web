@@ -15,7 +15,7 @@
 </head><body><div id="root"></div>
 <script>
 /* Configuración pública de Firebase Web. No colocar credenciales privadas aquí.
-   Los saldos se leen en tiempo real. Las operaciones de prueba requieren ?live=1. */
+   Operaciones reales protegidas mediante autenticación y reglas de Firestore. */
 window.MANOS_MONAS_FIREBASE = {
  apiKey: "AIzaSyBFlT0Ikvn9sRioQPm5AZ3_MY-SPIatY0g",
  authDomain: "manos-monas-puntos.firebaseapp.com",
@@ -23,9 +23,9 @@ window.MANOS_MONAS_FIREBASE = {
  appId: "1:287636328368:web:6df910c1cbc672a192d075",
  messagingSenderId: "287636328368"
 };
-// Los perfiles e historiales consultan Firestore. Solo se acreditan o canjean puntos desde el modo de pruebas.
+// El perfil y todas las operaciones del Club usan la base de datos de producción.
 window.MANOS_MONAS_ENABLE_DATA = true;
-window.MANOS_MONAS_ENABLE_WRITES = new URLSearchParams(window.location.search).get('live') === '1';
+window.MANOS_MONAS_ENABLE_WRITES = true;
 </script>
 <script>
 (function(){
@@ -52,7 +52,7 @@ const [rewardToConfirm,setRewardToConfirm]=useState(null);
 const [profileStatus,setProfileStatus]=useState('sin sesión');
 const liveWrites=window.MANOS_MONAS_ENABLE_WRITES===true;
 const isDemo=!configured||new URLSearchParams(window.location.search).has('demo');
-const canVoid=isDemo||(liveWrites&&new URLSearchParams(window.location.search).get('void')==='1');
+const canVoid=isDemo||liveWrites;
 const current=isDemo?demoClientState:(user?(profile?.uid===user.uid?profile:{uid:user.uid,displayName:user.displayName||'Clienta',email:user.email||'',photoURL:user.photoURL||'',points:null,visits:null}):null);
 const visibleVisits=isDemo?demoVisitsState:visits;
 const visibleClientVoids=isDemo?demoVoids:clientVoids;
@@ -102,7 +102,7 @@ try{
     showNotice('Simulación: '+item.name+' registrado. +'+item.points+' puntos.');
     return;
   }
-  if(!db||!liveWrites)throw new Error('Para acreditar puntos abre el enlace de pruebas ?live=1.');
+  if(!db||!liveWrites)throw new Error('La conexión con Firebase no está disponible para acreditar puntos.');
   if(!isAdmin)throw new Error('Solo la jefa de salón puede registrar atenciones.');
   const profileRef=db.collection('users').doc(target.uid);
   const visitRef=db.collection('visits').doc();
@@ -129,7 +129,7 @@ async function voidVisit(record){
       setDemoVoids(rows=>[...rows,{id:voidId,visitId:record.id,userId:'demo',points:record.points,reason,staffId:'demo-jefa',createdAt:{toDate:()=>new Date()}}]);
       setDemoClientState(c=>({...c,points:c.points-record.points,visits:c.visits-1}));
     }else{
-      if(!db||!canVoid)throw Error('Para anular se necesitan las reglas nuevas de Firebase y el enlace de pruebas.');
+      if(!db||!canVoid)throw Error('La conexión con Firebase no está disponible para anular atenciones.');
       const visitRef=db.collection('visits').doc(record.id);
       const voidRef=db.collection('voids').doc(voidId);
       const userRef=db.collection('users').doc(record.userId);
@@ -281,7 +281,6 @@ function adminView(){
 function navButton(id,label,icon){return e('button',{key:id,className:tab===id?'active':'',onClick:()=>{setTab(id);setNotice('');setError('')}},e('span',{className:'navIcon'},icon),label)}
 if(loading)return e('div',{className:'shell'},e('p',null,'Cargando Manos Monas…'));
 return e('div',{className:'page'},e('div',{className:'shell'},e('header',{className:'top'},e('div',{className:'brand'},e('div',{className:'mark'},e('img',{src:'../assets/img/logo.png',alt:'Logo de Manos Monas',loading:'eager'})),e('div',null,e('h2',null,'MANOS MONAS'),e('div',{className:'eyebrow'},'HOME STUDIO'),e('div',{className:'caption'},'Club de recompensas'))),e('div',{className:'toolbar',style:{alignItems:'center',justifyContent:'flex-end'}},user?avatar(38):null,e('span',{className:'chip'},isDemo?'◉ Demo':isAdmin?'✦ Jefa de salón':'♡ Mi cuenta'),(user||isDemo&&demoEntered)?e('button',{className:'button secondary',onClick:logout,disabled:busy,style:{padding:'9px 12px',whiteSpace:'nowrap'}},'Salir ↪'):null)),
-!isDemo&&user&&!liveWrites?e('div',{className:'notice'},'Tus puntos y visitas se consultan directamente en Firebase. Los nuevos canjes y acreditaciones permanecen en pruebas para proteger el programa de recompensas.'):null,
 !isDemo&&user&&db&&new URLSearchParams(window.location.search).get('live')==='1'?e('div',{className:'notice',style:{marginBottom:16}},e('strong',null,'Prueba de permisos Firebase'),e('div',{style:{marginTop:7,overflowWrap:'anywhere'}},'UID de esta sesión: ',e('code',null,user.uid)),e('div',{style:{marginTop:4}},'Acceso al menú Jefa: ',adminStatus),e('div',{className:'tiny',style:{marginTop:5}},'Si no está habilitada, comprueba que el documento admins tenga este mismo UID y enabled de tipo booleano verdadero.')):null,
 isDemo&&demoEntered?e('div',{className:'notice'},'Modo demostración · Ingreso simulado con '+demoProvider+'. Los cambios NO se guardan hasta configurar Firebase. ',e('button',{onClick:()=>{setDemoRole(demoRole==='jefa'?'clienta':'jefa');setTab('recompensas');setNotice('')}},'Cambiar vista: '+(demoRole==='jefa'?'Clienta':'Jefa')+' →'),' ',e('button',{onClick:()=>{setDemoEntered(false);setDemoRole('clienta');setNotice('')}},'Salir de demo')):null,
 (!isDemo&&!user)||(isDemo&&!demoEntered)?e('div',{className:'panel login'},e('img',{className:'loginBrand',src:'../assets/img/logo.png',alt:'Manos Monas Home Studio'}),e('h1',null,'Bienvenida al Club Monas'),e('p',null,'Ingresa con tu cuenta de Google (Gmail) o Facebook para consultar tus puntos y desbloquear recompensas.'),e('div',{className:'stack',style:{maxWidth:310,margin:'25px auto'}},button('✉ Continuar con Google',()=>login('google'),'full',busy),button('ⓕ Continuar con Facebook',()=>login('facebook'),'secondary full',busy)),isDemo?e('div',{className:'notice'},'Modo demostración: los botones solo abren una clienta ficticia. Para usar el inicio de sesión real debes conectar Firebase.'):e('p',{className:'tiny'},'Solo la jefa registra servicios y aprueba premios.'),error?e('div',{className:'notice error',role:'alert'},error):null):e(React.Fragment,null,
