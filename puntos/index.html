@@ -15,7 +15,7 @@
 </head><body><div id="root"></div>
 <script>
 /* Configuración pública de Firebase Web. No colocar credenciales privadas aquí.
-   Firestore y canjes permanecen desactivados hasta aplicar reglas y pruebas. */
+   Firestore se activa solamente con ?live=1 mientras verificamos las reglas y los roles. */
 window.MANOS_MONAS_FIREBASE = {
  apiKey: "AIzaSyBFlT0Ikvn9sRioQPm5AZ3_MY-SPIatY0g",
  authDomain: "manos-monas-puntos.firebaseapp.com",
@@ -23,8 +23,8 @@ window.MANOS_MONAS_FIREBASE = {
  appId: "1:287636328368:web:6df910c1cbc672a192d075",
  messagingSenderId: "287636328368"
 };
-// Fase 1: acceso Google real. Datos, canjes y roles permanecen apagados hasta Firestore + reglas.
-window.MANOS_MONAS_ENABLE_DATA = false;
+// Prueba real controlada. La portada normal sigue sin escritura a la base de datos.
+window.MANOS_MONAS_ENABLE_DATA = new URLSearchParams(window.location.search).get('live') === '1';
 </script>
 <script>
 (function(){
