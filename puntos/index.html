@@ -182,7 +182,7 @@ try{
     showNotice(approve?'Canje simulado aprobado.':'Canje simulado rechazado.');
     return;
   }
-  if(!db||!isAdmin||!liveWrites)throw new Error('Los canjes se procesan solo en el enlace de pruebas ?live=1.');
+  if(!db||!isAdmin)throw new Error('Solo la jefa de salón puede procesar canjes.');
   const redemptionRef=db.collection('redemptions').doc(request.id);
   const userRef=db.collection('users').doc(request.userId);
   await db.runTransaction(async t=>{
@@ -254,7 +254,7 @@ function adminView(){
     e('div',{className:'panel'},visibleAdminRequests.filter(r=>r.status==='pending').length?
       visibleAdminRequests.filter(r=>r.status==='pending').map(r=>e('div',{className:'listEntry',key:r.id},
         e('div',null,e('strong',null,clientList.find(c=>c.uid===r.userId)?.displayName||r.userId),e('div',{className:'tiny'},REWARDS.find(z=>z.id===r.rewardId)?.name||r.rewardId)),
-        e('div',{className:'toolbar'},button('Aprobar',()=>resolveReward(r,true),'',!liveWrites),button('Rechazar',()=>resolveReward(r,false),'secondary',!liveWrites)))):e('div',{className:'empty'},'No hay solicitudes pendientes.')),
+        e('div',{className:'toolbar'},button('Aprobar',()=>resolveReward(r,true)),button('Rechazar',()=>resolveReward(r,false),'secondary')))):e('div',{className:'empty'},'No hay solicitudes pendientes.')),
     canVoid?e('div',{className:'sectionTitle'},e('div',null,e('h2',null,'Historial de atenciones'),e('p',null,'Selecciona una clienta para ver sus últimas atenciones.'))):null,
     canVoid?e('div',{className:'panel'},
       recent.length?recent.map(v=>{
