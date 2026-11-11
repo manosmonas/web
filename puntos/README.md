@@ -13,9 +13,12 @@ La web comercial existente `/web/` permanece intacta; todo el MVP reside dentro 
 - Registro de servicios por la jefa con catálogo de puntos fijo, transacción atómica y documento de visita inmutable.
 - Solicitud de canje por clienta; la jefa aprueba o rechaza, y el saldo se descuenta de forma atómica al aprobar.
 - Historial de visitas y solicitudes, contadores y estados de canje.
+- **Anulación de atención (nueva, pendiente de despliegue de reglas):** la jefa puede corregir una acreditación por error, con motivo obligatorio, descuento atómico de puntos y una visita, sin borrar la visita original. Se guarda un documento inmutable `voids/void-{visitId}` con responsable y motivo. No permite anular dos veces ni dejar saldo negativo. En la demo puede probarse inmediatamente; con Firebase real el panel de anulación está disponible únicamente en `?live=1&void=1` **DESPUÉS de publicar las reglas nuevas**. El modo normal y `?live=1` sin `void=1` no activan la función.
 - Modo DEMO por `?demo=1` para recorrer el flujo completo: entrar como clienta → solicitar premio → cambiar a jefa → aprobar → registrar servicio → volver a clienta. No se guarda ningún dato real.
 
 **Actualización 11/11/2026:** el propietario confirmó Firestore Standard `(default)` en **southamerica-west1 (Chile)**, el propietario indicó que publicó las reglas y creó el documento `admins/{uid}` con `enabled=true`. **No se ha verificado el contenido publicado en Firebase**; además el archivo de GitHub fue reemplazado por una plantilla `allow read, write: if false` y restaurado por el asistente al contenido seguro de 7665 caracteres. **Es necesario copiar de nuevo las reglas correctas de GitHub a Firebase y publicarlas antes de probar el enlace `?live=1`.**
+
+**Pendiente para activar la anulación:** el archivo `puntos/firestore.rules` cambió después de la publicación anterior. El usuario debe copiar su contenido completo y volver a **Publicar** en Firestore → Reglas. Hasta entonces, no abrir la prueba `?live=1&void=1`, porque Firebase rechazará las nuevas operaciones de anulación. Después de publicar, validar con dos cuentas y confirmar que `voids` se puede leer y escribir correctamente. El asistente ha verificado la sintaxis JavaScript y la simulación, pero NO ha podido ejecutar el emulador ni comprobar las nuevas reglas contra Firestore real.
 
 **La consulta de saldo y visitas ya funciona con Firestore en tiempo real también en** `https://manosmonas.github.io/web/puntos/`. El enlace `?live=1` mantiene la acreditación de puntos y los canjes en modo de pruebas; `?demo=1` sigue siendo simulación. El perfil se vincula al UID de la sesión Firebase y deja de mostrar cero mientras espera una lectura real. La jefa debe usar `?live=1` para registrar atenciones. No lanzar canjes públicos ni dar por auditadas las reglas hasta terminar las pruebas. Las reglas del archivo GitHub **no se publican automáticamente** en Firebase.
 
@@ -42,7 +45,7 @@ La web comercial existente `/web/` permanece intacta; todo el MVP reside dentro 
 
 ## Seguridad y límites
 - GitHub Pages solo sirve archivos estáticos. El rol y las reglas de acceso se hacen cumplir mediante Firebase Firestore, no en el navegador.
-- Las reglas del repositorio niegan a las clientas editar puntos o asignarse el rol de jefa. Los registros de servicio son inmutables y los canjes aprobados descuentan saldo mediante transacción atómica.
+- Las reglas del repositorio niegan a las clientas editar puntos o asignarse el rol de jefa. Los registros de servicio son inmutables, los canjes aprobados descuentan saldo mediante transacción atómica y las anulaciones se respaldan con documentos `voids` inmutables y únicos por visita.
 - No se puede verificar realmente que una atención ocurrió sin un operador confiable; la cuenta administradora debe protegerse con MFA.
 - No incluir claves privadas, contraseñas, secretos de Facebook, ni archivos de cuentas de servicio en GitHub. La configuración pública de la app web de Firebase ya está definida en el HTML.
 
