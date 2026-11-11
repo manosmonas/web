@@ -15,6 +15,8 @@ La web comercial existente `/web/` permanece intacta; todo el MVP reside dentro 
 - Historial de visitas y solicitudes, contadores y estados de canje.
 - Modo DEMO por `?demo=1` para recorrer el flujo completo: entrar como clienta → solicitar premio → cambiar a jefa → aprobar → registrar servicio → volver a clienta. No se guarda ningún dato real.
 
+**Actualización 11/11/2026:** según la confirmación del propietario, Firestore Standard `(default)` fue creado en **southamerica-west1 (Chile)**, en modo producción y sin copias programadas. Falta publicar las reglas, asignar el rol de la jefa, activar el código y probar con cuentas separadas.
+
 **El backend Firestore sigue desactivado** en `puntos/index.html` con `window.MANOS_MONAS_ENABLE_DATA = false` para evitar que las clientas usen saldos no verificados o reglas sin publicar. Haber subido `puntos/firestore.rules` a GitHub **NO las publica en Firebase**. No activar el interruptor sin completar la lista siguiente.
 
 ## Activación final de Firebase (pendiente; seguir en orden)
