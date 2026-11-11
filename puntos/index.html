@@ -48,6 +48,7 @@ const [chosenClient,setChosenClient]=useState(''),[service,setService]=useState(
 const [adminStatus,setAdminStatus]=useState('comprobando');
 const [demoVoids,setDemoVoids]=useState([]),[clientVoids,setClientVoids]=useState([]),[adminVisits,setAdminVisits]=useState([]),[adminVoids,setAdminVoids]=useState([]);
 const [voidTarget,setVoidTarget]=useState(null),[voidReason,setVoidReason]=useState('');
+const [rewardToConfirm,setRewardToConfirm]=useState(null);
 const [profileStatus,setProfileStatus]=useState('sin sesión');
 const liveWrites=window.MANOS_MONAS_ENABLE_WRITES===true;
 const isDemo=!configured||new URLSearchParams(window.location.search).has('demo');
@@ -65,7 +66,7 @@ const activeClient=clientList.find(c=>c.uid===chosenClient)||clientList[0];
 const activeReward=REWARDS.filter(r=>(current?.points||0)<r.points).sort((a,b)=>a.points-b.points)[0];
 const pointsReady=isDemo||profileStatus==='listo';
 const showError=x=>{setError(errMsg(x));setNotice('')};const showNotice=x=>{setNotice(x);setError('')};
-useEffect(()=>{if(!auth||isDemo){setLoading(false);return}const unsub=auth.onAuthStateChanged(u=>{setUser(u);setProfile(null);setProfileStatus(u?'cargando':'sin sesión');setLoading(false);setAdmin(false);setAdminStatus('comprobando');setClients([]);setVisits([]);setClientRequests([]);setAdminRequests([]);setClientVoids([]);setAdminVisits([]);setAdminVoids([]);setVoidTarget(null);setVoidReason('')});return unsub},[isDemo]);
+useEffect(()=>{if(!auth||isDemo){setLoading(false);return}const unsub=auth.onAuthStateChanged(u=>{setUser(u);setProfile(null);setProfileStatus(u?'cargando':'sin sesión');setLoading(false);setAdmin(false);setAdminStatus('comprobando');setClients([]);setVisits([]);setClientRequests([]);setAdminRequests([]);setClientVoids([]);setAdminVisits([]);setAdminVoids([]);setVoidTarget(null);setVoidReason('');setRewardToConfirm(null)});return unsub},[isDemo]);
 useEffect(()=>{if(!db||!user)return;setAdminStatus('comprobando');setProfileStatus('cargando');const ref=db.collection('users').doc(user.uid);
 // Crear un perfil nuevo dentro de una transacción evita borrar puntos acreditados simultáneamente.
 let subscribed=true;
@@ -150,18 +151,21 @@ async function voidVisit(record){
   }catch(x){showError(x)}finally{setBusy(false)}
 }
 async function requestReward(reward){
-if(!isDemo&&(!db||!liveWrites))return showError('Los canjes siguen en pruebas.');
+if(!isDemo&&(!db||!user||!pointsReady))return showError('No pudimos cargar tu saldo. Vuelve a intentarlo.');
 setBusy(true);setError('');
 try{
   if((current?.points||0)<reward.points)throw Error('Puntos insuficientes.');
   if(visibleClientRequests.some(r=>r.rewardId===reward.id&&r.status==='pending'))throw Error('Ya solicitaste esta recompensa.');
   if(isDemo){
     setDemoRequestsState(rows=>[...rows,{id:'demo-'+Date.now(),userId:'demo',rewardId:reward.id,status:'pending',createdAt:{toDate:()=>new Date()}}]);
+    setRewardToConfirm(null);
     showNotice('Solicitud de canje simulada. Cambia a vista Jefa para aprobarla.');
     return;
   }
-  await db.collection('redemptions').add({userId:user.uid,rewardId:reward.id,status:'pending',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-  showNotice('Solicitud enviada. La jefa confirmará tu canje.');
+  const submitted=await db.collection('redemptions').add({userId:user.uid,rewardId:reward.id,status:'pending',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  setClientRequests(rows=>rows.some(r=>r.id===submitted.id)?rows:[...rows,{id:submitted.id,userId:user.uid,rewardId:reward.id,status:'pending'}]);
+  setRewardToConfirm(null);
+  showNotice('¡Solicitud enviada! Tu premio quedó pendiente de aprobación de la jefa. No se han descontado puntos todavía.');
 }catch(x){showError(x)}finally{setBusy(false)}
 }
 async function resolveReward(request,approve){
@@ -198,7 +202,28 @@ try{
 }catch(x){showError(x)}finally{setBusy(false)}
 }
 function button(label,click,variant='',disabled=false){return e('button',{className:'button '+variant,onClick:click,disabled:disabled||busy},label)}
-function rewardCard(r){const unlocked=(current?.points||0)>=r.points;const pending=visibleClientRequests.some(x=>x.rewardId===r.id&&x.status==='pending'&&x.userId===(user?.uid||'demo'));return e('article',{className:'reward'+(!unlocked?' locked':''),key:r.id},e('div',{className:'rewardArt'},r.emoji),e('h3',null,r.name),e('div',{className:'tiny'},r.points+' puntos'),button(pending?'⏳ Solicitado':unlocked?'Canjear ahora':'🔒 Bloqueado',()=>requestReward(r),'full',!unlocked||pending||(!isDemo&&(!db||!liveWrites||!pointsReady))))}
+function rewardCard(r){
+  const unlocked=pointsReady&&(current?.points||0)>=r.points;
+  const pending=visibleClientRequests.some(x=>x.rewardId===r.id&&x.status==='pending'&&x.userId===(user?.uid||'demo'));
+  const confirming=rewardToConfirm===r.id&&!pending&&unlocked;
+  return e('article',{className:'reward'+(!unlocked?' locked':''),key:r.id},
+    e('div',{className:'rewardArt'},r.emoji),
+    e('h3',null,r.name),
+    e('div',{className:'tiny'},r.points+' puntos'),
+    button(pending?'⏳ Solicitud pendiente':unlocked?'Solicitar canje':'🔒 Bloqueado',
+      ()=>{setRewardToConfirm(r.id);setError('');setNotice('')},
+      'full',!unlocked||pending||(!isDemo&&(!db||!user||!pointsReady))),
+    pending?e('div',{className:'tiny',style:{marginTop:9}},'La jefa debe aprobar la solicitud.'):null,
+    confirming?e('div',{className:'notice',style:{marginTop:12,padding:12}},
+      e('strong',null,'¿Solicitar '+r.name+'?'),
+      e('p',{className:'tiny',style:{margin:'8px 0'}},'La jefa revisará tu solicitud. Los puntos se descontarán solo cuando la apruebe.'),
+      e('div',{className:'toolbar'},
+        button('Confirmar solicitud',()=>requestReward(r),'full'),
+        button('Cancelar',()=>setRewardToConfirm(null),'secondary')
+      )
+    ):null
+  );
+}
 function rewardsView(){const pts=pointsReady?(current?.points||0):0;return e(React.Fragment,null,e('div',{className:'sectionTitle'},e('div',null,e('h2',null,'Tus puntos, tus premios'),e('p',null,'Cada visita te acerca a tu próxima recompensa.'))),e('div',{className:'pointsCard'},e('div',{className:'pointsRow'},e('div',null,e('div',{className:'eyebrow'},'Tu saldo disponible'),e('div',{className:'points'},pointsReady?pts.toLocaleString('es-PE'):'…',' ',e('span',null,'puntos'))),e('span',{style:{fontSize:34}},'🎀')),e('div',{className:'meter'},e('span',{style:{width:activeReward?Math.min(100,pts/activeReward.points*100)+'%':'100%'}})),e('div',{className:'tiny'},pointsReady?(activeReward?'Te faltan '+(activeReward.points-pts)+' puntos para '+activeReward.name+'.':'¡Tienes puntos para las recompensas disponibles!'):'Sincronizando tu saldo con Firebase…')),e('div',{className:'sectionTitle'},e('div',null,e('h2',null,'Elige tu recompensa'),e('p',null,'Los premios se desbloquean con tus puntos.'))),e('div',{className:'grid'},REWARDS.map(rewardCard)),e('div',{className:'sectionTitle'},e('h2',null,'Tu actividad')),e('div',{className:'panel'},visibleVisits.length?visibleVisits.map(v=>{const cancelled=visibleClientVoids.find(c=>c.visitId===v.id);return e('div',{className:'listEntry',key:v.id},e('div',null,e('strong',null,v.serviceName),e('div',{className:'tiny'},ts(v.createdAt)),cancelled?e('div',{className:'tiny'},'Anulada: '+cancelled.reason):null),e('strong',{style:{color:cancelled?'#927887':'#a54475'}},cancelled?'Anulada':'+'+v.points+' pts'))}):isDemo?demoVisitsState.map(v=>e('div',{className:'listEntry',key:v.id},e('span',null,v.serviceName),e('strong',null,'+'+v.points+' pts'))):e('div',{className:'empty'},'Aún no registramos servicios. Después de tu primera atención aparecerán aquí.')))}
 function avatar(size=58){const p=user?.photoURL||current?.photoURL||(user?.providerData||[]).find(x=>x?.photoURL)?.photoURL;const safeUrl=typeof p==='string'&&/^https:\/\//i.test(p)?p:null;return e('span',{className:'avatar',style:{width:size,height:size,fontSize:Math.round(size*.46)},'aria-label':safeUrl?'Foto de perfil':'Avatar de perfil'},'🐒',safeUrl?e('img',{src:safeUrl,alt:'Tu foto de perfil',referrerPolicy:'no-referrer',onError:ev=>{ev.currentTarget.style.display='none'}}):null)}
 function profileView(){return e(React.Fragment,null,e('div',{className:'sectionTitle'},e('h2',null,'Mi perfil')),e('div',{className:'panel'},e('div',{className:'profile'},avatar(68),e('div',null,e('h3',null,current?.displayName||'Clienta'),e('div',{className:'tiny'},current?.email||''))),e('div',{className:'adminGrid',style:{marginTop:25}},e('div',null,e('div',{className:'bigStat'},pointsReady?(current?.points??0).toLocaleString('es-PE'):'…'),e('div',{className:'tiny'},pointsReady?'Puntos disponibles · Firebase':'Sincronizando puntos…')),e('div',null,e('div',{className:'bigStat'},pointsReady?(current?.visits??0):'…'),e('div',{className:'tiny'},'Visitas registradas'))),!pointsReady?e('div',{className:'notice',role:'status',style:{marginTop:16}},profileStatus==='error'?'No se pudo leer tu saldo desde Firebase. Revisa el mensaje de error.':'Consultando tu saldo guardado…'):null,isAdmin?e('div',{className:'notice',style:{marginTop:18}},'Estás viendo tu propio perfil de administradora. El saldo de cada clienta aparece en el panel Jefa → Registrar atención.'):null,!isDemo?e('div',{style:{marginTop:24}},button('Cerrar sesión',logout,'secondary')):null),e('div',{className:'sectionTitle'},e('h2',null,'Mis solicitudes')),e('div',{className:'panel'},visibleClientRequests.filter(x=>x.userId===(user?.uid||'demo')).length?visibleClientRequests.filter(x=>x.userId===(user?.uid||'demo')).map(r=>e('div',{className:'listEntry',key:r.id},e('span',null,REWARDS.find(z=>z.id===r.rewardId)?.name||r.rewardId),e('span',{className:'pill'},r.status==='pending'?'Pendiente':r.status==='approved'?'Aprobada':'Rechazada'))):e('div',{className:'empty'},'Aún no tienes solicitudes de canje.')))}
