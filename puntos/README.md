@@ -15,17 +15,17 @@ La web comercial existente `/web/` permanece intacta; todo el MVP reside dentro 
 - Historial de visitas y solicitudes, contadores y estados de canje.
 - Modo DEMO por `?demo=1` para recorrer el flujo completo: entrar como clienta → solicitar premio → cambiar a jefa → aprobar → registrar servicio → volver a clienta. No se guarda ningún dato real.
 
-**Actualización 11/11/2026:** según la confirmación del propietario, Firestore Standard `(default)` fue creado en **southamerica-west1 (Chile)**, en modo producción y sin copias programadas. Falta publicar las reglas, asignar el rol de la jefa, activar el código y probar con cuentas separadas.
+**Actualización 11/11/2026:** el propietario confirmó Firestore Standard `(default)` en **southamerica-west1 (Chile)**, reglas copiadas y publicadas desde Firebase Console, y el documento `admins/{uid}` con `enabled=true`. El asistente aún no ha comprobado esos cambios con acceso directo a Firebase.
 
-**El backend Firestore sigue desactivado** en `puntos/index.html` con `window.MANOS_MONAS_ENABLE_DATA = false` para evitar que las clientas usen saldos no verificados o reglas sin publicar. Haber subido `puntos/firestore.rules` a GitHub **NO las publica en Firebase**. No activar el interruptor sin completar la lista siguiente.
+**La conexión real está habilitada solo para pruebas** en `https://manosmonas.github.io/web/puntos/?live=1`. La web habitual sigue sin escribir en Firestore; `?demo=1` sigue siendo simulación. Primero probar la cuenta de la jefa y una cuenta de clienta, auditar reglas y confirmar el catálogo antes de permitir escrituras en la URL normal. El archivo de reglas en GitHub **no se publica automáticamente** en Firebase.
 
-## Activación final de Firebase (pendiente; seguir en orden)
+## Activación final de Firebase (completada parcialmente; verificar en orden)
 1. En el proyecto **manos-monas-puntos**, crear **Cloud Firestore** en modo producción. La aplicación Firebase Web ya está registrada.
 2. En Firestore → **Rules**, pegar y **publicar** el contenido completo de `puntos/firestore.rules` desde GitHub. No habilitar reglas de prueba que permitan acceso público. Las reglas verifican roles y validan cada cambio de puntos contra la creación de una visita o la aprobación de un canje, mediante `getAfter()`.
 3. Entrar al Club Monas con la cuenta Google/Facebook de la **jefa** para obtener su UID desde Firebase → Authentication → Users. En Firestore crear la colección `admins`, documento con ID **exactamente igual a su UID**, campo `enabled` tipo **boolean** con valor `true`. Debe existir **únicamente** para cuentas autorizadas; la jefa puede crear su perfil al iniciar sesión tras activar la base de datos.
-4. Cambiar `window.MANOS_MONAS_ENABLE_DATA = true` en `puntos/index.html` **únicamente tras publicar las reglas y configurar el rol**. Esta modificación requiere publicar el archivo en GitHub Pages (lo hará el asistente cuando toque).
+4. **Realizado en modo de prueba:** el código usa `window.MANOS_MONAS_ENABLE_DATA = new URLSearchParams(window.location.search).get('live') === '1'`, permitiendo pruebas con base real sin exponer el programa sin validar en la URL normal. Después de validar, habilitar Firestore para todo el Club.
 5. Probar con **dos cuentas distintas**: (a) clienta, que no puede acreditar puntos, (b) jefa, que sí. La jefa registra una manicura y suma 30 puntos; clienta ve historial; con saldo suficiente solicita premio; jefa lo aprueba y se descuentan puntos. Verificar que una solicitud solo se procese una vez y que no se puedan gastar puntos negativos.
-6. Realizar pruebas de seguridad con el emulador de Firebase y revisar las reglas antes de abrir a todas las clientas. **La lógica está escrita, pero las reglas aún no han sido probadas contra Firestore real**.
+6. Realizar pruebas de seguridad con el emulador de Firebase y revisar las reglas antes de abrir a todas las clientas. **La lógica está escrita, pero las reglas aún no han sido probadas contra Firestore real por el asistente**.
 7. Definir/confirmar importes y premios ANTES de habilitar el programa real. Los valores actuales son meramente de prueba. Los valores en las reglas y en la web deben mantenerse idénticos.
 8. Configurar alertas de uso/costos de Firebase y probar errores de conexión y cierre de sesión.
 
