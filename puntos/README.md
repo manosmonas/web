@@ -45,3 +45,22 @@ La web comercial existente `/web/` permanece intacta; todo el MVP reside dentro 
 - Las reglas del repositorio niegan a las clientas editar puntos o asignarse el rol de jefa. Los registros de servicio son inmutables y los canjes aprobados descuentan saldo mediante transacción atómica.
 - No se puede verificar realmente que una atención ocurrió sin un operador confiable; la cuenta administradora debe protegerse con MFA.
 - No incluir claves privadas, contraseñas, secretos de Facebook, ni archivos de cuentas de servicio en GitHub. La configuración pública de la app web de Firebase ya está definida en el HTML.
+
+## Animaciones e interacción pendientes
+
+### MVP web en computadora y celular
+
+- [ ] Mostrar el saldo y la recompensa más cercana al entrar. En la primera visita, la monita saluda con un salto breve. Si el saldo es cero, mostrar «Tu próximo servicio te suma monedas».
+- [ ] Hacer que las tarjetas respondan al toque o clic. Mostrar qué incluye el premio y cuántas monedas faltan, o el botón **Canjear** si hay saldo suficiente.
+- [ ] Al confirmar los puntos de un servicio, mostrar `+X monedas`, animar unas monedas hacia el saldo y subir el contador hasta el total confirmado.
+- [ ] Llenar la barra en sincronía con el contador y mostrar chispas breves en la punta. Limitar la barra al 100 % y mostrar el saldo completo en el contador.
+- [ ] Al alcanzar un premio, abrir el candado, dar un destello a **Canjear** y hacer saltar a la monita junto a «¡Desbloqueaste una recompensa!».
+- [ ] Mostrar «Solicitud enviada» al pedir un canje. Cuando la jefa lo apruebe, mostrar un check con «¡Canje realizado!», actualizar el saldo y recalcular el progreso.
+- [ ] Probar en computadora y celular con los controles temporales **Sumar 10** y **Sumar 25**, partiendo de 80 monedas y un premio de 100 en la demo. Si se acreditan monedas con la app cerrada, reproducir la secuencia una vez al volver. Respetar la preferencia de movimiento reducido.
+
+### Después del MVP
+
+- [ ] Añadir un guiño de la monita al desbloquear el primer premio.
+- [ ] Diseñar una celebración especial para el primer canje.
+- [ ] Añadir una transición que amplíe la foto del premio al abrir su detalle.
+- [ ] Reproducir estas interacciones en la app nativa cuando se desarrolle.
