@@ -4,7 +4,7 @@ MVP React 18 para navegador móvil y escritorio. Disponible en `https://manosmon
 ## Estado (10/11/2026)
 - Firebase Web conectado a `manos-monas-puntos` para autenticación con Google (público en GitHub Pages); pendiente autorizar y probar `manosmonas.github.io` en Firebase Authentication.
 - Los datos de puntos, canjes y roles están **desactivados** deliberadamente (`window.MANOS_MONAS_ENABLE_DATA = false`) hasta provisionar Firestore y publicar reglas seguras. El login real puede funcionar sin crear puntos.
-- Facebook permanece desactivado en la interfaz real hasta completar el proveedor OAuth en Meta y Firebase.
+- Facebook **habilitado en la interfaz el 11/11/2026** para probar el inicio de sesión real vía Firebase (Meta OAuth redirect configurado por propietario). **Pendiente prueba real de inicio/cierre de sesión**; Meta puede restringir el acceso a personas con rol en la app mientras siga en modo desarrollo.
 - La rama `gh-pages` conserva la web principal en raíz; los cambios se limitan a `puntos/`.
 - Si se borra Firebase config, se activa la demo sin guardar datos.
 - Por ahora no hay login por SMS, contraseña, ni recuperación de contraseña propia.
