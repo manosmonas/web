@@ -34,6 +34,17 @@ La web comercial existente `/web/` permanece intacta; todo el MVP reside dentro 
 
 **Canjes: actualización 11/11/2026.** La aprobación y rechazo por parte de la jefa se habilitaron también en la URL habitual. Se probaron en simulación las operaciones de aprobación, rechazo, saldo insuficiente y petición ya procesada. Falta comprobarlas en la base real.  La clienta pulsa «Solicitar canje», confirma, Firestore crea `redemptions/{id}` con `status=pending` y la interfaz marca «Solicitud pendiente». El saldo se conserva hasta que la jefa apruebe. Se comprobó con un simulador de autenticación y Firestore (250 puntos → solicitud de manicura 200 → pendiente, manteniendo 250); **falta verificar la operación contra Firebase real y el ciclo de aprobación/rechazo**. El rechazo no descuenta puntos. Los pendientes duplicados del mismo premio se evitan en la interfaz, pero falta una restricción atómica interdispositivos; las aprobaciones siguen protegidas por comprobación de saldo en una transacción.
 
+## Flujo de canje acordado para el MVP (presencial)
+
+**Decisión del negocio (11/11/2026): mantener este flujo sin añadir estados ni reservas por ahora.**
+
+1. La clienta llega físicamente a Manos Monas Home Studio y muestra que tiene puntos suficientes para una recompensa desbloqueada.
+2. La clienta comunica que desea canjear ese premio y solicita el canje desde su cuenta.
+3. La jefa comprueba la solicitud en **Canjes pendientes** y la **aprueba**.
+4. Al aprobarla, Firebase descuenta los puntos y el personal **realiza el servicio en el salón**. Si la jefa rechaza, el saldo no cambia.
+
+En esta fase, **«Aprobada» es el estado final necesario**; no crear un estado adicional «Entregada» ni un sistema de comprobantes de entrega. **Reservas queda pendiente para una etapa posterior**, cuando se quiera permitir agendar un servicio después de que el canje esté aprobado. No modificar el flujo de canje presencial para introducir reservas antes de esa etapa.
+
 ## Otras tareas para después del MVP
 - Corregir carga de foto de perfil (actualmente puede mostrar monita de reserva).
 - Resolver aviso rojo de Facebook en Meta, completar revisión, permisos y publicación para usuarios sin rol de pruebas. **No ofrecer Facebook Login al público si persiste ese aviso.**
