@@ -42,6 +42,9 @@ service cloud.firestore {
     function userPath(uid) {
       return /databases/$(database)/documents/users/$(uid);
     }
+    function voidPath(id) {
+      return /databases/$(database)/documents/voids/$(id);
+    }
     // Toda acreditación debe venir acompañada de UNA nueva visita inmutable
     // en la misma transacción. Los puntos son fijos por tipo de servicio.
     function validVisitBalance(uid) {
@@ -71,6 +74,25 @@ service cloud.firestore {
         && request.resource.data.points == resource.data.points - rewardPoints(next.rewardId)
         && request.resource.data.visits == resource.data.visits;
     }
+    // Anular una atención exige crear un comprobante único y ajustar saldo y
+    // visitas en una sola transacción. La visita original nunca se elimina.
+    function validVoidBalance(uid) {
+      let voidId = request.resource.data.lastEventId;
+      let cancellation = getAfter(voidPath(voidId)).data;
+      let visit = get(visitPath(cancellation.visitId)).data;
+      return !exists(voidPath(voidId))
+        && voidId == 'void-' + cancellation.visitId
+        && cancellation.userId == uid
+        && cancellation.staffId == request.auth.uid
+        && visit.userId == uid
+        && cancellation.points == visit.points
+        && cancellation.points == servicePoints(visit.serviceId)
+        && cancellation.createdAt == request.time
+        && resource.data.points >= cancellation.points
+        && resource.data.visits >= 1
+        && request.resource.data.points == resource.data.points - cancellation.points
+        && request.resource.data.visits == resource.data.visits - 1;
+    }
     match /admins/{uid} {
       allow get: if owns(uid) || isAdmin();
       allow list, create, update, delete: if false;
@@ -96,14 +118,15 @@ service cloud.firestore {
         && request.resource.data.points is int
         && request.resource.data.visits is int
         && request.resource.data.points >= 0
-        && request.resource.data.visits >= resource.data.visits
+        && request.resource.data.visits >= 0
         && request.resource.data.lastEventId is string
         && request.resource.data.lastEventId.size() > 0
         && request.resource.data.lastEventId.size() < 128
         && request.resource.data.lastEventId != resource.data.lastEventId
         && request.resource.data.updatedAt == request.time
         && ((request.resource.data.lastEventType == 'visit' && validVisitBalance(uid))
-          || (request.resource.data.lastEventType == 'redemption' && validRedeemBalance(uid)));
+          || (request.resource.data.lastEventType == 'redemption' && validRedeemBalance(uid))
+          || (request.resource.data.lastEventType == 'void' && validVoidBalance(uid)));
       allow delete: if false;
     }
     match /visits/{id} {
@@ -120,6 +143,30 @@ service cloud.firestore {
         && exists(userPath(request.resource.data.userId))
         && getAfter(userPath(request.resource.data.userId)).data.lastEventId == id
         && getAfter(userPath(request.resource.data.userId)).data.lastEventType == 'visit';
+      allow update, delete: if false;
+    }
+    match /voids/{id} {
+      allow get, list: if signedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasAll(['visitId','userId','points','reason','staffId','createdAt'])
+        && request.resource.data.keys().hasOnly(['visitId','userId','points','reason','staffId','createdAt'])
+        && request.resource.data.visitId is string
+        && request.resource.data.visitId.size() > 0
+        && request.resource.data.visitId.size() < 100
+        && id == 'void-' + request.resource.data.visitId
+        && request.resource.data.userId is string
+        && request.resource.data.staffId == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() >= 3
+        && request.resource.data.reason.size() <= 200
+        && request.resource.data.points is int
+        && request.resource.data.points > 0
+        && exists(visitPath(request.resource.data.visitId))
+        && get(visitPath(request.resource.data.visitId)).data.userId == request.resource.data.userId
+        && get(visitPath(request.resource.data.visitId)).data.points == request.resource.data.points
+        && getAfter(userPath(request.resource.data.userId)).data.lastEventId == id
+        && getAfter(userPath(request.resource.data.userId)).data.lastEventType == 'void';
       allow update, delete: if false;
     }
     match /redemptions/{id} {
