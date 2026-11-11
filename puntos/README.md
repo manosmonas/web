@@ -25,6 +25,7 @@ MVP React 18 para navegador móvil y escritorio. Disponible en `https://manosmon
 8. Activar alertas de presupuesto / uso en Google Cloud y Firebase. Revisar cuotas del plan gratuito.
 9. Antes de producción real: mover adjudicación de puntos y canjes a backend confiable (Cloud Functions) o reforzar Rules con validación cruzada `getAfter()`, límites de importe y auditoría. Las reglas de este prototipo impiden escrituras de clientas sobre su saldo pero una cuenta de jefa comprometida puede conceder puntos arbitrarios. **No usar como sistema antifraude de producción sin ese refuerzo**.
 10. Una vez finalizado el desarrollo, migrar a `manosmonas.com` y actualizar los dominios autorizados en Auth.
+11. **Antes de abrir Facebook Login al público:** resolver la advertencia roja «Enviar para revisión del inicio de sesión» que aparece en la pantalla de consentimiento de Facebook. Revisar los permisos `email` y `public_profile`, completar los requisitos y revisión/publicación de Meta que correspondan, configurar identidad y política de privacidad de la aplicación y probar con una cuenta externa sin rol de administrador. **No lanzar a clientas mientras persista el aviso de permisos no aprobados.**
 
 ## Notas
 - React y Firebase se cargan desde CDN para publicar la maqueta directamente en GitHub Pages sin configurar una cadena de build.
