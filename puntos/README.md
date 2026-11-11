@@ -1,10 +1,12 @@
 # Club de Recompensas · Manos Monas
 MVP React 18 para navegador móvil y escritorio. Disponible en `https://manosmonas.github.io/web/puntos/`. La web comercial del directorio raíz no se modifica.
 
-## Estado
-- Maqueta interactiva sin backend si falta configuración: alterna entre clienta/jefa, pero **no guarda datos**.
-- Acceso inicial: **Google (cuentas Gmail) y Facebook**. Ambos botones están maquetados y sus proveedores preparados en Firebase Auth; en modo demo el ingreso es simulado, no se autentica ni almacena información real.
-- Por decisión del negocio, **toda la configuración de backend se deja para el final**. No habilitar accesos reales hasta completar Firebase Authentication, Firestore, reglas y pruebas.
+## Estado (10/11/2026)
+- Firebase Web conectado a `manos-monas-puntos` para autenticación con Google (público en GitHub Pages); pendiente autorizar y probar `manosmonas.github.io` en Firebase Authentication.
+- Los datos de puntos, canjes y roles están **desactivados** deliberadamente (`window.MANOS_MONAS_ENABLE_DATA = false`) hasta provisionar Firestore y publicar reglas seguras. El login real puede funcionar sin crear puntos.
+- Facebook permanece desactivado en la interfaz real hasta completar el proveedor OAuth en Meta y Firebase.
+- La rama `gh-pages` conserva la web principal en raíz; los cambios se limitan a `puntos/`.
+- Si se borra Firebase config, se activa la demo sin guardar datos.
 - Por ahora no hay login por SMS, contraseña, ni recuperación de contraseña propia.
 - Firestore: perfiles de clienta, registros de servicios, puntos, solicitudes de canje y aprobación/rechazo por la jefa.
 - Roles: document `admins/{UID}` (crear manualmente en la consola, NO desde la app).
@@ -18,7 +20,7 @@ MVP React 18 para navegador móvil y escritorio. Disponible en `https://manosmon
 3. Firestore Database > crear base de datos. Elegir región cercana al negocio y modo producción.
 4. Firestore > Rules > copiar y publicar `puntos/firestore.rules` (no dejar reglas de prueba).
 5. Crear una cuenta Google para la jefa e iniciar sesión en la aplicación una vez. En Authentication > Users copiar su UID. En Firestore > crear colección `admins`, documento con ID igual al UID y campo `enabled` boolean `true`. No crear documentos de admin para clientas.
-6. En `puntos/index.html` reemplazar solo el objeto `window.MANOS_MONAS_FIREBASE` por `apiKey`, `authDomain`, `projectId`, `appId` y `messagingSenderId` de Firebase > Project settings > Your apps. La config web es pública por diseño; **no pegar claves privadas o service accounts**.
+6. El objeto `window.MANOS_MONAS_FIREBASE` ya contiene la configuración pública de Firebase Web suministrada por el propietario. **No pegar claves privadas ni service accounts**. Tras crear Firestore, publicar reglas y realizar auditoría mínima, activar explícitamente `window.MANOS_MONAS_ENABLE_DATA = true` solo cuando estén seguros los accesos y canjes.
 7. Verificar desde navegador: Google login como clienta, vista de jefa, registrar atención, comprobar puntos, solicitar premio, aprobar y descontar.
 8. Activar alertas de presupuesto / uso en Google Cloud y Firebase. Revisar cuotas del plan gratuito.
 9. Antes de producción real: mover adjudicación de puntos y canjes a backend confiable (Cloud Functions) o reforzar Rules con validación cruzada `getAfter()`, límites de importe y auditoría. Las reglas de este prototipo impiden escrituras de clientas sobre su saldo pero una cuenta de jefa comprometida puede conceder puntos arbitrarios. **No usar como sistema antifraude de producción sin ese refuerzo**.
