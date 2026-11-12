@@ -88,6 +88,8 @@
 @media(prefers-reduced-motion:reduce){.unlockMoment,.unlockPrizePhoto,.unlockCheck,.unlockHalo,.unlockSpark{animation:none!important;transform:none!important}.unlockSparkLayer{display:none}}
 
 .bookingSection{display:grid;gap:12px}.bookingSection .sectionTitle{margin:15px 0 0}.bookingSection textarea{width:100%;resize:vertical;border:1px solid #ebd6e1;border-radius:12px;padding:12px;font:inherit;color:#493445}.bookingFields,.bookingAgenda,.bookingDetails{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.bookingFields input{min-width:0;font-size:16px}.bookingCard{padding:18px}.bookingTop{display:flex;align-items:center;justify-content:space-between;gap:8px}.bookingTop>strong{font-size:17px}.bookingDetails{margin:14px 0}.bookingDetails>div{display:grid;gap:4px}.bookingDetails span{font-size:11px;color:#987c8b}.bookingDetails strong{font-size:13px}.bookingNotes{background:#fff4f8;border-radius:10px;padding:10px;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere}.bookingSlot{border-left:3px solid #c88aab;background:#fff2f7;border-radius:9px;padding:10px;margin:8px 0;display:grid;gap:5px}.bookingSlot strong{font-size:12px}.bookingSlot span{font-size:11px;overflow-wrap:anywhere}.bookingHistory summary{cursor:pointer;font-weight:700;color:#a54374}.bookingHistory>.bookingCard{margin-top:10px}.bookingAgenda>.panel{padding:14px}.bookingAgenda h3{font-size:14px}.bookingSection .button{min-height:40px}.nav button{padding:8px 4px;font-size:11px}
+
+.quickCalendar{padding:12px;min-width:0}.calendarBar{display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:center;margin-bottom:12px}.calendarBar>div{display:grid;gap:4px}.calendarBar strong{font-size:13px}.calendarBar span,.calendarFoot{font-size:11px;color:#927887}.calendarArrow{width:35px;height:35px;flex:0 0 35px;border:1px solid #edd5e1;background:#fff5f9;color:#a54374;border-radius:10px;font-size:24px;cursor:pointer}.calendarArrow:disabled{opacity:.35}.calendarKey{display:flex;gap:9px;flex-wrap:wrap;font-size:10px;color:#806778;margin-bottom:8px}.calendarScroll{display:flex;gap:7px;overflow-x:auto;scroll-snap-type:x proximity;overscroll-behavior-x:contain;touch-action:pan-x pan-y;padding:3px 1px 8px;max-width:100%;scrollbar-width:thin}.calendarDay{flex:0 0 104px;display:grid;gap:4px;scroll-snap-align:start}.calendarDayHead{position:sticky;top:0;display:grid;place-items:center;gap:2px;padding:8px 4px;border-radius:12px;background:#fce6f0;color:#a54374;text-transform:capitalize}.calendarDayHead strong{font-size:23px;line-height:1}.calendarDayHead span,.calendarDayHead small{font-size:11px}.calendarSlot{min-height:38px;display:grid;gap:2px;justify-items:center;align-content:center;border:1px solid #f0e2e9;border-radius:8px;color:#5b4754;background:#fff;cursor:pointer}.calendarSlot strong{font-size:12px}.calendarSlot small{font-size:10px;color:#6d8571}.calendarSlot.partialSlot{background:#fff4df;border-color:#eed6a6}.calendarSlot.partialSlot small{color:#95713b}.calendarSlot.fullSlot{background:#eee8ec;color:#9b8c95;cursor:not-allowed}.calendarSlot.fullSlot small{color:#9b8c95}.calendarSlot.selectedSlot{background:#a54374;color:#fff;border-color:#a54374}.calendarSlot.selectedSlot small{color:#fff}.quickBooking{display:grid;gap:15px;border-color:#e7bed4}.quickTitle{display:flex;justify-content:space-between;align-items:center}.quickTitle h3{margin:4px 0 0}.quickStep{display:grid;gap:8px}.quickStep>strong{font-size:13px;color:#8b4c70}.quickStep>.tiny{margin:0}.quickChoices,.quickClients{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.quickChoices.three{grid-template-columns:repeat(3,minmax(0,1fr))}.choice{min-height:44px;padding:9px 6px;border:1px solid #ecd4e1;background:#fff7fa;color:#794966;border-radius:11px;font-size:12px;font-weight:700;cursor:pointer;overflow-wrap:anywhere}.choice.selectedChoice{background:#a54374;color:#fff;border-color:#a54374}.choice:disabled{background:#eee9ec;border-color:#e4dce1;color:#9d9298;cursor:not-allowed}.choice small{display:block;font-size:10px}.customDuration{display:flex;gap:8px}.customDuration input{flex:1;min-width:0}.customDuration .button{flex:0 0 auto}.calendarFoot{margin:8px 0 0}.quickBooking input{font-size:16px}@media(min-width:700px){.calendarDay{flex-basis:132px}}
 </style>
 <link rel="preload" as="image" href="./images/monita.webp">
 </head><body>
@@ -177,13 +179,18 @@ function UnlockMoment({moment,onClose,onView}){
 }
 function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
  const staffNames={'m1':'Manicurista 1','m2':'Manicurista 2'};
- const services=['Manicura clásica','Soft Gel','Pedicura','Pestañas','Mechas','Alisado','Otro'];
+ const services=['Uñas','Pestañas','Cabello'];
  const today=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
  const minutes=t=>Number(t.split(':')[0])*60+Number(t.split(':')[1]);
  const clock=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
  const dateText=d=>d.split('-').reverse().join('/');
  const [rows,setRows]=useState([]),[ready,setReady]=useState(demo),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
- const [date,setDate]=useState(today()),[time,setTime]=useState('15:00'),[duration,setDuration]=useState('60'),[staff,setStaff]=useState('m1'),[service,setService]=useState('Soft Gel'),[client,setClient]=useState(''),[notes,setNotes]=useState(''),[edit,setEdit]=useState(null),[ask,setAsk]=useState(null);
+ const [date,setDate]=useState(today()),[time,setTime]=useState('15:00'),[duration,setDuration]=useState('60'),[staff,setStaff]=useState('m1'),[service,setService]=useState(''),[client,setClient]=useState(''),[notes,setNotes]=useState(''),[edit,setEdit]=useState(null),[ask,setAsk]=useState(null);
+ const [anchor,setAnchor]=useState(today()),[slot,setSlot]=useState(null),[search,setSearch]=useState(''),[customMinutes,setCustomMinutes]=useState('');
+ const calendarRef=useRef(null),saving=useRef(false);
+ const addDays=(d,n)=>{const v=new Date(d+'T12:00:00Z');v.setUTCDate(v.getUTCDate()+n);return v.toISOString().slice(0,10)};
+ const days=Array.from({length:8},(_,i)=>addDays(anchor,i));
+ const hours=Array.from({length:14},(_,i)=>900+i*30);
  const bookings=demo?demoRows:rows;
  const visible=bookings.filter(b=>admin||b.userId===(demo?'demo':uid)).sort((a,b)=>a.date.localeCompare(b.date)||a.start-b.start);
  useEffect(()=>{
@@ -193,13 +200,17 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
   const col=db.collection('reservations'),q=admin?col:col.where('userId','==',uid);
   return q.onSnapshot(snap=>{setRows(snap.docs.map(d=>({id:d.id,...d.data()})));setReady(true)},()=>{setError('No pudimos cargar las reservas.');setReady(false)});
  },[admin,demo,uid]);
- function reset(){setEdit(null);setNotes('');setClient('')}
- function editBooking(b){setEdit(b.id);setDate(b.date);setTime(clock(b.start));setDuration(String(b.end-b.start));setStaff(b.staffId);setClient(b.userId);setService(b.service);setNotes(b.notes||'');setError('');setNotice('');window.scrollTo({top:0,behavior:'smooth'})}
+ function reset(){setEdit(null);setNotes('');setClient('');setStaff('');setService('');setSlot(null);setSearch('');setCustomMinutes('')}
+ function editBooking(b){setEdit(b.id);setDate(b.date);setTime(clock(b.start));setSlot({date:b.date,start:b.start});setAnchor(b.date);setDuration(String(b.end-b.start));setStaff(b.staffId);setClient(b.userId);setService(services.includes(b.service)?b.service:'');setNotes(b.notes||'');setError('');setNotice('');window.scrollTo({top:0,behavior:'smooth'})}
+ function pickSlot(day,start){if(busy)return;setSlot({date:day,start});setDate(day);setTime(clock(start));setStaff('');setClient(edit?client:'');setService('');setCustomMinutes('');setSearch('');setError('');setNotice('')}
+ function staffFree(id,mins=15){return slot&&!conflict(bookings.filter(b=>b.status==='confirmed'&&b.date===slot.date),{userId:client,staffId:id,start:slot.start,end:slot.start+mins},edit)&&slot.start+mins<=1320}
+ function changeWeek(n){setAnchor(v=>addDays(v,n)<today()?today():addDays(v,n));if(calendarRef.current)calendarRef.current.scrollLeft=0}
  function conflict(slots,next,id){return slots.some(x=>x.id!==id&&(x.staffId===next.staffId||x.userId===next.userId)&&x.start<next.end&&next.start<x.end)}
- async function save(ev){
-  ev.preventDefault();if(!admin||busy)return;
-  const who=clients.find(c=>c.uid===(client||clients[0]?.uid)),start=minutes(time),mins=Number(duration),end=start+mins;
-  if(!who||!date||date<today()||!Number.isInteger(start)||start<0||!Number.isInteger(mins)||mins<15||mins>720||end>1440){setError('Revisa la fecha, hora y duración. La cita debe terminar el mismo día y durar entre 15 y 720 minutos.');return}
+ async function save(chosenMinutes){
+  if(!admin||busy||saving.current||!slot)return;
+  const who=clients.find(c=>c.uid===client),start=slot.start,mins=Number(chosenMinutes),end=start+mins;
+  if(!who||!staff||!services.includes(service)||date<today()||!Number.isInteger(start)||start<900||!Number.isInteger(mins)||mins<15||mins>420||end>1320){setError('Selecciona clienta, especialista, servicio y una duración dentro de 3 a 10 pm.');return}
+  saving.current=true;
   const next={userId:who.uid,clientName:who.displayName||'Clienta',staffId:staff,service,date,start,end,notes:notes.trim(),status:'confirmed',rescheduleRequested:false};
   setBusy(true);setError('');setNotice('');
   try{
@@ -223,7 +234,7 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
     });
    }
    setNotice(edit?'Cambio confirmado.':'¡Reserva registrada! La clienta ya puede verla.');reset();
-  }catch(ex){setError(ex.message||'No se pudo guardar.')}finally{setBusy(false)}
+  }catch(ex){setError(ex.message||'No se pudo guardar.')}finally{setBusy(false);saving.current=false}
  }
  async function cancel(b){
   if(!admin||busy||!window.confirm('¿Cancelar esta cita y liberar el horario?'))return;
@@ -271,15 +282,21 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
   error?e('div',{className:'notice error',role:'alert'},error):null,notice?e('div',{className:'notice ok',role:'status'},notice):null,
   !ready?e('div',{className:'panel'},error?'Reservas no disponibles.':'Cargando reservas…'):e(React.Fragment,null,
    admin?e(React.Fragment,null,
-    e('form',{className:'panel form',onSubmit:save},
-     e('h3',null,edit?'Editar reserva':'Nueva reserva'),
-     field('Clienta',select(client||clients[0]?.uid||'',setClient,clients.length?clients.map(c=>[c.uid,c.displayName+' · '+c.email]):[['','No hay clientas registradas']])),
-     field('Especialista',select(staff,setStaff,Object.entries(staffNames))),
-     field('Servicio',select(service,setService,services.map(x=>[x,x]))),
-     e('div',{className:'bookingFields'},field('Fecha',input(date,setDate,{type:'date',min:today()})),field('Hora',input(time,setTime,{type:'time'}))),
-     field('Duración estimada (minutos)',input(duration,setDuration,{type:'number',min:15,max:720,inputMode:'numeric'})),
-     field('Diseño y detalles (opcional)',e('textarea',{value:notes,maxLength:500,rows:3,placeholder:'Ej.: Soft Gel almendra, ojo de gato vino',onChange:ev=>setNotes(ev.target.value)})),
-     e('button',{type:'submit',className:'button full',disabled:busy||!clients.length},busy?'Guardando…':edit?'Confirmar cambio':'Registrar reserva'),edit?btn('Cancelar edición',reset,true):null),
+    e('div',{className:'panel quickCalendar'},
+     e('div',{className:'calendarBar'},e('button',{type:'button',className:'calendarArrow','aria-label':'Semana anterior',disabled:anchor<=today(),onClick:()=>changeWeek(-7)},'‹'),e('div',null,e('strong',null,dateText(days[0])+' – '+dateText(days[7])),e('span',null,'Desliza para ver más días')),e('button',{type:'button',className:'calendarArrow','aria-label':'Semana siguiente',onClick:()=>changeWeek(7)},'›')),
+     e('div',{className:'calendarKey'},e('span',null,'🟢 2 libres'),e('span',null,'🟡 1 libre'),e('span',null,'🔒 Ocupado')),
+     e('div',{className:'calendarScroll',ref:calendarRef},days.map(day=>e('div',{className:'calendarDay',key:day},
+      e('div',{className:'calendarDayHead'},e('span',null,new Intl.DateTimeFormat('es-PE',{weekday:'short',timeZone:'UTC'}).format(new Date(day+'T12:00:00Z'))),e('strong',null,day.slice(-2)),e('small',null,new Intl.DateTimeFormat('es-PE',{month:'short',timeZone:'UTC'}).format(new Date(day+'T12:00:00Z')))),
+      ...hours.map(start=>{const taken=bookings.filter(x=>x.id!==edit&&x.status==='confirmed'&&x.date===day&&x.start<start+15&&x.end>start);const count=new Set(taken.map(x=>x.staffId)).size;const selected=slot?.date===day&&slot?.start===start;return e('button',{key:start,type:'button',className:'calendarSlot '+(selected?'selectedSlot ':'')+(count===2?'fullSlot':count===1?'partialSlot':'freeSlot'),disabled:busy||count===2,'aria-label':dateText(day)+' '+clock(start)+' · '+(2-count)+' especialistas libres',onClick:()=>pickSlot(day,start)},e('strong',null,clock(start)),e('small',null,count===2?'Ocupado':count===1?'1 libre':'2 libres'))})
+     ))),
+     e('p',{className:'tiny calendarFoot'},'Atención de 3:00 pm a 10:00 pm · Toca una hora para reservar.')),
+    slot?e('div',{className:'panel quickBooking'},
+      e('div',{className:'quickTitle'},e('div',null,e('span',{className:'eyebrow'},edit?'Reagendar cita':'Nueva reserva'),e('h3',null,dateText(slot.date)+' · '+clock(slot.start))),e('button',{className:'calendarArrow',type:'button','aria-label':'Cerrar reserva',onClick:reset},'×')),
+      e('div',{className:'quickStep'},e('strong',null,'1. Clienta'),client?e('button',{type:'button',className:'choice selectedChoice',onClick:()=>{setClient('');setSearch('')}},clients.find(c=>c.uid===client)?.displayName||'Cambiar clienta',' · Cambiar'):e(React.Fragment,null,e('input',{type:'search',placeholder:'Buscar nombre o correo',value:search,onChange:ev=>setSearch(ev.target.value),'aria-label':'Buscar clienta'}),e('div',{className:'quickClients'},clients.filter(c=>((c.displayName||'')+' '+(c.email||'')).toLowerCase().includes(search.toLowerCase())).slice(0,6).map(c=>e('button',{type:'button',className:'choice',key:c.uid,onClick:()=>{setClient(c.uid);setSearch('')}},c.displayName||c.email)),!clients.length?e('p',{className:'tiny'},'La clienta debe tener una cuenta Club Monas.'):null))),
+      client?e('div',{className:'quickStep'},e('strong',null,'2. Especialista'),e('div',{className:'quickChoices'},Object.entries(staffNames).map(([id,name])=>e('button',{key:id,type:'button',className:'choice'+(staff===id?' selectedChoice':''),disabled:!staffFree(id),onClick:()=>{setStaff(id);setService('')}},'💅 '+name,staffFree(id)?null:e('small',null,'Ocupada'))))):null,
+      client&&staff?e('div',{className:'quickStep'},e('strong',null,'3. Servicio'),e('div',{className:'quickChoices three'},services.map((name,i)=>e('button',{key:name,type:'button',className:'choice'+(service===name?' selectedChoice':''),onClick:()=>setService(name)},['💅','👁️','💇'][i]+' '+name)))):null,
+      client&&staff&&service?e('div',{className:'quickStep'},e('strong',null,'4. Duración · toca para reservar'),e('p',{className:'tiny'},'Al elegir el tiempo se guarda automáticamente la cita.'),e('div',{className:'quickChoices three'},[30,45,60,90,120,180].map(m=>e('button',{type:'button',key:m,className:'choice durationChoice',disabled:busy||!staffFree(staff,m),onClick:()=>save(m)},m<60?m+' min':Math.floor(m/60)+' h'+(m%60?' '+m%60+' min':'')))),e('div',{className:'customDuration'},e('input',{type:'number',inputMode:'numeric',min:15,max:420,placeholder:'Otros min',value:customMinutes,onChange:ev=>setCustomMinutes(ev.target.value),'aria-label':'Duración personalizada en minutos'}),e('button',{type:'button',className:'button',disabled:busy||!Number.isInteger(Number(customMinutes))||Number(customMinutes)<15||!staffFree(staff,Number(customMinutes)),onClick:()=>save(Number(customMinutes))},busy?'Guardando…':'Reservar')),busy?e('p',{role:'status',className:'tiny'},'Guardando reserva…'):null):null
+     ):null,
     section('Agenda del día',dateText(date)),
     e('div',{className:'bookingAgenda'},Object.entries(staffNames).map(([id,name])=>e('div',{className:'panel',key:id},e('h3',null,name),dayRows.filter(b=>b.staffId===id).length?dayRows.filter(b=>b.staffId===id).map(b=>e('div',{className:'bookingSlot',key:b.id},e('strong',null,clock(b.start)+' – '+clock(b.end)),e('span',null,b.clientName+' · '+b.service),btn('Editar',()=>editBooking(b),true))):e('p',{className:'tiny'},'Sin citas registradas.')))),
     section('Próximas reservas')):null,
