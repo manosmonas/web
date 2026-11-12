@@ -45,6 +45,13 @@ En esta fase, **«Aprobada» es el estado final necesario**; no crear un estado 
 
 **Activación de operación desde URL normal (11/11/2026):** habilitados los botones «Acreditar puntos» y «Anular atención» sin parámetros `?live` o `?void`. La jefa debe comprobar una vez que ambos aparecen y funcionan en la dirección habitual. No cambia las reglas publicadas ni la web comercial.
 
+## Notificaciones push (pendiente)
+
+- Implementar notificaciones push para Club Monas, sin retrasar el lanzamiento del MVP presencial.
+- Eventos propuestos: puntos acreditados, nueva recompensa desbloqueada y solicitud de canje aprobada o rechazada para la clienta; nueva solicitud de canje para la jefa.
+- Evaluar Firebase Cloud Messaging (FCM) para web y futura app móvil, incluyendo consentimiento explícito, gestión de suscripciones/tokens y permisos por rol. Validar compatibilidad de navegadores y dispositivos antes de elegir la implementación.
+- No enviar promociones sin consentimiento ni exponer datos personales en las notificaciones. No crear reservas ni cambiar el flujo presencial como parte de esta tarea.
+
 ## Otras tareas para después del MVP
 - Corregir carga de foto de perfil (actualmente puede mostrar monita de reserva).
 - Resolver aviso rojo de Facebook en Meta, completar revisión, permisos y publicación para usuarios sin rol de pruebas. **No ofrecer Facebook Login al público si persiste ese aviso.**
