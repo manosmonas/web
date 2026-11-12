@@ -319,7 +319,7 @@ function rewardCard(r){
     pending?e('div',{className:'tiny',style:{marginTop:9}},'La jefa debe aprobar la solicitud.'):null,
     confirming?e('div',{className:'notice',style:{marginTop:12,padding:12}},
       e('strong',null,'¿Solicitar '+r.name+'?'),
-      e('p',{className:'tiny',style:{margin:'8px 0'}},'La jefa revisará tu solicitud. Los puntos se descontarán solo cuando la apruebe.'),
+      e('p',{className:'tiny',style:{margin:'8px 0'}},'Al canjear este servicio se restarán '+r.points+' puntos de tu saldo.'),
       e('div',{className:'toolbar'},
         button('Confirmar solicitud',()=>requestReward(r),'full'),
         button('Cancelar',()=>setRewardToConfirm(null),'secondary')
