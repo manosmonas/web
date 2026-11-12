@@ -46,6 +46,30 @@
 @keyframes gift-hop{0%,100%{transform:translateY(0) rotate(0) scale(1)}35%{transform:translateY(-8px) rotate(-13deg) scale(1.15)}65%{transform:translateY(-2px) rotate(9deg) scale(1.04)}}@keyframes gift-spark{0%{opacity:0;transform:rotate(var(--angle)) translateX(2px) scale(.3)}25%{opacity:1}100%{opacity:0;transform:rotate(var(--angle)) translateX(32px) scale(.65)}}
 @media(max-width:520px){.nav{bottom:max(8px,env(safe-area-inset-bottom));width:calc(100% - 20px);padding:6px}.nav button{min-height:52px}.shell{padding-bottom:calc(108px + env(safe-area-inset-bottom))}}
 @media(prefers-reduced-motion:reduce){.clubBoot,.photoFrame img{transition:none!important}.bootMascot,.bootSpark,.bootMeter span,.photoPlaceholder,.hero small,.hero h1,.hero p,.login h1,.login p,.tabEntrance>*,.tabEntrance>.grid .reward,.giftNav.active .giftEmoji,.giftSparkBurst i{animation:none!important}.giftSparkBurst{display:none}.photo-ready img{transform:none}}
+
+/* Recompensas vivas: movimiento mínimo, solo cuando se pueden canjear. */
+.tabEntrance>.grid .reward.locked{animation:none;transform:none;background:#f5f0f3;border-color:#e9e1e6}
+.reward.locked .rewardArt{opacity:.83;filter:none}
+.reward.locked .rewardArt img{filter:saturate(.42) brightness(.74)}
+.reward.locked h3{color:#76636e}
+.reward.locked .rewardGoalText{color:#826f79}
+.reward.locked .miniMeter span{background:#bfabb5}
+.reward.locked .photoPlaceholder{animation:none;background:#e9e0e5}
+.reward.available{border-color:#e8bdcf;box-shadow:0 4px 15px #b95c8520}
+.tabEntrance>.grid .reward.available{animation:reward-float 4.6s ease-in-out infinite;animation-delay:0s}
+.tabEntrance>.grid .reward.available:nth-child(even){animation-delay:-2.3s}
+.tabEntrance>.grid .reward.available.justUnlocked{animation:reward-awake .85s cubic-bezier(.2,.7,.3,1) both,reward-float 4.6s .85s ease-in-out infinite}
+.tabEntrance>.grid .reward.available:focus-within,.tabEntrance>.grid .reward.available.confirming{animation:none;transform:none}
+.reward.available .rewardArt{transition:opacity .45s ease,filter .45s ease}
+.reward.available>.button:not(:disabled){position:relative;overflow:hidden;isolation:isolate;background:linear-gradient(110deg,#a54374,#b65d8c,#a54374);box-shadow:0 3px 9px #a5437426}
+.reward.available>.button:not(:disabled)::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 35%,#ffffff26 50%,transparent 65%);transform:translateX(-130%);animation:reward-button-shine 6s ease-in-out infinite}
+.reward.available.confirming>.button::after,.reward.available:focus-within>.button::after{animation:none;opacity:0}
+.reward.justUnlocked .rewardArt .photo-ready img{animation:reward-photo-awake .85s ease-out both}
+@keyframes reward-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes reward-awake{0%{transform:translateY(0);filter:saturate(.7)}55%{transform:translateY(-4px);filter:saturate(1.08);box-shadow:0 0 0 2px #e5b1cf,0 5px 17px #c28aaf38}100%{transform:translateY(0);filter:none}}
+@keyframes reward-photo-awake{0%{filter:saturate(.45) brightness(.78);transform:scale(1)}100%{filter:none;transform:scale(1)}}
+@keyframes reward-button-shine{0%,75%{transform:translateX(-130%)}95%,100%{transform:translateX(130%)}}
+@media(prefers-reduced-motion:reduce){.tabEntrance>.grid .reward.available,.reward.available>.button::after,.reward.justUnlocked .rewardArt img{animation:none!important;transform:none!important}.reward.available>.button::after{display:none}}
 </style>
 <link rel="preload" as="image" href="./images/monita.webp">
 </head><body>
@@ -308,7 +332,7 @@ function rewardCard(r){
   const unlocked=pointsReady&&(current?.points||0)>=r.points;
   const pending=visibleClientRequests.some(x=>x.rewardId===r.id&&x.status==='pending'&&x.userId===(user?.uid||'demo'));
   const confirming=rewardToConfirm===r.id&&!pending&&unlocked;
-  return e('article',{id:'reward-'+r.id,className:'reward'+(!unlocked?' locked':'')+(celebration?.unlocked.includes(r.id)?' justUnlocked':''),key:r.id},
+  return e('article',{id:'reward-'+r.id,className:'reward'+(!unlocked?' locked':pending?' pendingReward':' available')+(confirming?' confirming':'')+(celebration?.unlocked.includes(r.id)?' justUnlocked':''),key:r.id},
     e('div',{className:'rewardArt'},e(RewardPhoto,{key:r.id,id:r.id,alt:r.name+' (imagen referencial)'}),!unlocked?e('span',{className:'rewardLock','aria-hidden':true},'🔒'):celebration?.unlocked.includes(r.id)?e('span',{className:'rewardLock unlockMark','aria-hidden':true},'✨'):null),
     e('h3',null,r.name),
     e('div',{className:'tiny'},r.points+' puntos'),
