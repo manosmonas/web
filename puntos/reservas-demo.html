@@ -108,6 +108,8 @@
 .calendarHourButton.hourUnavailable.hourBookedBoth{opacity:1;cursor:not-allowed}
 @keyframes reservation-painted{from{transform:scale(.96);filter:brightness(1.12)}to{transform:scale(1);filter:none}}
 @media(prefers-reduced-motion:reduce){.calendarHourButton.hourBookedM1,.calendarHourButton.hourBookedM2,.calendarHourButton.hourBookedBoth{animation:none!important}}
+
+.bookingReminder{display:grid;gap:12px;animation:booking-enter .3s ease-out both}.bookingReminderHead{display:flex;gap:12px;align-items:center}.bookingReminderHead>span{font-size:27px}.bookingReminderHead p{margin:4px 0 0}.bookingReminderMessage{background:#fff4e3;border:1px solid #f0dbb5;border-radius:12px;padding:12px;color:#855e29;font-size:13px;font-weight:700;animation:booking-step .3s ease-out both}.bookingReminderMessage .tiny{margin-top:5px;font-weight:400}.clientBookingHero{border-color:#e9bfd5;background:linear-gradient(140deg,#fff,#fff2f8);animation:booking-enter .32s ease-out both}.clientBookingHero .bookingTop>strong{font-size:20px}.clientBookingHero .bookingDetails{background:#fff9fc;border:1px solid #f1e0e9;border-radius:12px;padding:12px}.bookingNextLabel{color:#a54374;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px}.bookingCard .button{transition:transform .16s ease,background .18s ease}.bookingCard .button:active{transform:scale(.97)}@media(prefers-reduced-motion:reduce){.bookingReminder,.bookingReminderMessage,.clientBookingHero{animation:none!important}}
 </style>
 <link rel="preload" as="image" href="./images/monita.webp">
 </head><body>
@@ -191,6 +193,31 @@ function UnlockMoment({moment,onClose,onView}){
     prizes.length>1?e('div',{className:'unlockOtherPrizes'},e('strong',null,'También desbloqueaste'),...prizes.slice(0,-1).map(r=>e('span',{key:r.id},'✓ '+r.name+' · '+r.points+' pts'))):null,
     e('p',{className:'unlockHint'},'Tu premio ya está disponible para canjear.'),
     e('button',{type:'button',className:'button full unlockView',onClick:()=>onView(main.id),autoFocus:true},prizes.length===1?'Ver mi recompensa':'Ver mis recompensas'));
+}
+function ClientReminders({uid,demo,bookings}){
+ const [messages,setMessages]=useState([]),[status,setStatus]=useState(''),[enabled,setEnabled]=useState(false),[working,setWorking]=useState(false);
+ useEffect(()=>{if(demo||!uid||!db)return;return db.collection('users').doc(uid).collection('reminders').orderBy('createdAt','desc').limit(20).onSnapshot(s=>setMessages(s.docs.map(x=>({id:x.id,...x.data()}))),()=>setMessages([]))},[uid,demo]);
+ useEffect(()=>{setEnabled(false);setStatus('');if(demo||!uid)return;try{setEnabled(localStorage.getItem('monas-push-uid')===uid&&window.Notification?.permission==='granted')}catch(_){}},[uid,demo]);
+ const live=messages.filter(m=>bookings.some(b=>b.id===m.reservationId&&b.date===m.date&&b.start===m.start&&b.status==='confirmed'));
+ async function activate(){
+  if(working)return;setWorking(true);setStatus('');
+  try{
+   if(demo){setEnabled(true);setStatus('Simulación: recordatorios activados. No se enviarán avisos reales.');return}
+   if(!window.MANOS_MONAS_VAPID_KEY)throw Error('Los avisos del teléfono aún están pendientes de activación.');
+   if(!('Notification'in window)||!('serviceWorker'in navigator)||!firebase.messaging.isSupported())throw Error('Este navegador no admite avisos. En iPhone, agrega Club Monas a la pantalla de inicio.');
+   const permission=await Notification.requestPermission();if(permission!=='granted')throw Error('No se concedió el permiso de notificaciones.');
+   const registration=await navigator.serviceWorker.register('./firebase-messaging-sw.js',{scope:'./'});
+   const token=await firebase.messaging().getToken({vapidKey:window.MANOS_MONAS_VAPID_KEY,serviceWorkerRegistration:registration});
+   if(!token)throw Error('No se obtuvo el registro del dispositivo.');
+   await firebase.app().functions('us-central1').httpsCallable('registerClubPush')({token});
+   localStorage.setItem('monas-push-uid',uid);setEnabled(true);setStatus('¡Recordatorios activados en este dispositivo!');
+  }catch(ex){setStatus(ex.message||'No pudimos activar los avisos.')}finally{setWorking(false)}
+ }
+ return e('div',{className:'panel bookingReminder'},e('div',{className:'bookingReminderHead'},e('span',{'aria-hidden':true},'🔔'),e('div',null,e('strong',null,'Tus recordatorios'),e('p',{className:'tiny'},'El día de tu cita, a las 8:00 a. m. y una hora antes.'))),
+  e('button',{type:'button',className:'button secondary full',disabled:working||enabled,onClick:activate},working?'Activando…':enabled?'✓ Avisos activados':'Activar avisos en mi celular'),
+  status?e('p',{className:'tiny',role:'status'},status):null,
+  demo&&enabled?e('div',{className:'bookingReminderMessage'},'✨ Ejemplo: ¡Hoy tienes una cita en Manos Monas!'):null,
+  ...live.map(m=>e('div',{key:m.id,className:'bookingReminderMessage',role:'status'},m.kind==='morning'?'💅 ¡Hoy tienes una cita en Manos Monas!':'⏰ ¡Falta una horita para tu cita!',e('div',{className:'tiny'},'Consulta tu reserva confirmada aquí.'))));
 }
 function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
  const staffNames={'m1':'Doris','m2':'Miluzka'};
@@ -289,7 +316,8 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
  const section=(title,sub)=>e('div',{className:'sectionTitle'},e('div',null,e('h2',null,title),sub?e('p',null,sub):null));
  function card(b){
   const cancelled=b.status==='cancelled';
-  return e('article',{key:b.id,className:'panel bookingCard'},
+  return e('article',{key:b.id,className:'panel bookingCard'+(!admin&&!cancelled?' clientBookingHero':'')},
+   !admin&&!cancelled?e('p',{className:'bookingNextLabel'},'✦ Tu cita confirmada'):null,
    e('div',{className:'bookingTop'},e('strong',null,b.service),e('span',{className:'pill '+(cancelled?'request-rejected':b.rescheduleRequested?'request-pending':'request-approved')},cancelled?'Cancelada':b.rescheduleRequested?'Cambio solicitado':'Confirmada')),
    admin?e('p',{className:'tiny'},b.clientName):null,
    e('div',{className:'bookingDetails'},[['Fecha',dateText(b.date)],['Hora',clock(b.start)+' – '+clock(b.end)],['Especialista',staffNames[b.staffId]],['Duración estimada',(b.end-b.start)+' min']].map(([k,v])=>e('div',{key:k},e('span',null,k),e('strong',null,v)))),
@@ -301,6 +329,7 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
  const dayRows=upcoming.filter(b=>b.date===date);
  return e('section',{className:'bookingSection'},
   section(admin?'Agenda de reservas':'Mis reservas',admin?'Acuerda por WhatsApp y registra la cita aquí.':'Tus citas confirmadas por el salón.'),
+  !admin?e(ClientReminders,{uid,demo,bookings:visible}):null,
   error?e('div',{className:'notice error',role:'alert'},error):null,notice?e('div',{className:'notice ok',role:'status'},notice):null,
   !ready?e('div',{className:'panel'},error?'Reservas no disponibles.':'Cargando reservas…'):e(React.Fragment,null,
    admin?e(React.Fragment,null,
