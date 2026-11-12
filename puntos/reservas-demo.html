@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/><meta name="theme-color" content="#f9dbe9"/><meta name="description" content="Club de recompensas Manos Monas Home Studio"/><title>Club Monas | Demo de reservas</title>
+<link rel="icon" type="image/png" href="../assets/img/logov1.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"></noscript>
+<style>
+:root{font-family:'DM Sans',sans-serif;color:#392b35;background:#fffafc;font-synthesis:none}*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #da70a0;outline-offset:2px}
+.page{min-height:100vh;background:linear-gradient(155deg,#fff7fb 0%,#fffdfe 64%,#fef1f6 100%)}.shell{max-width:1020px;margin:auto;padding:22px 24px 110px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:6px 0 23px}.brand{display:flex;align-items:center;gap:12px}.mark{width:56px;height:56px;background:#fff;border:1px solid #e6aec9;border-radius:16px;display:grid;place-items:center;overflow:hidden;padding:4px}.mark img{width:100%;height:100%;object-fit:contain}.loginBrand{width:146px;height:112px;object-fit:contain;display:block;margin:0 auto 8px}.eyebrow{font-size:11px;letter-spacing:.19em;text-transform:uppercase;font-weight:800;color:#bd648b}.brand h2{font-size:17px;letter-spacing:-.04em;margin:1px 0}.caption{font-size:12px;color:#967e8b}.chip{border:1px solid #e9cfdb;border-radius:999px;padding:9px 12px;background:#fff;color:#955777;font-size:12px;font-weight:700}.hero{background:linear-gradient(115deg,#4d2d43,#7e4966);color:white;border-radius:28px;padding:31px 34px;display:flex;justify-content:space-between;align-items:center;gap:30px;box-shadow:0 14px 32px #7d416222}.hero small{color:#f3cadc;text-transform:uppercase;letter-spacing:.17em;font-weight:800}.hero h1{font-family:'Playfair Display',serif;font-size:clamp(28px,5vw,44px);margin:12px 0}.hero p{color:#f9dce8;margin:0;line-height:1.65;max-width:470px}.heroIcon{font-size:86px;filter:drop-shadow(0 7px 7px #31202e40)}.sectionTitle{display:flex;justify-content:space-between;align-items:end;gap:10px;margin:29px 0 15px}.sectionTitle h2{font-family:'Playfair Display',serif;font-size:27px;margin:0}.sectionTitle p{color:#9b8792;font-size:13px;margin:6px 0 0}.pointsCard{background:#fff;border:1px solid #f1e3e9;border-radius:22px;padding:24px;box-shadow:0 6px 25px #69415a08}.pointsRow{display:flex;justify-content:space-between;align-items:center;gap:16px}.points{font-size:40px;font-weight:800;letter-spacing:-.06em;color:#aa4776}.points span{font-size:15px;letter-spacing:0;color:#8e7383}.meter{background:#f2e6eb;border-radius:999px;height:11px;margin:17px 0 8px;overflow:hidden}.meter span{display:block;height:100%;background:linear-gradient(90deg,#b84c80,#ee9abf);border-radius:999px;transition:width .25s}.tiny{font-size:12px;color:#927887}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.reward{background:#fff;border:1px solid #f1e1e9;border-radius:20px;padding:18px;min-height:210px;display:flex;flex-direction:column;position:relative;overflow:hidden}.reward.locked{background:#f8f5f7}.rewardArt{width:100%;border-radius:14px;display:grid;place-items:center;font-size:39px;height:78px;background:#fff0f6;margin-bottom:14px}.locked .rewardArt{filter:grayscale(1);opacity:.48}.reward h3{font-size:15px;line-height:1.3;margin:0}.reward .tiny{margin:7px 0 16px}.reward button{margin-top:auto}.button{border:0;padding:12px 15px;border-radius:12px;font-weight:800;font-size:13px;background:#a54374;color:white}.button.secondary{background:#fff;border:1px solid #e7c7d7;color:#9f4b76}.button.dark{background:#4b2a41}.button.full{width:100%}.button:disabled{background:#e5d9df;color:#8e7d85}.layout{display:grid;grid-template-columns:1fr 290px;gap:22px}.stack{display:grid;gap:14px}.panel{border:1px solid #f1e1e9;border-radius:20px;background:white;padding:21px}.panel h3{margin:0 0 11px;font-size:17px}.sideNote{background:#fff0f6;border-radius:16px;padding:18px;font-size:13px;line-height:1.6;color:#81586b}.nav{position:sticky;bottom:14px;z-index:10;margin:25px auto 0;display:flex;max-width:570px;justify-content:space-around;background:#fff;border:1px solid #f0dae5;box-shadow:0 10px 30px #6e365327;border-radius:20px;padding:9px}.nav button{border:0;background:transparent;color:#977c8b;padding:10px 14px;border-radius:13px;font-size:12px;font-weight:700}.nav button.active{color:#a14474;background:#fceaf2}.navIcon{display:block;font-size:23px;margin-bottom:2px}.notice{padding:12px 16px;border-radius:12px;background:#fff1de;color:#755329;font-size:13px;line-height:1.6;margin:0 0 16px}.notice.error{background:#ffe9e9;color:#982d46}.notice.ok{background:#eaf8f0;color:#206b4c}.form{display:grid;gap:11px}.form label{display:grid;gap:5px;color:#846c7a;font-size:13px;font-weight:700}input,select{border:1px solid #ebd6e1;background:white;border-radius:12px;padding:12px;width:100%;color:#493445}.listEntry{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid #f3e8ed;font-size:13px}.listEntry:last-child{border-bottom:0}.muted{color:#977f8d}.profile{display:flex;align-items:center;gap:17px}.avatar{width:58px;height:58px;display:grid;place-items:center;background:#f4d7e5;border-radius:50%;font-size:27px;position:relative;overflow:hidden;flex-shrink:0}.avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}.empty{padding:29px;text-align:center;color:#997f8e;font-size:13px;line-height:1.7}.toolbar{display:flex;gap:8px;flex-wrap:wrap}.login{max-width:530px;margin:40px auto;text-align:center}.login h1{font-family:'Playfair Display',serif;font-size:38px}.login p{color:#917783;line-height:1.7}.footer{font-size:12px;color:#9e8694;text-align:center;margin:25px 0}.pill{display:inline-block;background:#f8e9f0;color:#9f5276;border-radius:20px;padding:6px 10px;font-size:11px;font-weight:800}.bigStat{font-size:28px;font-weight:800;color:#9b4570}.adminGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:820px){.layout{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.adminGrid{grid-template-columns:1fr}}@media(max-width:520px){.shell{padding:14px 14px 90px}.hero{padding:27px 22px}.heroIcon{font-size:43px}.hero h1{font-size:30px}.grid{gap:9px}.reward{min-height:193px;padding:12px}.rewardArt{height:60px;font-size:30px}.reward h3{font-size:13px}.points{font-size:34px}.mark{width:48px;height:48px}.top{gap:5px}.chip{padding:7px}.sectionTitle h2{font-size:24px}}
+
+/* Fotografías de recompensas: formato uniforme, visible incluso con candado. */
+.rewardArt{position:relative;aspect-ratio:4/5;height:auto;display:block;overflow:hidden;background:#f8e8ef;margin-bottom:14px}
+.rewardArt img{display:block;width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.locked .rewardArt{filter:none;opacity:1}.locked .rewardArt img{filter:saturate(.65) brightness(.82)}
+.rewardArt .rewardLock{position:absolute;top:9px;right:9px;width:32px;height:32px;display:grid;place-items:center;background:#fffdf9ed;border:1px solid #fff;border-radius:50%;font-size:15px;box-shadow:0 2px 8px #48263d30}
+.rewardPhotoNote{color:#927887;font-size:11px;margin:8px 0 0}
+
+/* Club Monas: microinteracciones y perfil (solo presentación). */
+.pointsCard{position:relative;isolation:isolate}.points{font-variant-numeric:tabular-nums}.pointsRibbon{display:inline-block}.pointsCelebrating{border-color:#e9a5c5;box-shadow:0 0 0 3px #f7dce9,0 12px 32px #bf669d18}.pointsCelebrating .pointsRibbon{animation:monas-bounce .65s ease both}.pointsBurst{position:relative;display:grid;gap:3px;background:#fff0f7;border:1px solid #f3d4e3;border-radius:12px;padding:12px 14px;margin:12px 0;color:#a54374;animation:monas-pop .35s ease both}.pointsBurst span{font-size:12px;color:#805d72}.sparkles{position:absolute;inset:0;pointer-events:none;overflow:hidden}.sparkles i{position:absolute;left:calc(10% + var(--i)*15%);top:60%;font-style:normal;font-size:16px;color:#d99e37;animation:monas-sparkle 1.2s calc(var(--i)*.075s) ease-out both}.justUnlocked{animation:monas-unlock .75s ease-out both;box-shadow:0 0 0 2px #eab1cc,0 8px 22px #ad5f8d25}.unlockMark{color:#be8534}.meter span{transition:width .7s cubic-bezier(.2,.75,.25,1)}.headerAccount{border:0;background:none;padding:0;border-radius:50%;display:grid;place-items:center}.profilePanel{padding:22px}.profileIdentity{min-width:0;overflow-wrap:anywhere}.profileIdentity h3{margin:4px 0;font-size:20px}.profileStats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:20px 0}.profileStat{background:#fff4f8;border:1px solid #f2e0e9;border-radius:13px;padding:12px 7px;text-align:center}.profileStat .bigStat{font-size:24px}.profileStat .tiny{font-size:11px}.profileDetails{border-top:1px solid #f3e4eb}.infoRow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f3e4eb;font-size:13px;color:#927887}.infoRow strong{color:#473240;text-align:right;max-width:58%;overflow-wrap:anywhere}.profileActions{display:grid;gap:9px;margin-top:18px}.request-approved{background:#eaf8f0;color:#286947}.request-pending{background:#fff1de;color:#896321}.request-rejected{background:#ffe9e9;color:#982d46}.nav{position:sticky;bottom:12px;gap:5px}.nav button{flex:1;min-width:0;padding:10px 8px}.nav button.active .navIcon{animation:monas-pop .25s ease}
+@keyframes monas-pop{from{opacity:.4;transform:scale(.92)}to{opacity:1;transform:scale(1)}}@keyframes monas-bounce{0%,100%{transform:translateY(0) rotate(0)}45%{transform:translateY(-9px) rotate(-10deg)}}@keyframes monas-sparkle{0%{opacity:0;transform:translateY(8px) scale(.3)}35%{opacity:1}100%{opacity:0;transform:translateY(-35px) rotate(35deg) scale(.7)}}@keyframes monas-unlock{0%{transform:scale(.97);filter:brightness(.95)}60%{transform:scale(1.025);filter:brightness(1.08)}100%{transform:scale(1);filter:none}}
+@media(max-width:520px){.profilePanel{padding:16px}.profileStats{gap:6px}.profileStat .bigStat{font-size:22px}.profileStat .tiny{font-size:10px}.profileIdentity h3{font-size:17px}.nav button{font-size:12px}.top .toolbar{gap:5px}.top .chip{font-size:10px}.pointsBurst{padding:10px}}
+@media(prefers-reduced-motion:reduce){.pointsRibbon,.pointsBurst,.sparkles i,.justUnlocked,.nav button.active .navIcon{animation:none!important}.meter span{transition:none!important}.sparkles{display:none}}
+
+/* Mascota original aprobada: vestido amarillo y uñas rojas. */
+.hero{position:relative;overflow:hidden;gap:16px}.hero>div:first-child{min-width:0;flex:1}.mascotHero{position:relative;flex:0 0 112px;align-self:center;display:grid;place-items:center;min-height:165px}.mascotImage{width:99px;height:170px;object-fit:contain;filter:drop-shadow(0 5px 5px #34203255);transform-origin:50% 88%;animation:mascot-enter .7s cubic-bezier(.2,.8,.3,1.1) both}.mascotStar{position:absolute;color:#ffe6a5;font-size:22px;pointer-events:none;animation:mascot-twinkle 1s ease-out 2 both}.mascotStarOne{top:11px;right:0}.mascotStarTwo{bottom:29px;left:0;animation-delay:.28s}.pointsBurst.mascotBurst{display:flex;gap:12px;align-items:center;min-height:86px;overflow:hidden}.mascotCelebrate{height:80px;width:auto;flex:0 0 auto;object-fit:contain;transform-origin:50% 90%;animation:mascot-party .8s ease-in-out 3 both;z-index:1}.mascotMessage{display:grid;gap:4px;min-width:0;z-index:1}.mascotMessage strong{font-size:15px}
+@keyframes mascot-enter{0%{opacity:0;transform:translateY(15px) scale(.93)}70%{opacity:1;transform:translateY(-3px) scale(1.03)}100%{opacity:1;transform:translateY(0) scale(1)}}@keyframes mascot-party{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-9px) rotate(-6deg)}70%{transform:translateY(-3px) rotate(5deg)}}@keyframes mascot-twinkle{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1.25)}}
+@media(max-width:520px){.hero{gap:8px;padding:23px 17px}.mascotHero{flex-basis:78px;min-height:130px}.mascotImage{width:76px;height:130px}.mascotStar{font-size:16px}.hero h1{font-size:25px}.hero p{font-size:12px}.mascotCelebrate{height:72px}}
+@media(prefers-reduced-motion:reduce){.mascotImage,.mascotStar,.mascotCelebrate{animation:none!important}}
+
+/* Metas con brillo continuo y progreso real. */
+.pointsCard{background:linear-gradient(145deg,#fff 55%,#fff6ec);border-color:#efd9cb}.pointsRow{align-items:center}.monasCoin{display:inline-grid;place-items:center;flex-shrink:0;border-radius:50%;background:radial-gradient(circle at 30% 22%,#fff6b7 0%,#f4cb61 33%,#dc9e30 78%,#c18424 100%);border:2px solid #e6b94f;box-shadow:inset 0 0 0 2px #fff0a7,0 3px 7px #c18d2940;color:#925b1b;font-family:Georgia,serif;font-weight:bold;text-shadow:0 1px #fff6c4}.coinBalance{width:48px;height:48px;font-size:25px;transform:rotate(-8deg);animation:coin-breathe 3.4s ease-in-out infinite}.goalHeader{display:flex;align-items:center;gap:12px;margin:21px 0 12px}.goalThumb{width:56px;height:56px;border-radius:13px;overflow:hidden;border:1px solid #edd2c4;flex:0 0 56px}.goalThumb img{width:100%;height:100%;object-fit:cover}.goalCopy{flex:1;min-width:0;display:grid;gap:3px}.goalCopy .eyebrow{font-size:10px;color:#a87a38;letter-spacing:.1em}.goalCopy strong{font-size:16px;color:#593a4d;line-height:1.2}.goalCopy span{font-size:12px;color:#a0808c}.goalPercent{font-size:25px;font-weight:850;letter-spacing:-.05em;color:#ad7532;flex-shrink:0}.goalMeter{position:relative;padding:5px 0 14px}.goalTrack{position:relative;height:21px;border-radius:99px;background:#f5e5df;box-shadow:inset 0 2px 4px #8f553219,0 0 11px #e6b45839;overflow:hidden;border:1px solid #ecd5bd;animation:goal-glow 2.8s ease-in-out infinite}.goalTrack:after{content:'';position:absolute;inset:0;pointer-events:none;border-radius:99px;background:linear-gradient(105deg,transparent 35%,#ffffff65 50%,transparent 65%);background-size:250% 100%;animation:goal-track-sheen 3.8s linear infinite}.goalFill{position:relative;height:100%;border-radius:99px;background:linear-gradient(100deg,#c98a36 0%,#f3bf58 40%,#ffe9a2 75%,#e8ad41 100%);box-shadow:inset 0 2px 3px #fff4b7,0 0 12px #eab1438c;transition:width .16s linear;overflow:hidden}.goalSheen{position:absolute;inset:0;background:linear-gradient(110deg,transparent 26%,#fffbe2 47%,#ffffffa0 51%,transparent 72%);width:70%;transform:translateX(-130%);animation:goal-shimmer 1.9s ease-in-out infinite}.goalTip{position:absolute;right:3px;top:3px;bottom:3px;width:6px;border-radius:50%;background:#fff5ce;box-shadow:0 0 9px #fff}.goalTicks{position:relative;margin:0 3px;height:12px;font-size:15px;color:#d4a761}.goalTicks span{position:absolute;top:0;transform:translateX(-50%);line-height:1}.goalTicks span:last-child{font-size:12px;color:#c58e36;transform:translateX(-100%)}.goalFooter{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:2px}.goalFooter strong{font-size:13px;color:#ab7130}.goalLink{border:none;background:transparent;padding:6px 0;font-size:12px;font-weight:750;color:#a54374;text-align:right}.goalNear .goalTrack{box-shadow:inset 0 1px 4px #975a2520,0 0 14px #e6b45870}.goalComplete .goalTrack{background:#f8e8a4}.goalComplete .goalPercent{color:#a2722b}.goalAll{margin-top:10px}.rewardGoal{margin:0 0 12px;display:grid;gap:5px}.miniMeter{height:5px;border-radius:20px;background:#f2e4e4;overflow:hidden}.miniMeter span{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,#d29b4d,#f7d67d);transition:width .6s ease}.rewardGoalText{font-size:11px;color:#a37a45;font-weight:650}.reward:not(.locked) .rewardGoalText{color:#987035}.coinRain{position:absolute;inset:0;overflow:hidden;pointer-events:none}.flyingCoin{position:absolute;left:calc(7% + var(--i)*13%);top:74%;width:22px;height:22px;font-size:11px;animation:coin-flight 1.15s calc(var(--i)*.09s) cubic-bezier(.15,.65,.28,1) both}.pointsCelebrating .coinBalance{animation:coin-celebrate .65s ease-in-out 3}.mascotCelebrate{animation:mascot-dance .78s ease-in-out 4 both}.mascotStar{animation:mascot-twinkle 2.6s ease-in-out infinite}
+@keyframes goal-glow{0%,100%{box-shadow:inset 0 2px 4px #8f553219,0 0 6px #e6b45839}50%{box-shadow:inset 0 2px 4px #8f553219,0 0 16px #e6b45880}}@keyframes goal-shimmer{0%{transform:translateX(-130%)}100%{transform:translateX(170%)}}@keyframes goal-track-sheen{from{background-position:100% 0}to{background-position:-150% 0}}@keyframes coin-breathe{0%,100%{transform:rotate(-8deg) translateY(0)}50%{transform:rotate(8deg) translateY(-3px)}}@keyframes coin-celebrate{0%,100%{transform:scale(1) rotate(-8deg)}50%{transform:scale(1.17) rotate(16deg)}}@keyframes coin-flight{0%{opacity:0;transform:translateY(8px) scale(.35) rotate(-40deg)}22%{opacity:1}70%{opacity:1}100%{opacity:0;transform:translate(calc((var(--i) - 3)*7px),-82px) rotate(210deg) scale(.85)}}@keyframes mascot-dance{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-9px) rotate(-8deg)}55%{transform:translateY(0) rotate(5deg)}75%{transform:translateY(-6px) rotate(8deg)}}
+@media(max-width:520px){.pointsCard{padding:18px}.goalHeader{gap:9px}.goalThumb{width:48px;height:48px;flex-basis:48px}.goalCopy strong{font-size:14px}.goalPercent{font-size:22px}.goalFooter strong{font-size:12px}.coinBalance{width:43px;height:43px}.goalLink{font-size:11px}.goalTrack{height:20px}.rewardGoalText{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.goalTrack,.goalTrack:after,.goalSheen,.coinBalance,.pointsCelebrating .coinBalance,.mascotCelebrate,.mascotStar,.flyingCoin{animation:none!important}.goalFill,.miniMeter span{transition:none!important}.coinRain{display:none}}
+
+/* Arranque ligero: mascota embebida, sin depender de fuentes ni imágenes remotas. */
+.clubBoot{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 40%,#fff7ec,#fce8f0 65%,#fff7fb);color:#57364a;transition:opacity .32s ease;isolation:isolate}.clubBoot.bootGone{opacity:0;pointer-events:none}.bootCard{text-align:center;width:min(310px,100%)}.bootHalo{position:relative;width:136px;height:195px;display:grid;place-items:center;margin:0 auto 7px}.bootMascot{width:99px;height:170px;object-fit:contain;filter:drop-shadow(0 5px 8px #a3695435);animation:boot-float 2s ease-in-out infinite}.bootSpark{position:absolute;color:#c99840;font-size:25px;animation:mascot-twinkle 1.8s ease-in-out infinite}.bootSpark1{right:0;top:23px}.bootSpark2{left:3px;bottom:26px;animation-delay:.5s}.bootBrand{letter-spacing:.2em;font-size:11px;font-weight:800;color:#a65c82}.bootCard h1{font-family:Georgia,serif;font-size:25px;line-height:1.25;margin:12px 0 8px}.bootCard p{font-size:13px;color:#957184;min-height:36px;line-height:1.5;margin:0 0 16px}.bootMeter{height:8px;border-radius:99px;background:#efdde4;overflow:hidden}.bootMeter span{display:block;height:100%;width:37%;border-radius:99px;background:linear-gradient(90deg,#d99d44,#ffe6a1,#e6b350);animation:boot-slide 1.5s ease-in-out infinite}.bootRetry{margin-top:18px}.bootRetry[hidden]{display:none}
+@keyframes boot-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}@keyframes boot-slide{0%{transform:translateX(-100%)}100%{transform:translateX(370%)}}
+/* La imagen nunca aparece de golpe: placeholder del mismo tamaño hasta que termina de cargar. */
+.photoFrame{position:relative;width:100%;height:100%;overflow:hidden;background:#f6e3ea}.photoPlaceholder{position:absolute;inset:0;display:grid;place-items:center;color:#bd8b9d;font-size:22px;background:linear-gradient(110deg,#f5e1e9 25%,#fff5f9 45%,#f5e1e9 65%);background-size:230% 100%;animation:photo-shimmer 1.8s linear infinite}.photoFrame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.025);transition:opacity .48s ease,transform .6s ease}.photo-ready .photoPlaceholder{opacity:0;animation:none}.photo-ready img{opacity:1;transform:scale(1)}.photo-error .photoPlaceholder{animation:none;opacity:.4}.photoFallback{position:absolute;inset:0;display:grid;place-items:center;font-size:24px}.goalThumb .photoPlaceholder{font-size:14px}.goalThumb .photoFallback{font-size:18px}.rewardArt .photoFrame{position:absolute;inset:0}
+@keyframes photo-shimmer{from{background-position:100% 0}to{background-position:-130% 0}}
+/* Entrada de textos escalonada, solo al cambiar de pantalla. */
+.hero small,.hero h1,.hero p,.login h1,.login p,.tabEntrance>.sectionTitle,.tabEntrance>.pointsCard,.tabEntrance>.panel,.tabEntrance>.grid,.tabEntrance>.rewardPhotoNote{animation:club-enter .48s cubic-bezier(.2,.7,.3,1) both}.hero h1,.login h1{animation-delay:.07s}.hero p,.login p{animation-delay:.14s}.tabEntrance>.pointsCard,.tabEntrance>.panel{animation-delay:.08s}.tabEntrance>.grid{animation-delay:.16s}.tabEntrance>.grid .reward{animation:club-enter .46s ease both}.tabEntrance>.grid .reward:nth-child(2){animation-delay:.08s}.tabEntrance>.grid .reward:nth-child(3){animation-delay:.16s}.tabEntrance>.grid .reward:nth-child(4){animation-delay:.24s}.tabEntrance>.grid .reward.justUnlocked{animation:monas-unlock .75s ease-out both}
+@keyframes club-enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+/* Navegación accesible siempre a mano; destellos al seleccionar el regalito. */
+.nav{position:fixed;z-index:20;bottom:max(12px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:calc(100% - 28px);max-width:570px;margin:0;overflow:visible}.shell{padding-bottom:calc(120px + env(safe-area-inset-bottom))}.nav button{overflow:visible;min-height:54px}.giftNavIcon{position:relative;display:block}.giftEmoji{display:inline-block;transform-origin:50% 75%}.giftNav.active .giftEmoji{animation:gift-hop .68s cubic-bezier(.2,.8,.25,1.05) both}.giftNav.active .navIcon{animation:none}.giftSparkBurst{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none}.giftSparkBurst i{position:absolute;left:0;top:0;font-style:normal;font-size:15px;color:#c38a2e;text-shadow:0 0 5px #ffe5a3;opacity:0;animation:gift-spark .78s calc(var(--n)*.035s) ease-out both;--angle:calc(var(--n)*60deg);transform-origin:0 0}.giftNav.active{box-shadow:inset 0 0 0 1px #eac1d5}.giftNav.active .giftNavIcon{filter:drop-shadow(0 1px 3px #e5b85c75)}
+@keyframes gift-hop{0%,100%{transform:translateY(0) rotate(0) scale(1)}35%{transform:translateY(-8px) rotate(-13deg) scale(1.15)}65%{transform:translateY(-2px) rotate(9deg) scale(1.04)}}@keyframes gift-spark{0%{opacity:0;transform:rotate(var(--angle)) translateX(2px) scale(.3)}25%{opacity:1}100%{opacity:0;transform:rotate(var(--angle)) translateX(32px) scale(.65)}}
+@media(max-width:520px){.nav{bottom:max(8px,env(safe-area-inset-bottom));width:calc(100% - 20px);padding:6px}.nav button{min-height:52px}.shell{padding-bottom:calc(108px + env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce){.clubBoot,.photoFrame img{transition:none!important}.bootMascot,.bootSpark,.bootMeter span,.photoPlaceholder,.hero small,.hero h1,.hero p,.login h1,.login p,.tabEntrance>*,.tabEntrance>.grid .reward,.giftNav.active .giftEmoji,.giftSparkBurst i{animation:none!important}.giftSparkBurst{display:none}.photo-ready img{transform:none}}
+
+/* Recompensas vivas: movimiento mínimo, solo cuando se pueden canjear. */
+.tabEntrance>.grid .reward.locked{animation:none;transform:none;background:#f5f0f3;border-color:#e9e1e6}
+.reward.locked .rewardArt{opacity:.83;filter:none}
+.reward.locked .rewardArt img{filter:saturate(.42) brightness(.74)}
+.reward.locked h3{color:#76636e}
+.reward.locked .rewardGoalText{color:#826f79}
+.reward.locked .miniMeter span{background:#bfabb5}
+.reward.locked .photoPlaceholder{animation:none;background:#e9e0e5}
+.reward.available{border-color:#e8bdcf;box-shadow:0 4px 15px #b95c8520}
+.tabEntrance>.grid .reward.available{animation:reward-float 4.6s ease-in-out infinite;animation-delay:0s}
+.tabEntrance>.grid .reward.available:nth-child(even){animation-delay:-2.3s}
+.tabEntrance>.grid .reward.available.justUnlocked{animation:reward-awake .85s cubic-bezier(.2,.7,.3,1) both,reward-float 4.6s .85s ease-in-out infinite}
+.tabEntrance>.grid .reward.available:focus-within,.tabEntrance>.grid .reward.available.confirming{animation:none;transform:none}
+.reward.available .rewardArt{transition:opacity .45s ease,filter .45s ease}
+.reward.available>.button:not(:disabled){position:relative;overflow:hidden;isolation:isolate;background:linear-gradient(110deg,#a54374,#b65d8c,#a54374);box-shadow:0 3px 9px #a5437426}
+.reward.available>.button:not(:disabled)::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 35%,#ffffff26 50%,transparent 65%);transform:translateX(-130%);animation:reward-button-shine 6s ease-in-out infinite}
+.reward.available.confirming>.button::after,.reward.available:focus-within>.button::after{animation:none;opacity:0}
+.reward.justUnlocked .rewardArt .photo-ready img{animation:reward-photo-awake .85s ease-out both}
+@keyframes reward-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes reward-awake{0%{transform:translateY(0);filter:saturate(.7)}55%{transform:translateY(-4px);filter:saturate(1.08);box-shadow:0 0 0 2px #e5b1cf,0 5px 17px #c28aaf38}100%{transform:translateY(0);filter:none}}
+@keyframes reward-photo-awake{0%{filter:saturate(.45) brightness(.78);transform:scale(1)}100%{filter:none;transform:scale(1)}}
+@keyframes reward-button-shine{0%,75%{transform:translateX(-130%)}95%,100%{transform:translateX(130%)}}
+@media(prefers-reduced-motion:reduce){.tabEntrance>.grid .reward.available,.reward.available>.button::after,.reward.justUnlocked .rewardArt img{animation:none!important;transform:none!important}.reward.available>.button::after{display:none}}
+
+/* Las monedas de cada nueva acreditación aterrizan exactamente sobre el progreso. */
+.goalMeter{isolation:isolate}.goalMeter.coinReceiving{z-index:2}.coinReceiving .goalFill{transition:width .09s linear}.coinReceiving .goalTrack{box-shadow:inset 0 1px 4px #92561c22,0 0 16px #efc66a99}
+.coinLane{position:absolute;left:0;right:0;top:5px;height:21px;pointer-events:none;z-index:4;overflow:visible}.incomingCoin{position:absolute;left:0;top:0;width:23px;height:23px;font-size:12px;opacity:0;animation:coin-deposit .56s calc(.35s + var(--i)*.1s) cubic-bezier(.25,.65,.34,1) both;transform-origin:center;will-change:transform,opacity}.coinLandingSpark{position:absolute;left:var(--land);top:0;color:#b78025;font-size:19px;line-height:20px;transform:translateX(-50%);opacity:0;animation:coin-land .36s calc(.88s + var(--i)*.1s) ease-out both;text-shadow:0 0 7px #fff2a5}
+@keyframes coin-deposit{0%{left:var(--start);transform:translate(-50%,-64px) rotate(-45deg) scale(.65);opacity:0}20%{opacity:1;transform:translate(-50%,-48px) rotate(-5deg) scale(1)}78%{opacity:1;transform:translate(-50%,-8px) rotate(150deg) scale(.9)}100%{left:var(--land);transform:translate(-50%,0) rotate(250deg) scale(.25);opacity:0}}
+@keyframes coin-land{0%{opacity:0;transform:translate(-50%,0) scale(.4)}40%{opacity:1;transform:translate(-50%,-7px) scale(1.2)}100%{opacity:0;transform:translate(-50%,-15px) scale(.6)}}
+.pointsBurst.mascotBurst{animation:monas-pop .3s ease both}.pointsBurst .mascotMessage strong{font-variant-numeric:tabular-nums}.giftNav .pointsAlert{position:absolute;right:calc(50% - 22px);top:-4px;width:11px;height:11px;background:#d6a13d;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 2px #e6bf6d40}.demoPointButton{margin:8px 0 0;width:100%;font-size:12px}
+@media(prefers-reduced-motion:reduce){.coinLane{display:none}.coinReceiving .goalFill{transition:none!important}}
+.activityMore{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:12px;padding:12px;background:#fff5f9;border:1px solid #efd7e4;border-radius:12px;color:#a54374;font-size:13px;font-weight:800;cursor:pointer}.activityMore span{font-size:16px;line-height:1}.activityMore:focus-visible{outline:2px solid #a54374;outline-offset:3px}
+
+/* Momento del logro: una vista, foco sobre la foto y partículas doradas. */
+.unlockMoment{position:fixed;width:min(390px,calc(100% - 28px));max-height:calc(100dvh - 24px);margin:auto;border:1px solid #f1d4e2;border-radius:26px;padding:26px 22px 22px;background:radial-gradient(ellipse at 50% 48%,#fff0cd 0%,#fff9ee 36%,#fff5fa 73%);box-shadow:0 22px 90px #53203b66;text-align:center;color:#563147;overflow:auto;animation:unlock-moment-in .36s cubic-bezier(.2,.75,.3,1) both}
+.unlockMoment::backdrop{background:#41283f9c;backdrop-filter:blur(4px)}.unlockClose{position:absolute;right:12px;top:12px;display:grid;place-items:center;width:33px;height:33px;border:1px solid #efd7e1;border-radius:50%;background:#fff;color:#a66a85;font-size:23px;line-height:1;cursor:pointer}.unlockKicker{font-size:10px;letter-spacing:.19em;font-weight:800;color:#b17a32;margin:6px 26px 10px}.unlockMoment h2{font-family:'Playfair Display',Georgia,serif;font-size:clamp(25px,6vw,31px);line-height:1.14;margin:0;color:#783c60}.unlockIntro{font-size:13px;color:#947082;margin:10px 0 5px}.unlockStage{position:relative;isolation:isolate;width:240px;max-width:100%;height:202px;margin:15px auto 11px;display:grid;place-items:center}.unlockHalo{position:absolute;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle,#ffe7a5aa 0%,#f6d48566 45%,transparent 72%);animation:unlock-halo 2.4s ease-in-out infinite}.unlockPrizePhoto{position:relative;width:135px;height:169px;border:3px solid #fff8e8;border-radius:19px;overflow:hidden;box-shadow:0 0 0 1px #dfb65d,0 9px 28px #a76a3845;animation:unlock-prize-in .55s .12s cubic-bezier(.2,.75,.3,1.15) both;z-index:1}.unlockSparkLayer{position:absolute;inset:0;pointer-events:none;z-index:2}.unlockSpark{position:absolute;left:50%;top:50%;color:#cb9634;font-size:var(--size);text-shadow:0 0 7px #fff4a5;opacity:0;animation:unlock-sparkle 1.45s calc(.12s + var(--d)) ease-out both;transform-origin:0 0}.unlockCheck{position:absolute;right:calc(50% - 83px);bottom:10px;z-index:3;display:grid;place-items:center;width:35px;height:35px;background:linear-gradient(145deg,#ffe9a2,#d5a139);border:2px solid #fff6d6;border-radius:50%;font-size:20px;color:#815516;font-weight:900;box-shadow:0 3px 8px #a76a3833;animation:unlock-prize-in .4s .5s both}.unlockPrizeName{font-size:21px;font-weight:800;line-height:1.2;color:#563147}.unlockPoints{font-size:14px;color:#a77a32;font-weight:800;margin:6px 0}.unlockHint{font-size:13px;line-height:1.45;color:#947082;margin:12px 0 15px}.unlockOtherPrizes{display:grid;gap:5px;background:#fff9ec;border:1px solid #f0dbad;border-radius:12px;padding:10px;margin-top:11px;font-size:12px;text-align:left;color:#8e6531}.unlockOtherPrizes strong{font-size:11px;text-transform:uppercase;letter-spacing:.06em}.unlockView{font-size:15px;padding:14px 10px;background:linear-gradient(100deg,#a54374,#b45b8b);box-shadow:0 5px 15px #a5437430}.unlockMoment button:focus-visible{outline:2px solid #8c3b68;outline-offset:3px}
+@keyframes unlock-moment-in{from{opacity:0;transform:scale(.94) translateY(12px)}to{opacity:1;transform:none}}@keyframes unlock-prize-in{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}@keyframes unlock-halo{0%,100%{transform:scale(.94);opacity:.75}50%{transform:scale(1.08);opacity:1}}@keyframes unlock-sparkle{0%{opacity:0;transform:rotate(var(--a)) translateX(25px) scale(.2)}22%{opacity:1}65%{opacity:1;transform:rotate(var(--a)) translateX(var(--r)) rotate(calc(-1 * var(--a))) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateX(calc(var(--r) + 14px)) rotate(calc(-1 * var(--a))) scale(.4)}}
+@media(max-height:620px){.unlockMoment{padding:18px}.unlockStage{height:158px;margin:8px auto}.unlockPrizePhoto{width:104px;height:130px}.unlockHalo{width:150px;height:150px}.unlockIntro{margin:5px 0}.unlockHint{margin:8px 0}.unlockMoment h2{font-size:24px}}
+@media(prefers-reduced-motion:reduce){.unlockMoment,.unlockPrizePhoto,.unlockCheck,.unlockHalo,.unlockSpark{animation:none!important;transform:none!important}.unlockSparkLayer{display:none}}
+
+.bookingSection{display:grid;gap:12px}.bookingSection .sectionTitle{margin:15px 0 0}.bookingSection textarea{width:100%;resize:vertical;border:1px solid #ebd6e1;border-radius:12px;padding:12px;font:inherit;color:#493445}.bookingFields,.bookingAgenda,.bookingDetails{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.bookingFields input{min-width:0;font-size:16px}.bookingCard{padding:18px}.bookingTop{display:flex;align-items:center;justify-content:space-between;gap:8px}.bookingTop>strong{font-size:17px}.bookingDetails{margin:14px 0}.bookingDetails>div{display:grid;gap:4px}.bookingDetails span{font-size:11px;color:#987c8b}.bookingDetails strong{font-size:13px}.bookingNotes{background:#fff4f8;border-radius:10px;padding:10px;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere}.bookingSlot{border-left:3px solid #c88aab;background:#fff2f7;border-radius:9px;padding:10px;margin:8px 0;display:grid;gap:5px}.bookingSlot strong{font-size:12px}.bookingSlot span{font-size:11px;overflow-wrap:anywhere}.bookingHistory summary{cursor:pointer;font-weight:700;color:#a54374}.bookingHistory>.bookingCard{margin-top:10px}.bookingAgenda>.panel{padding:14px}.bookingAgenda h3{font-size:14px}.bookingSection .button{min-height:40px}.nav button{padding:8px 4px;font-size:11px}
+</style>
+<link rel="preload" as="image" href="./images/monita.webp">
+</head><body>
+<div id="clubBoot" class="clubBoot" role="status" aria-live="polite">
+  <div class="bootCard">
+    <div class="bootHalo"><img class="bootMascot" src="data:image/webp;base64,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" width="99" height="170" alt=""><span class="bootSpark bootSpark1" aria-hidden="true">✦</span><span class="bootSpark bootSpark2" aria-hidden="true">✧</span></div>
+    <div class="bootBrand">MANOS MONAS</div><h1>Tu club está llegando</h1>
+    <p id="bootMessage">Preparando tus recompensas…</p>
+    <div class="bootMeter" aria-hidden="true"><span></span></div>
+    <button id="bootRetry" class="button secondary bootRetry" type="button" hidden onclick="location.reload()">Volver a intentar</button>
+  </div>
+</div>
+<div id="root"></div>
+<script>
+(function(){
+ const boot=document.getElementById('clubBoot'),message=document.getElementById('bootMessage'),retry=document.getElementById('bootRetry');
+ let slow=setTimeout(function(){if(message)message.textContent='Tu conexión parece lenta. Seguimos preparando el Club…';},7000);
+ let timeout=setTimeout(function(){if(message)message.textContent='La carga está tardando. Puedes volver a intentar.';if(retry)retry.hidden=false;},22000);
+ window.monasBootReady=function(){clearTimeout(slow);clearTimeout(timeout);if(!boot||boot.classList.contains('bootGone'))return;boot.classList.add('bootGone');boot.setAttribute('aria-hidden','true');setTimeout(function(){boot.remove();},350);};
+ window.monasBootError=function(){clearTimeout(slow);clearTimeout(timeout);if(message)message.textContent='No pudimos cargar Club Monas. Revisa tu conexión e inténtalo de nuevo.';if(retry)retry.hidden=false;};
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+
+<script>
+/* Configuración pública de Firebase Web. No colocar credenciales privadas aquí.
+   Operaciones reales protegidas mediante autenticación y reglas de Firestore. */
+window.MANOS_MONAS_FIREBASE = {
+ apiKey: "AIzaSyBFlT0Ikvn9sRioQPm5AZ3_MY-SPIatY0g",
+ authDomain: "manos-monas-puntos.firebaseapp.com",
+ projectId: "manos-monas-puntos",
+ appId: "1:287636328368:web:6df910c1cbc672a192d075",
+ messagingSenderId: "287636328368"
+};
+// El perfil y todas las operaciones del Club usan la base de datos de producción.
+window.MANOS_MONAS_ENABLE_DATA = false;
+window.MANOS_MONAS_ENABLE_WRITES = false;
+</script>
+<script>
+(function(){
+'use strict';
+if(typeof React==='undefined'||typeof ReactDOM==='undefined'){window.monasBootError?.();return;}
+const e=React.createElement,{useState,useEffect,useRef}=React;
+const REWARDS=[{id:'manicura',name:'Manicura clásica',points:200,emoji:'💅'},{id:'pedicura',name:'Pedicura clásica',points:400,emoji:'🦶'},{id:'lifting',name:'Lifting de pestañas',points:650,emoji:'👁️'},{id:'alisado',name:'Descuento en alisado',points:1000,emoji:'✨'}];
+const SERVICES=[{id:'manicura',name:'Manicura',points:30},{id:'pedicura',name:'Pedicura',points:40},{id:'pestanas',name:'Pestañas',points:50},{id:'mechas',name:'Mechas',points:90},{id:'alisado',name:'Alisado',points:110}];
+const configured=false;
+let auth=null,db=null;
+try{if(configured){firebase.initializeApp(window.MANOS_MONAS_FIREBASE);auth=firebase.auth();if(window.MANOS_MONAS_ENABLE_DATA===true)db=firebase.firestore();}}catch(ex){console.error(ex)}
+if(configured&&!new URLSearchParams(window.location.search).has('demo')&&(!auth||(window.MANOS_MONAS_ENABLE_DATA===true&&!db))){window.monasBootError?.();return;}
+const demoClient={uid:'demo',displayName:'Clienta de ejemplo',email:'demo@ejemplo.com',points:250,visits:3};
+const demoVisits=[{id:'demo1',serviceName:'Manicura',points:30,createdAt:{toDate:()=>new Date()}}];
+const errMsg=x=>x&&x.message?x.message:String(x);
+const ts=x=>x&&x.toDate?x.toDate().toLocaleDateString('es-PE'):'Hoy';
+function RewardPhoto({id,alt,kind='card',eager=false}){
+  const [state,setState]=useState('loading');
+  return e('div',{className:'photoFrame photo-'+state+' photo-'+kind},
+    e('div',{className:'photoPlaceholder','aria-hidden':true},e('span',null,'✦')),
+    state!=='error'?e('img',{src:'./images/rewards/'+id+'.webp',alt,loading:eager?'eager':'lazy',decoding:'async',width:176,height:220,onLoad:()=>setState('ready'),onError:()=>setState('error')}):e('span',{className:'photoFallback',role:'img','aria-label':alt},'🎁')
+  );
+}
+// Un solo escenario de celebración, incluso cuando se desbloquean varios premios.
+function UnlockMoment({moment,onClose,onView}){
+  const ref=useRef(null);
+  const prizes=moment.ids.map(id=>REWARDS.find(r=>r.id===id)).filter(Boolean);
+  const main=prizes[prizes.length-1];
+  useEffect(()=>{const node=ref.current;if(node&&!node.open)node.showModal();return()=>{if(node?.open)node.close()}},[]);
+  if(!main)return null;
+  return e('dialog',{ref,className:'unlockMoment','aria-labelledby':'unlockTitle',onCancel:ev=>{ev.preventDefault();onClose()}},
+    e('button',{type:'button',className:'unlockClose','aria-label':'Cerrar celebración',onClick:onClose},'×'),
+    e('div',{className:'unlockKicker'},'✦ CLUB MONAS ✦'),
+    e('h2',{id:'unlockTitle'},prizes.length===1?'¡Nueva recompensa desbloqueada!':'¡Nuevas recompensas desbloqueadas!'),
+    e('p',{className:'unlockIntro'},'¡Lo lograste! Tus visitas se convierten en premios.'),
+    e('div',{className:'unlockStage','aria-hidden':true},
+      e('div',{className:'unlockHalo'}),
+      e('div',{className:'unlockPrizePhoto'},e(RewardPhoto,{key:main.id,id:main.id,alt:'',eager:true})),
+      e('div',{className:'unlockSparkLayer'},Array.from({length:12},(_,i)=>e('span',{key:i,className:'unlockSpark',style:{'--a':(i*30)+'deg','--d':(i%3)*.07+'s','--r':(i%2?116:94)+'px','--size':(i%3===0?23:15)+'px'}},i%2?'✧':'✦'))),
+      e('span',{className:'unlockCheck'},'✓')),
+    e('div',{className:'unlockPrizeName'},main.name),
+    e('div',{className:'unlockPoints'},'✦ '+main.points.toLocaleString('es-PE')+' puntos'),
+    prizes.length>1?e('div',{className:'unlockOtherPrizes'},e('strong',null,'También desbloqueaste'),...prizes.slice(0,-1).map(r=>e('span',{key:r.id},'✓ '+r.name+' · '+r.points+' pts'))):null,
+    e('p',{className:'unlockHint'},'Tu premio ya está disponible para canjear.'),
+    e('button',{type:'button',className:'button full unlockView',onClick:()=>onView(main.id),autoFocus:true},prizes.length===1?'Ver mi recompensa':'Ver mis recompensas'));
+}
+function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
+ const staffNames={'m1':'Manicurista 1','m2':'Manicurista 2'};
+ const services=['Manicura clásica','Soft Gel','Pedicura','Pestañas','Mechas','Alisado','Otro'];
+ const today=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ const minutes=t=>Number(t.split(':')[0])*60+Number(t.split(':')[1]);
+ const clock=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
+ const dateText=d=>d.split('-').reverse().join('/');
+ const [rows,setRows]=useState([]),[ready,setReady]=useState(demo),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
+ const [date,setDate]=useState(today()),[time,setTime]=useState('15:00'),[duration,setDuration]=useState('60'),[staff,setStaff]=useState('m1'),[service,setService]=useState('Soft Gel'),[client,setClient]=useState(''),[notes,setNotes]=useState(''),[edit,setEdit]=useState(null),[ask,setAsk]=useState(null);
+ const bookings=demo?demoRows:rows;
+ const visible=bookings.filter(b=>admin||b.userId===(demo?'demo':uid)).sort((a,b)=>a.date.localeCompare(b.date)||a.start-b.start);
+ useEffect(()=>{
+  if(demo){setReady(true);return}
+  setRows([]);setReady(false);setError('');
+  if(!db||!uid)return;
+  const col=db.collection('reservations'),q=admin?col:col.where('userId','==',uid);
+  return q.onSnapshot(snap=>{setRows(snap.docs.map(d=>({id:d.id,...d.data()})));setReady(true)},()=>{setError('No pudimos cargar las reservas.');setReady(false)});
+ },[admin,demo,uid]);
+ function reset(){setEdit(null);setNotes('');setClient('')}
+ function editBooking(b){setEdit(b.id);setDate(b.date);setTime(clock(b.start));setDuration(String(b.end-b.start));setStaff(b.staffId);setClient(b.userId);setService(b.service);setNotes(b.notes||'');setError('');setNotice('');window.scrollTo({top:0,behavior:'smooth'})}
+ function conflict(slots,next,id){return slots.some(x=>x.id!==id&&(x.staffId===next.staffId||x.userId===next.userId)&&x.start<next.end&&next.start<x.end)}
+ async function save(ev){
+  ev.preventDefault();if(!admin||busy)return;
+  const who=clients.find(c=>c.uid===(client||clients[0]?.uid)),start=minutes(time),mins=Number(duration),end=start+mins;
+  if(!who||!date||date<today()||!Number.isInteger(start)||start<0||!Number.isInteger(mins)||mins<15||mins>720||end>1440){setError('Revisa la fecha, hora y duración. La cita debe terminar el mismo día y durar entre 15 y 720 minutos.');return}
+  const next={userId:who.uid,clientName:who.displayName||'Clienta',staffId:staff,service,date,start,end,notes:notes.trim(),status:'confirmed',rescheduleRequested:false};
+  setBusy(true);setError('');setNotice('');
+  try{
+   if(demo){
+    const id=edit||'demo-res-'+Date.now();
+    if(conflict(bookings.filter(x=>x.status==='confirmed'&&x.date===date),next,id))throw Error('Este horario se cruza con otra cita de la especialista o de la clienta.');
+    setDemoRows(old=>[...old.filter(x=>x.id!==id),{id,...next}]);
+   }else{
+    const ref=edit?db.collection('reservations').doc(edit):db.collection('reservations').doc();
+    await db.runTransaction(async tx=>{
+     const previous=edit?await tx.get(ref):null;
+     if(edit&&(!previous.exists||previous.data().status!=='confirmed'))throw Error('La reserva ya no está activa.');
+     const dayRef=db.collection('reservationDays').doc(date),day=await tx.get(dayRef);
+     const oldDate=previous?.data()?.date,oldRef=oldDate&&oldDate!==date?db.collection('reservationDays').doc(oldDate):null,oldDay=oldRef?await tx.get(oldRef):null;
+     const slots=(day.exists?day.data().slots:[]).filter(x=>x.id!==ref.id);
+     if(conflict(slots,next,ref.id))throw Error('Este horario se cruza con otra cita de la especialista o de la clienta.');
+     if(oldRef)tx.set(oldRef,{slots:(oldDay.exists?oldDay.data().slots:[]).filter(x=>x.id!==ref.id)});
+     tx.set(dayRef,{slots:[...slots,{id:ref.id,userId:next.userId,staffId:staff,start,end}]});
+     const stamp=firebase.firestore.FieldValue.serverTimestamp();
+     if(edit)tx.update(ref,{...next,updatedAt:stamp});else tx.set(ref,{...next,createdAt:stamp,updatedAt:stamp});
+    });
+   }
+   setNotice(edit?'Cambio confirmado.':'¡Reserva registrada! La clienta ya puede verla.');reset();
+  }catch(ex){setError(ex.message||'No se pudo guardar.')}finally{setBusy(false)}
+ }
+ async function cancel(b){
+  if(!admin||busy||!window.confirm('¿Cancelar esta cita y liberar el horario?'))return;
+  setBusy(true);setError('');setNotice('');
+  try{
+   if(demo)setDemoRows(old=>old.map(x=>x.id===b.id?{...x,status:'cancelled',rescheduleRequested:false}:x));
+   else await db.runTransaction(async tx=>{
+    const ref=db.collection('reservations').doc(b.id),snap=await tx.get(ref);
+    if(!snap.exists||snap.data().status!=='confirmed')throw Error('La reserva ya no está activa.');
+    const dayRef=db.collection('reservationDays').doc(snap.data().date),day=await tx.get(dayRef);
+    tx.set(dayRef,{slots:(day.exists?day.data().slots:[]).filter(x=>x.id!==b.id)});
+    tx.update(ref,{status:'cancelled',rescheduleRequested:false,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+   });
+   if(edit===b.id)reset();setNotice('Reserva cancelada. Horario liberado.');
+  }catch(ex){setError(ex.message)}finally{setBusy(false)}
+ }
+ async function request(b){
+  if(admin||busy||b.status!=='confirmed'||b.rescheduleRequested)return;
+  setBusy(true);setError('');setNotice('');
+  try{
+   if(demo)setDemoRows(old=>old.map(x=>x.id===b.id?{...x,rescheduleRequested:true}:x));
+   else await db.collection('reservations').doc(b.id).update({rescheduleRequested:true,requestedAt:firebase.firestore.FieldValue.serverTimestamp()});
+   setAsk(null);setNotice('Solicitud enviada. Tu cita original sigue vigente.');
+  }catch(ex){setError('No pudimos enviar la solicitud. Intenta nuevamente.')}finally{setBusy(false)}
+ }
+ const btn=(label,fn,secondary=false)=>e('button',{type:'button',className:'button'+(secondary?' secondary':''),disabled:busy,onClick:fn},label);
+ const field=(label,input)=>e('label',null,label,input);
+ const select=(value,set,opts)=>e('select',{value,onChange:ev=>set(ev.target.value),required:true},opts.map(([id,name])=>e('option',{key:id,value:id},name)));
+ const input=(value,set,props={})=>e('input',{value,onChange:ev=>set(ev.target.value),required:true,...props});
+ const section=(title,sub)=>e('div',{className:'sectionTitle'},e('div',null,e('h2',null,title),sub?e('p',null,sub):null));
+ function card(b){
+  const cancelled=b.status==='cancelled';
+  return e('article',{key:b.id,className:'panel bookingCard'},
+   e('div',{className:'bookingTop'},e('strong',null,b.service),e('span',{className:'pill '+(cancelled?'request-rejected':b.rescheduleRequested?'request-pending':'request-approved')},cancelled?'Cancelada':b.rescheduleRequested?'Cambio solicitado':'Confirmada')),
+   admin?e('p',{className:'tiny'},b.clientName):null,
+   e('div',{className:'bookingDetails'},[['Fecha',dateText(b.date)],['Hora',clock(b.start)+' – '+clock(b.end)],['Especialista',staffNames[b.staffId]],['Duración estimada',(b.end-b.start)+' min']].map(([k,v])=>e('div',{key:k},e('span',null,k),e('strong',null,v)))),
+   b.notes?e('p',{className:'bookingNotes'},b.notes):null,
+   !cancelled&&admin?e('div',{className:'toolbar'},btn(b.rescheduleRequested?'Reagendar':'Editar',()=>editBooking(b)),btn('Cancelar cita',()=>cancel(b),true)):null,
+   !cancelled&&!admin?b.rescheduleRequested?e('p',{className:'tiny'},'La jefa revisará tu solicitud. Tu horario sigue vigente.'):ask===b.id?e('div',{className:'notice'},'¿Solicitar otro horario? Tu cita original se mantiene.',e('div',{className:'toolbar',style:{marginTop:8}},btn('Enviar solicitud',()=>request(b)),btn('Volver',()=>setAsk(null),true))):btn('Solicitar reagendar',()=>setAsk(b.id),true):null);
+ }
+ const upcoming=visible.filter(b=>b.status==='confirmed'&&b.date>=today()),past=visible.filter(b=>b.status==='cancelled'||b.date<today()).reverse();
+ const dayRows=upcoming.filter(b=>b.date===date);
+ return e('section',{className:'bookingSection'},
+  section(admin?'Agenda de reservas':'Mis reservas',admin?'Acuerda por WhatsApp y registra la cita aquí.':'Tus citas confirmadas por el salón.'),
+  error?e('div',{className:'notice error',role:'alert'},error):null,notice?e('div',{className:'notice ok',role:'status'},notice):null,
+  !ready?e('div',{className:'panel'},error?'Reservas no disponibles.':'Cargando reservas…'):e(React.Fragment,null,
+   admin?e(React.Fragment,null,
+    e('form',{className:'panel form',onSubmit:save},
+     e('h3',null,edit?'Editar reserva':'Nueva reserva'),
+     field('Clienta',select(client||clients[0]?.uid||'',setClient,clients.length?clients.map(c=>[c.uid,c.displayName+' · '+c.email]):[['','No hay clientas registradas']])),
+     field('Especialista',select(staff,setStaff,Object.entries(staffNames))),
+     field('Servicio',select(service,setService,services.map(x=>[x,x]))),
+     e('div',{className:'bookingFields'},field('Fecha',input(date,setDate,{type:'date',min:today()})),field('Hora',input(time,setTime,{type:'time'}))),
+     field('Duración estimada (minutos)',input(duration,setDuration,{type:'number',min:15,max:720,inputMode:'numeric'})),
+     field('Diseño y detalles (opcional)',e('textarea',{value:notes,maxLength:500,rows:3,placeholder:'Ej.: Soft Gel almendra, ojo de gato vino',onChange:ev=>setNotes(ev.target.value)})),
+     e('button',{type:'submit',className:'button full',disabled:busy||!clients.length},busy?'Guardando…':edit?'Confirmar cambio':'Registrar reserva'),edit?btn('Cancelar edición',reset,true):null),
+    section('Agenda del día',dateText(date)),
+    e('div',{className:'bookingAgenda'},Object.entries(staffNames).map(([id,name])=>e('div',{className:'panel',key:id},e('h3',null,name),dayRows.filter(b=>b.staffId===id).length?dayRows.filter(b=>b.staffId===id).map(b=>e('div',{className:'bookingSlot',key:b.id},e('strong',null,clock(b.start)+' – '+clock(b.end)),e('span',null,b.clientName+' · '+b.service),btn('Editar',()=>editBooking(b),true))):e('p',{className:'tiny'},'Sin citas registradas.')))),
+    section('Próximas reservas')):null,
+   upcoming.length?upcoming.map(card):e('div',{className:'panel empty'},admin?'Aún no hay reservas próximas.':'Todavía no tienes una próxima cita. Acuerda tu atención por WhatsApp.'),
+   past.length?e('details',{className:'panel bookingHistory'},e('summary',null,'Historial de reservas'),past.map(card)):null));
+}
+function App(){
+const [demoEntered,setDemoEntered]=useState(true),[demoProvider,setDemoProvider]=useState('Google');
+const [demoClientState,setDemoClientState]=useState(demoClient),[demoVisitsState,setDemoVisitsState]=useState(demoVisits),[demoRequestsState,setDemoRequestsState]=useState([]);
+const [user,setUser]=useState(null),[profile,setProfile]=useState(null),[admin,setAdmin]=useState(false),[tab,setTab]=useState('reservas'),[clients,setClients]=useState([]),[visits,setVisits]=useState([]),[clientRequests,setClientRequests]=useState([]),[adminRequests,setAdminRequests]=useState([]),[loading,setLoading]=useState(configured),[busy,setBusy]=useState(false),[notice,setNotice]=useState(''),[error,setError]=useState(''),[demoRole,setDemoRole]=useState('jefa');
+const [chosenClient,setChosenClient]=useState(''),[service,setService]=useState('manicura');
+const [adminStatus,setAdminStatus]=useState('comprobando');
+const [demoVoids,setDemoVoids]=useState([]),[clientVoids,setClientVoids]=useState([]),[adminVisits,setAdminVisits]=useState([]),[adminVoids,setAdminVoids]=useState([]);
+const [voidTarget,setVoidTarget]=useState(null),[voidReason,setVoidReason]=useState('');
+const [rewardToConfirm,setRewardToConfirm]=useState(null);
+const [profileStatus,setProfileStatus]=useState('sin sesión');
+const [giftTap,setGiftTap]=useState(0);
+const [activityExpanded,setActivityExpanded]=useState(false);
+const [demoReservations,setDemoReservations]=useState([]);
+useEffect(()=>{setActivityExpanded(false)},[user?.uid,demoEntered,tab]);
+
+const [animatedPoints,setAnimatedPoints]=useState(null),[celebration,setCelebration]=useState(null);
+const [unlockMoment,setUnlockMoment]=useState(null);
+
+const liveWrites=window.MANOS_MONAS_ENABLE_WRITES===true;
+const isDemo=true;
+const canVoid=isDemo||liveWrites;
+const current=isDemo?demoClientState:(user?(profile?.uid===user.uid?profile:{uid:user.uid,displayName:user.displayName||'Clienta',email:user.email||'',photoURL:user.photoURL||'',points:null,visits:null}):null);
+const visibleVisits=isDemo?demoVisitsState:visits;
+const visibleClientVoids=isDemo?demoVoids:clientVoids;
+const visibleAdminVisits=isDemo?demoVisitsState:adminVisits;
+const visibleAdminVoids=isDemo?demoVoids:adminVoids;
+const visibleClientRequests=isDemo?demoRequestsState:clientRequests;
+const visibleAdminRequests=isDemo?demoRequestsState:adminRequests;
+const isAdmin=isDemo?demoRole==='jefa':admin;
+const clientList=isDemo?[demoClientState]:clients;
+const activeClient=clientList.find(c=>c.uid===chosenClient)||clientList[0];
+const activeReward=REWARDS.filter(r=>(current?.points||0)<r.points).sort((a,b)=>a.points-b.points)[0];
+const pointsReady=isDemo||profileStatus==='listo';
+const bootPending=loading||(!isDemo&&user&&db&&adminStatus==='comprobando');
+useEffect(()=>{if(bootPending)return;const t=window.setTimeout(()=>window.monasBootReady?.(),0);return()=>window.clearTimeout(t)},[bootPending]);
+const balanceUID=isDemo?'demo':user?.uid;
+const actualBalance=pointsReady&&current&&Number.isFinite(current.points)?current.points:null;
+const ownRequests=visibleClientRequests.filter(x=>x.userId===(user?.uid||'demo'));
+const approvedCount=ownRequests.filter(x=>x.status==='approved').length;
+const unlockedCount=pointsReady?REWARDS.filter(r=>(current?.points||0)>=r.points).length:null;
+// El saldo visto se conserva por cuenta y navegador, solo después de mostrar la celebración.
+const [seenBalance,setSeenBalance]=useState(null),[profileFresh,setProfileFresh]=useState(false);
+const [pageVisible,setPageVisible]=useState(document.visibilityState!=='hidden');
+const seenRef=useRef(null);
+useEffect(()=>{const change=()=>setPageVisible(document.visibilityState!=='hidden');document.addEventListener('visibilitychange',change);return()=>document.removeEventListener('visibilitychange',change)},[]);
+const rewardsVisible=tab==='recompensas'&&pageVisible&&!bootPending&&!rewardToConfirm&&(isDemo?demoEntered:!!user);
+useEffect(()=>{
+  if(!balanceUID||actualBalance===null||!(isDemo||profileFresh)){return}
+  const key='monas-seen-points-v1-'+balanceUID;
+  let seen=seenRef.current;
+  if(!seen||seen.uid!==balanceUID){
+    let stored=null;
+    if(!isDemo){try{const raw=localStorage.getItem(key);if(raw!==null&&/^\d+$/.test(raw))stored=Number(raw)}catch(_){}}
+    const first=stored===null&&!isDemo;
+    seen={uid:balanceUID,points:stored??(isDemo?actualBalance:0),first};
+    seenRef.current=seen;setSeenBalance({...seen});
+  }
+  function remember(points){
+    seen={uid:balanceUID,points,first:false};seenRef.current=seen;setSeenBalance({...seen});
+    if(!isDemo){try{localStorage.setItem(key,String(points))}catch(_){}}
+  }
+  const before=seen.points;
+  if(actualBalance<=before){
+    if(actualBalance<before||seen.first)remember(actualBalance);
+    setAnimatedPoints(actualBalance);setCelebration(null);return;
+  }
+  if(!rewardsVisible){setAnimatedPoints(actualBalance);setCelebration(null);return}
+  const gain=actualBalance-before;
+  const crossed=REWARDS.filter(r=>before<r.points&&actualBalance>=r.points);
+  const goal=crossed[crossed.length-1]||REWARDS.find(r=>actualBalance<r.points)||REWARDS[REWARDS.length-1];
+  const count=9;
+  setAnimatedPoints(before);
+  setCelebration({gain,from:before,to:actualBalance,first:seen.first,unlocked:crossed.map(r=>r.id),name:crossed[crossed.length-1]?.name||null,goalId:goal.id,complete:false,count});
+  let frame=0,hide=0,started=null;
+  const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const card=document.querySelector('.pointsCard');
+  if(card){const rect=card.getBoundingClientRect();if(rect.top<0||rect.top+Math.min(rect.height,300)>window.innerHeight)card.scrollIntoView({behavior:reduced?'auto':'smooth',block:'center'});}
+  function complete(){
+    setAnimatedPoints(actualBalance);remember(actualBalance);
+    setCelebration(c=>c?{...c,complete:true}:null);
+    if(crossed.length)setUnlockMoment(old=>({uid:balanceUID,ids:[...new Set([...(old?.uid===balanceUID?old.ids:[]),...crossed.map(r=>r.id)])]}));
+    hide=window.setTimeout(()=>setCelebration(null),crossed.length?2600:1600);
+  }
+  if(reduced||!window.requestAnimationFrame){complete()}
+  else {
+    // Las monedas llegan una por una (560 ms de vuelo, 100 ms entre ellas).
+    // El contador y la barra se actualizan a medida que van aterrizando.
+    const tick=now=>{
+      if(started===null)started=now;
+      const elapsed=now-started;
+      const landed=Math.max(0,Math.min(count,(elapsed-910)/100+1));
+      const value=Math.round(before+gain*landed/count);
+      setAnimatedPoints(value);
+      if(elapsed<1710)frame=window.requestAnimationFrame(tick);else complete();
+    };
+    frame=window.requestAnimationFrame(tick);
+  }
+  return()=>{if(frame)window.cancelAnimationFrame(frame);if(hide)window.clearTimeout(hide)};
+},[balanceUID,actualBalance,profileFresh,isDemo,rewardsVisible]);
+const pendingPoints=!!(seenBalance?.uid===balanceUID&&actualBalance!==null&&actualBalance>seenBalance.points);
+const visibleUnlock=unlockMoment?.uid===balanceUID&&rewardsVisible?unlockMoment:null;
+function viewUnlocked(id){setUnlockMoment(null);setTab('recompensas');window.requestAnimationFrame(()=>document.getElementById('reward-'+id)?.scrollIntoView({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'}))}
+const showError=x=>{setError(errMsg(x));setNotice('')};const showNotice=x=>{setNotice(x);setError('')};
+useEffect(()=>{if(!auth||isDemo){setLoading(false);return}const unsub=auth.onAuthStateChanged(u=>{setUser(u);setUnlockMoment(null);setProfileFresh(false);setTab('recompensas');setProfile(null);setProfileStatus(u?'cargando':'sin sesión');setLoading(false);setAdmin(false);setAdminStatus('comprobando');setClients([]);setVisits([]);setClientRequests([]);setAdminRequests([]);setClientVoids([]);setAdminVisits([]);setAdminVoids([]);setVoidTarget(null);setVoidReason('');setRewardToConfirm(null)});return unsub},[isDemo]);
+useEffect(()=>{if(!db||!user)return;setAdminStatus('comprobando');setProfileStatus('cargando');const ref=db.collection('users').doc(user.uid);
+// Crear un perfil nuevo dentro de una transacción evita borrar puntos acreditados simultáneamente.
+let subscribed=true,initialRoleResolved=false;
+const u1=ref.onSnapshot({includeMetadataChanges:true},s=>{if(!subscribed)return;setProfileFresh(!s.metadata?.fromCache&&!s.metadata?.hasPendingWrites);if(s.exists){setProfile({uid:s.id,...s.data()});setProfileStatus('listo')}else{setProfile(null);setProfileStatus('creando')}},x=>{if(!subscribed)return;setProfileStatus('error');showError(x)});
+db.runTransaction(async t=>{const existing=await t.get(ref);if(!existing.exists)t.set(ref,{displayName:user.displayName||'Clienta',email:user.email||'',photoURL:user.photoURL||'',points:0,visits:0,lastEventId:'',lastEventType:'none',createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()})}).catch(x=>{if(subscribed){setProfileStatus('error');showError(x)}});
+const u2=db.collection('admins').doc(user.uid).onSnapshot({includeMetadataChanges:true},s=>{if(!subscribed)return;if(s.metadata?.fromCache&&!initialRoleResolved)return;const enabled=s.exists&&s.data()?.enabled===true;setAdmin(enabled);setAdminStatus(enabled?'habilitada':s.exists?'enabled no es booleano true':'no existe admins/'+user.uid);if(!initialRoleResolved){initialRoleResolved=true;setTab(enabled?'admin':'recompensas')}else if(!enabled){setTab(t=>t==='admin'?'recompensas':t)}},x=>{if(!subscribed)return;setAdmin(false);setTab(t=>t==='admin'?'recompensas':t);setAdminStatus('error Firebase: '+errMsg(x));showError(x)});
+return()=>{subscribed=false;u1();u2()}},[user]);
+useEffect(()=>{if(!db||!user)return;const a=db.collection('visits').where('userId','==',user.uid).onSnapshot(s=>setVisits(s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0))),showError);
+const b=db.collection('redemptions').where('userId','==',user.uid).onSnapshot(s=>setClientRequests(s.docs.map(d=>({id:d.id,...d.data()}))),showError);
+return()=>{a();b()}},[user]);
+useEffect(()=>{if(!db||!user||!admin)return;const a=db.collection('users').onSnapshot(s=>setClients(s.docs.map(d=>({uid:d.id,...d.data()})).sort((x,y)=>(x.displayName||'').localeCompare(y.displayName||''))),showError);
+const b=db.collection('redemptions').where('status','==','pending').onSnapshot(s=>setAdminRequests(s.docs.map(d=>({id:d.id,...d.data()}))),showError);
+return()=>{a();b()}},[admin,user]);
+useEffect(()=>{if(!db||!user||!canVoid)return;
+  const unsub=db.collection('voids').where('userId','==',user.uid).onSnapshot(s=>setClientVoids(s.docs.map(d=>({id:d.id,...d.data()}))),showError);
+  return()=>unsub();
+},[user,canVoid]);
+useEffect(()=>{if(!db||!user||!admin||!canVoid)return;
+  const a=db.collection('visits').onSnapshot(s=>setAdminVisits(s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0))),showError);
+  const b=db.collection('voids').onSnapshot(s=>setAdminVoids(s.docs.map(d=>({id:d.id,...d.data()}))),showError);
+  return()=>{a();b()};
+},[user,admin,canVoid]);
+async function login(provider='google'){if(isDemo){setDemoProvider(provider==='facebook'?'Facebook':'Google');setDemoEntered(true);setTab('recompensas');showNotice('Vista de demostración. No se ha autenticado ninguna cuenta real.');return}setBusy(true);setError('');try{const p=provider==='facebook'?new firebase.auth.FacebookAuthProvider():new firebase.auth.GoogleAuthProvider();if(provider==='facebook')p.addScope('email');await auth.signInWithPopup(p)}catch(x){showError(x)}finally{setBusy(false)}}
+async function logout(){setBusy(true);setError('');try{if(isDemo){setDemoEntered(false);setDemoRole('clienta')}else if(auth){await auth.signOut()}setProfile(null);setAdmin(false);setTab('recompensas');setNotice('')}catch(x){showError(x)}finally{setBusy(false)}}
+async function addVisit(){
+const target=activeClient;const item=SERVICES.find(s=>s.id===service);
+if(!target||!item)return showError('Selecciona una clienta y un servicio.');
+setBusy(true);setError('');
+try{
+  if(isDemo){
+    setDemoClientState(c=>({...c,points:c.points+item.points,visits:c.visits+1}));
+    setDemoVisitsState(rows=>[{id:'demo-'+Date.now(),serviceName:item.name,points:item.points,createdAt:{toDate:()=>new Date()}},...rows]);
+    showNotice('Simulación: '+item.name+' registrado. +'+item.points+' puntos.');
+    return;
+  }
+  if(!db||!liveWrites)throw new Error('La conexión con Firebase no está disponible para acreditar puntos.');
+  if(!isAdmin)throw new Error('Solo la jefa de salón puede registrar atenciones.');
+  const profileRef=db.collection('users').doc(target.uid);
+  const visitRef=db.collection('visits').doc();
+  await db.runTransaction(async t=>{
+    const snap=await t.get(profileRef);
+    if(!snap.exists)throw new Error('La clienta aún no tiene perfil.');
+    const data=snap.data();
+    t.set(visitRef,{userId:target.uid,serviceId:item.id,serviceName:item.name,points:item.points,createdAt:firebase.firestore.FieldValue.serverTimestamp(),staffId:user.uid});
+    t.update(profileRef,{points:(data.points||0)+item.points,visits:(data.visits||0)+1,lastEventId:visitRef.id,lastEventType:'visit',updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  });
+  showNotice('Atención registrada: +'+item.points+' puntos para '+(target.displayName||'clienta')+'.');
+}catch(x){showError(x)}finally{setBusy(false)}
+}
+async function voidVisit(record){
+  if(!record||!isAdmin)return showError('Solo la jefa puede anular una atención.');
+  const reason=voidReason.trim();
+  if(reason.length<3||reason.length>200)return showError('Escribe un motivo de 3 a 200 caracteres.');
+  setBusy(true);setError('');
+  try{
+    const voidId='void-'+record.id;
+    if(isDemo){
+      if(demoVoids.some(v=>v.visitId===record.id))throw Error('La atención ya fue anulada.');
+      if((demoClientState.points||0)<record.points||demoClientState.visits<1)throw Error('No se puede anular: saldo o visitas insuficientes.');
+      setDemoVoids(rows=>[...rows,{id:voidId,visitId:record.id,userId:'demo',points:record.points,reason,staffId:'demo-jefa',createdAt:{toDate:()=>new Date()}}]);
+      setDemoClientState(c=>({...c,points:c.points-record.points,visits:c.visits-1}));
+    }else{
+      if(!db||!canVoid)throw Error('La conexión con Firebase no está disponible para anular atenciones.');
+      const visitRef=db.collection('visits').doc(record.id);
+      const voidRef=db.collection('voids').doc(voidId);
+      const userRef=db.collection('users').doc(record.userId);
+      await db.runTransaction(async t=>{
+        const original=await t.get(visitRef);
+        const previous=await t.get(voidRef);
+        const client=await t.get(userRef);
+        if(!original.exists||!client.exists)throw Error('No se encontró la atención o la clienta.');
+        if(previous.exists)throw Error('Esta atención ya fue anulada.');
+        const visit=original.data(),balance=client.data();
+        if(visit.userId!==record.userId||visit.points!==record.points)throw Error('Los datos de la atención no coinciden.');
+        if((balance.points||0)<visit.points||(balance.visits||0)<1)throw Error('La clienta ya usó esos puntos o no tiene visitas suficientes. No se puede anular automáticamente.');
+        t.set(voidRef,{visitId:record.id,userId:visit.userId,points:visit.points,reason,staffId:user.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+        t.update(userRef,{points:balance.points-visit.points,visits:balance.visits-1,lastEventId:voidId,lastEventType:'void',updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+      });
+    }
+    setVoidTarget(null);setVoidReason('');
+    showNotice('Atención anulada: -'+record.points+' puntos y -1 visita. El historial se conserva.');
+  }catch(x){showError(x)}finally{setBusy(false)}
+}
+async function requestReward(reward){
+if(!isDemo&&(!db||!user||!pointsReady))return showError('No pudimos cargar tu saldo. Vuelve a intentarlo.');
+setBusy(true);setError('');
+try{
+  if((current?.points||0)<reward.points)throw Error('Puntos insuficientes.');
+  if(visibleClientRequests.some(r=>r.rewardId===reward.id&&r.status==='pending'))throw Error('Ya solicitaste esta recompensa.');
+  if(isDemo){
+    setDemoRequestsState(rows=>[...rows,{id:'demo-'+Date.now(),userId:'demo',rewardId:reward.id,status:'pending',createdAt:{toDate:()=>new Date()}}]);
+    setRewardToConfirm(null);
+    showNotice('Solicitud de canje simulada. Cambia a vista Jefa para aprobarla.');
+    return;
+  }
+  const submitted=await db.collection('redemptions').add({userId:user.uid,rewardId:reward.id,status:'pending',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  setClientRequests(rows=>rows.some(r=>r.id===submitted.id)?rows:[...rows,{id:submitted.id,userId:user.uid,rewardId:reward.id,status:'pending'}]);
+  setRewardToConfirm(null);
+  showNotice('¡Solicitud enviada! Tu premio quedó pendiente de aprobación de la jefa. No se han descontado puntos todavía.');
+}catch(x){showError(x)}finally{setBusy(false)}
+}
+async function resolveReward(request,approve){
+setBusy(true);setError('');
+try{
+  const prize=REWARDS.find(z=>z.id===request.rewardId);
+  if(!prize)throw Error('Recompensa no encontrada.');
+  if(isDemo){
+    const existing=demoRequestsState.find(r=>r.id===request.id&&r.status==='pending');
+    if(!existing)throw Error('El canje ya fue procesado.');
+    if(approve&&demoClientState.points<prize.points)throw Error('Puntos insuficientes.');
+    if(approve)setDemoClientState(c=>({...c,points:c.points-prize.points}));
+    setDemoRequestsState(rows=>rows.map(r=>r.id===request.id?{...r,status:approve?'approved':'rejected'}:r));
+    showNotice(approve?'Canje simulado aprobado.':'Canje simulado rechazado.');
+    return;
+  }
+  if(!db||!isAdmin)throw new Error('Solo la jefa de salón puede procesar canjes.');
+  const redemptionRef=db.collection('redemptions').doc(request.id);
+  const userRef=db.collection('users').doc(request.userId);
+  await db.runTransaction(async t=>{
+    const redemption=await t.get(redemptionRef);
+    const client=await t.get(userRef);
+    if(!redemption.exists||redemption.data().status!=='pending')throw Error('Canje ya procesado.');
+    if(!client.exists)throw Error('Clienta no encontrada.');
+    const confirmed=REWARDS.find(r=>r.id===redemption.data().rewardId);
+    if(!confirmed)throw Error('Recompensa desconocida.');
+    if(approve){
+      if((client.data().points||0)<confirmed.points)throw Error('La clienta no tiene suficientes puntos.');
+      t.update(userRef,{points:client.data().points-confirmed.points,lastEventId:redemptionRef.id,lastEventType:'redemption',updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    }
+    t.update(redemptionRef,{status:approve?'approved':'rejected',processedBy:user.uid,processedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  });
+  showNotice(approve?'Canje aprobado: puntos descontados.':'Solicitud rechazada.');
+}catch(x){showError(x)}finally{setBusy(false)}
+}
+function button(label,click,variant='',disabled=false){return e('button',{className:'button '+variant,onClick:click,disabled:disabled||busy},label)}
+function rewardCard(r){
+  const actual=current?.points||0;
+  const visualPoints=celebration&&!celebration.complete?Math.min(actual,animatedPoints??actual):actual;
+  const unlocked=pointsReady&&actual>=r.points&&visualPoints>=r.points;
+  const pending=visibleClientRequests.some(x=>x.rewardId===r.id&&x.status==='pending'&&x.userId===(user?.uid||'demo'));
+  const confirming=rewardToConfirm===r.id&&!pending&&unlocked;
+  return e('article',{id:'reward-'+r.id,className:'reward'+(!unlocked?' locked':pending?' pendingReward':' available')+(confirming?' confirming':'')+(unlocked&&celebration?.unlocked.includes(r.id)?' justUnlocked':''),key:r.id},
+    e('div',{className:'rewardArt'},e(RewardPhoto,{key:r.id,id:r.id,alt:r.name+' (imagen referencial)'}),!unlocked?e('span',{className:'rewardLock','aria-hidden':true},'🔒'):celebration?.unlocked.includes(r.id)?e('span',{className:'rewardLock unlockMark','aria-hidden':true},'✨'):null),
+    e('h3',null,r.name),
+    e('div',{className:'tiny'},r.points+' puntos'),
+    pointsReady?e('div',{className:'rewardGoal'},e('div',{className:'miniMeter','aria-hidden':true},e('span',{style:{width:Math.min(100,Math.max(0,visualPoints/r.points*100))+'%'}})),e('div',{className:'rewardGoalText'},unlocked?'¡Disponible!':'Te faltan '+Math.max(0,r.points-visualPoints).toLocaleString('es-PE')+' pts')):null,
+    button(pending?'⏳ Solicitud pendiente':unlocked?'Canjear':'🔒 Bloqueado',
+      ()=>{setRewardToConfirm(r.id);setError('');setNotice('')},
+      'full',!unlocked||pending||(!isDemo&&(!db||!user||!pointsReady))),
+    pending?e('div',{className:'tiny',style:{marginTop:9}},'La jefa debe aprobar la solicitud.'):null,
+    confirming?e('div',{className:'notice',style:{marginTop:12,padding:12}},
+      e('strong',null,'¿Solicitar '+r.name+'?'),
+      e('p',{className:'tiny',style:{margin:'8px 0'}},'Al canjear este servicio se restarán '+r.points+' puntos de tu saldo.'),
+      e('div',{className:'toolbar'},
+        button('Canjear',()=>requestReward(r),'full'),
+        button('Cancelar',()=>setRewardToConfirm(null),'secondary')
+      )
+    ):null
+  );
+}
+function rewardsView(){
+  const pts=pointsReady?(current?.points||0):0;
+  const shown=pointsReady?Math.max(0,animatedPoints??pts):0;
+  const achieved=celebration?.goalId?REWARDS.find(r=>r.id===celebration.goalId):null;
+  const goal=achieved||activeReward||REWARDS[REWARDS.length-1];
+  const allUnlocked=pointsReady&&!activeReward;
+  const progress=pointsReady?Math.min(100,Math.max(0,shown/goal.points*100)):0;
+  const pct=pointsReady?Math.min(100,Math.floor(shown/goal.points*100)):0;
+  const remaining=Math.max(0,goal.points-shown);
+  const near=pointsReady&&!achieved&&!allUnlocked&&pct>=75;
+  const completed=pointsReady&&shown>=goal.points&&(!!achieved||allUnlocked);
+  const goToPrize=()=>{const el=document.getElementById('reward-'+goal.id);if(el&&typeof el.scrollIntoView==='function')el.scrollIntoView({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});};
+  return e(React.Fragment,null,
+    e('div',{className:'sectionTitle'},e('div',null,e('h2',null,'Tus puntos, tus premios'),e('p',null,'Cada visita te acerca a tu próxima recompensa.'))),
+    e('div',{className:'pointsCard'+(celebration?' pointsCelebrating':'')+(near?' goalNear':'')+(completed?' goalComplete':'')},
+      e('div',{className:'pointsRow'},e('div',null,e('div',{className:'eyebrow'},'Tu saldo disponible'),e('div',{className:'points'},pointsReady?shown.toLocaleString('es-PE'):'…',' ',e('span',null,'puntos'))),e('span',{className:'monasCoin coinBalance','aria-hidden':true},'M')),
+      celebration?e('div',{className:'pointsBurst mascotBurst',role:'status'},e('img',{src:'./images/monita.webp',className:'mascotCelebrate',alt:'',width:99,height:170}),e('div',{className:'mascotMessage'},e('strong',null,(celebration.first?'':'+' )+celebration.gain+' puntos ✨'),e('span',null,celebration.first?'¡Estos son tus puntos acumulados!':celebration.name?(celebration.complete?'¡Desbloqueaste '+celebration.name+'!':'¡Estás a punto de desbloquear '+celebration.name+'!'):'¡Has recibido nuevos puntitos!')),e('div',{className:'sparkles','aria-hidden':true},[0,1,2,3,4,5].map(i=>e('i',{key:i,style:{'--i':i}},i%2?'✦':'★')))):null,
+      e('div',{className:'goalHeader'},e('div',{className:'goalThumb'},e(RewardPhoto,{key:goal.id,id:goal.id,alt:'',kind:'thumb',eager:true})),e('div',{className:'goalCopy'},e('div',{className:'eyebrow'},completed?'¡Meta alcanzada!':near?'¡Estás muy cerca!':'Tu próxima recompensa'),e('strong',null,goal.name),e('span',null,pointsReady?(completed?'¡Ya puedes solicitar tu premio!':shown.toLocaleString('es-PE')+' / '+goal.points.toLocaleString('es-PE')+' puntos'):'Cargando tu progreso…')),e('span',{className:'goalPercent'},pointsReady?pct+'%':'…')),
+      e('div',{className:'goalMeter'+(completed?' goalMeterFull':'')+(celebration&&!celebration.complete?' coinReceiving':''),role:'progressbar','aria-label':'Progreso hacia '+goal.name,'aria-valuemin':0,'aria-valuemax':goal.points,'aria-valuenow':Math.min(goal.points,shown),'aria-valuetext':pointsReady?pct+'% completado':'Cargando'},
+        e('div',{className:'goalTrack'},e('div',{className:'goalFill',style:{width:progress+'%'}},e('div',{className:'goalSheen'}),progress>0?e('span',{className:'goalTip'}):null)),
+        e('div',{className:'goalTicks','aria-hidden':true},[0,25,50,75,100].map(n=>e('span',{key:n,style:{left:n+'%'}},n===100?'★':n===0?'':'·'))),
+        celebration?e('div',{className:'coinLane','aria-hidden':true,key:'deposit-'+celebration.from+'-'+celebration.to},Array.from({length:celebration.count},(_,i)=>{const land=Math.max(3,Math.min(97,(celebration.from+(celebration.to-celebration.from)*(i+1)/celebration.count)/goal.points*100))+'%';const style={'--i':i,'--start':(12+(i*23)%77)+'%','--land':land};return e(React.Fragment,{key:i},e('span',{className:'monasCoin incomingCoin',style},'M'),e('span',{className:'coinLandingSpark',style},'✦'))})):null
+      ),
+      e('div',{className:'goalFooter'},e('strong',null,pointsReady?(completed?'🎉 ¡Lo lograste!':'Te faltan '+remaining.toLocaleString('es-PE')+' puntos'):'Sincronizando saldo…'),pointsReady?e('button',{className:'goalLink',onClick:goToPrize},completed?'Ver mi premio →':'Ver recompensa →'):null),
+      allUnlocked&&(!celebration||celebration.complete)?e('p',{className:'tiny goalAll'},'¡Tienes puntos suficientes para todos los premios! Elige tu favorito.'):null,
+      isDemo?e(React.Fragment,null,e('button',{className:'button secondary demoPointButton',disabled:!!celebration,onClick:()=>setDemoClientState(c=>({...c,points:c.points+30}))},'Prueba: recibir +30 puntos'),activeReward?e('button',{className:'button secondary demoPointButton',disabled:!!celebration,onClick:()=>setDemoClientState(c=>({...c,points:activeReward.points}))},'Prueba: desbloquear próximo premio'):null):null
+    ),
+    e('div',{className:'sectionTitle'},e('div',null,e('h2',null,'Elige tu recompensa'),e('p',null,'Los premios se desbloquean con tus puntos.'))),
+    e('div',{className:'grid'},REWARDS.map(rewardCard)),e('p',{className:'rewardPhotoNote'},'Imágenes referenciales de los servicios.'),
+    e('div',{className:'sectionTitle'},e('h2',null,'Tu actividad')),
+    e('div',{className:'panel activityPanel'},
+      (activityExpanded?visibleVisits:visibleVisits.slice(0,2)).map(v=>{const cancelled=visibleClientVoids.find(c=>c.visitId===v.id);return e('div',{className:'listEntry',key:v.id},e('div',null,e('strong',null,v.serviceName),e('div',{className:'tiny'},ts(v.createdAt)),cancelled?e('div',{className:'tiny'},'Anulada: '+cancelled.reason):null),e('strong',{style:{color:cancelled?'#927887':'#a54475'}},cancelled?'Anulada':'+'+v.points+' pts'))}),
+      !visibleVisits.length?e('div',{className:'empty'},'Aún no registramos servicios. Después de tu primera atención aparecerán aquí.'):null,
+      visibleVisits.length>2?e('button',{type:'button',className:'activityMore','aria-expanded':activityExpanded,onClick:()=>setActivityExpanded(v=>!v)},activityExpanded?'Ver menos':'Ver más',e('span',{'aria-hidden':true},activityExpanded?'⌃':'⌄')):null)
+  );
+}
+function avatar(size=58){const p=user?.photoURL||current?.photoURL||(user?.providerData||[]).find(x=>x?.photoURL)?.photoURL;const safeUrl=typeof p==='string'&&/^https:\/\//i.test(p)?p:null;return e('span',{className:'avatar',style:{width:size,height:size,fontSize:Math.round(size*.46)},'aria-label':safeUrl?'Foto de perfil':'Avatar de perfil'},'🐒',safeUrl?e('img',{src:safeUrl,alt:'Tu foto de perfil',referrerPolicy:'no-referrer',onError:ev=>{ev.currentTarget.style.display='none'}}):null)}
+function profileView(){
+  const lastVisit=visibleVisits.find(v=>!visibleClientVoids.some(c=>c.visitId===v.id));
+  const memberDate=current?.createdAt?.toDate?current.createdAt.toDate().toLocaleDateString('es-PE',{month:'long',year:'numeric'}):null;
+  const provider=isDemo?demoProvider:(user?.providerData||[]).map(x=>x.providerId==='google.com'?'Google':x.providerId==='facebook.com'?'Facebook':null).filter(Boolean).join(' · ');
+  const stat=(label,value)=>e('div',{className:'profileStat'},e('div',{className:'bigStat'},value),e('div',{className:'tiny'},label));
+  const info=(label,value)=>e('div',{className:'infoRow'},e('span',null,label),e('strong',null,value||'—'));
+  return e(React.Fragment,null,
+    e('div',{className:'sectionTitle'},e('h2',null,'Mi perfil')),
+    e('div',{className:'panel profilePanel'},
+      e('div',{className:'profile'},avatar(72),e('div',{className:'profileIdentity'},e('div',{className:'eyebrow'},isAdmin?'Jefa de salón':'Miembro del Club Monas'),e('h3',null,current?.displayName||'Clienta'),e('div',{className:'tiny'},current?.email||'Correo no disponible'))),
+      e('div',{className:'profileStats'},stat('Puntos',pointsReady?(current?.points??0).toLocaleString('es-PE'):'…'),stat('Visitas',pointsReady?(current?.visits??0):'…'),stat('Canjes aprobados',approvedCount)),
+      !pointsReady?e('div',{className:'notice',role:'status'},profileStatus==='error'?'No se pudo leer tu saldo. Revisa tu conexión.':'Consultando tu saldo guardado…'):null,
+      e('div',{className:'profileDetails'},info('Premios disponibles',unlockedCount===null?'…':String(unlockedCount)),info('Última visita',lastVisit?ts(lastVisit.createdAt):'Sin visitas'),memberDate?info('Miembro desde',memberDate):null,provider?info('Cuenta vinculada',provider):null),
+      isAdmin?e('div',{className:'tiny',style:{marginTop:12}},'Este es tu perfil personal. Gestiona a las clientas desde el menú Jefa.'):null,
+      e('div',{className:'profileActions'},button('Ver recompensas',()=>{setTab('recompensas');setNotice('');setError('')},'full'),!isDemo?button('Cerrar sesión',logout,'secondary full'):null)
+    ),
+    e('div',{className:'sectionTitle'},e('h2',null,'Mis solicitudes')),
+    e('div',{className:'panel'},ownRequests.length?ownRequests.map(r=>e('div',{className:'listEntry',key:r.id},e('div',null,e('strong',null,REWARDS.find(z=>z.id===r.rewardId)?.name||r.rewardId),r.createdAt?e('div',{className:'tiny'},ts(r.createdAt)):null),e('span',{className:'pill request-'+r.status},r.status==='pending'?'Pendiente':r.status==='approved'?'Aprobada':'Rechazada'))):e('div',{className:'empty'},'Aún no tienes solicitudes de canje.'))
+  );
+}
+
+function adminView(){
+  const recent=visibleAdminVisits.filter(v=>!activeClient||!v.userId||v.userId===activeClient.uid).slice(0,20);
+  return e(React.Fragment,null,
+    e('div',{className:'sectionTitle'},e('div',null,e('h2',null,'Panel de la jefa'),e('p',null,'Servicios, puntos y solicitudes.'))),
+    e('div',{className:'adminGrid'},
+      e('div',{className:'panel'},e('h3',null,'Registrar atención'),
+        e('div',{className:'form'},
+          e('label',null,'Clienta',
+            e('select',{value:chosenClient||activeClient?.uid||'',onChange:x=>{setChosenClient(x.target.value);setVoidTarget(null)}},
+              clientList.length?clientList.map(c=>e('option',{key:c.uid,value:c.uid},c.displayName+' · '+c.email+' · '+(c.points||0)+' pts')):e('option',{value:''},'No hay clientas registradas'))),
+          activeClient?e('div',{className:'notice',style:{margin:'8px 0',padding:'12px 14px'}},e('strong',null,'Saldo de la clienta: '+(activeClient.points||0)+' puntos'),e('div',{className:'tiny',style:{marginTop:5}},'Visitas registradas: '+(activeClient.visits||0))):null,
+          e('label',null,'Servicio realizado',e('select',{value:service,onChange:x=>setService(x.target.value)},SERVICES.map(x=>e('option',{key:x.id,value:x.id},x.name+' · +'+x.points+' puntos')))),
+          button('✓ Acreditar puntos',addVisit,'full',!clientList.length||!liveWrites)
+        )
+      ),
+      e('div',{className:'panel'},e('h3',null,'Resumen'),
+        e('div',{className:'bigStat'},clientList.length),e('div',{className:'tiny'},'Clientas registradas'),
+        e('div',{className:'bigStat',style:{marginTop:16}},visibleAdminRequests.filter(r=>r.status==='pending').length),
+        e('div',{className:'tiny'},'Solicitudes pendientes'),
+        e('p',{className:'tiny'},'Los saldos se actualizan mediante transacciones seguras.')
+      )
+    ),
+    e('div',{className:'sectionTitle'},e('h2',null,'Canjes pendientes')),
+    e('div',{className:'panel'},visibleAdminRequests.filter(r=>r.status==='pending').length?
+      visibleAdminRequests.filter(r=>r.status==='pending').map(r=>e('div',{className:'listEntry',key:r.id},
+        e('div',null,e('strong',null,clientList.find(c=>c.uid===r.userId)?.displayName||r.userId),e('div',{className:'tiny'},REWARDS.find(z=>z.id===r.rewardId)?.name||r.rewardId)),
+        e('div',{className:'toolbar'},button('Aprobar',()=>resolveReward(r,true)),button('Rechazar',()=>resolveReward(r,false),'secondary')))):e('div',{className:'empty'},'No hay solicitudes pendientes.')),
+    canVoid?e('div',{className:'sectionTitle'},e('div',null,e('h2',null,'Historial de atenciones'),e('p',null,'Selecciona una clienta para ver sus últimas atenciones.'))):null,
+    canVoid?e('div',{className:'panel'},
+      recent.length?recent.map(v=>{
+        const cancelled=visibleAdminVoids.find(c=>c.visitId===v.id);
+        return e('div',{className:'listEntry',key:v.id},
+          e('div',null,e('strong',null,v.serviceName||v.serviceId),
+            e('div',{className:'tiny'},ts(v.createdAt)+' · '+(clientList.find(c=>c.uid===v.userId)?.displayName||activeClient?.displayName||'Clienta')),
+            cancelled?e('div',{className:'tiny'},'Anulada: '+cancelled.reason):null),
+          e('div',{className:'toolbar'},e('strong',null,cancelled?'Anulada':'+'+v.points+' pts'),
+            !cancelled?button('Anular',()=>{setVoidTarget(v);setVoidReason('')},'secondary'):null)
+        )
+      }):e('div',{className:'empty'},'Aún no hay atenciones para esta clienta.')
+    ):null,
+    canVoid&&voidTarget?e('div',{className:'panel',style:{marginTop:16}},
+      e('h3',null,'Confirmar anulación'),
+      e('p',{className:'muted'},'Se descontarán '+voidTarget.points+' puntos y una visita. Esta operación no borra el historial.'),
+      e('label',null,'Motivo de la anulación',e('input',{value:voidReason,maxLength:200,placeholder:'Ej.: Atención asignada por error',onChange:x=>setVoidReason(x.target.value)})),
+      e('div',{className:'toolbar',style:{marginTop:14}},
+        button('Confirmar anulación',()=>voidVisit(voidTarget),'',voidReason.trim().length<3),
+        button('Cancelar',()=>{setVoidTarget(null);setVoidReason('')},'secondary'))
+    ):null
+  );
+}
+function navButton(id,label,icon){
+  const selected=tab===id, gift=id==='recompensas';
+  return e('button',{key:id,className:(selected?'active ':'')+(gift?'giftNav':''),'aria-current':selected?'page':undefined,onClick:()=>{if(gift)setGiftTap(n=>n+1);setTab(id);setNotice('');setError('');if(typeof window.scrollTo==='function')window.scrollTo({top:0,behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}},
+    e('span',{className:'navIcon'+(gift?' giftNavIcon':''),'aria-hidden':true},gift?e('span',{className:'giftEmoji',key:'gift-'+giftTap+'-'+selected},icon):icon,
+      gift&&pendingPoints&&!selected?e('span',{className:'pointsAlert',role:'img','aria-label':'Tienes nuevos puntos'}):null,
+      gift&&selected?e('span',{className:'giftSparkBurst',key:'spark-'+giftTap,'aria-hidden':true},[0,1,2,3,4,5].map(n=>e('i',{key:n,style:{'--n':n}},n%2?'✧':'✦'))):null),label);
+}
+if(bootPending)return null;
+return e('div',{className:'page'},e('div',{className:'shell'},e('header',{className:'top'},e('div',{className:'brand'},e('div',{className:'mark'},e('img',{src:'../assets/img/logo.png',alt:'Logo de Manos Monas',loading:'eager'})),e('div',null,e('h2',null,'MANOS MONAS'),e('div',{className:'eyebrow'},'HOME STUDIO'),e('div',{className:'caption'},'Club de recompensas'))),e('div',{className:'toolbar',style:{alignItems:'center',justifyContent:'flex-end'}},(user||isDemo&&demoEntered)?e('button',{className:'headerAccount',onClick:()=>{setTab('perfil');setNotice('');setError('')},'aria-label':'Abrir mi perfil'},avatar(38)):null,e('span',{className:'chip'},isDemo?'◉ Demo':isAdmin?'✦ Jefa de salón':'♡ Mi cuenta'))),
+!isDemo&&user&&db&&new URLSearchParams(window.location.search).get('live')==='1'?e('div',{className:'notice',style:{marginBottom:16}},e('strong',null,'Prueba de permisos Firebase'),e('div',{style:{marginTop:7,overflowWrap:'anywhere'}},'UID de esta sesión: ',e('code',null,user.uid)),e('div',{style:{marginTop:4}},'Acceso al menú Jefa: ',adminStatus),e('div',{className:'tiny',style:{marginTop:5}},'Si no está habilitada, comprueba que el documento admins tenga este mismo UID y enabled de tipo booleano verdadero.')):null,
+isDemo&&demoEntered?e('div',{className:'notice'},'Demostración de reservas · Cuenta ficticia de '+demoProvider+'. Las citas de prueba no se guardan en Firebase. ',e('button',{onClick:()=>{setDemoRole(demoRole==='jefa'?'clienta':'jefa');setTab('reservas');setNotice('')}},'Cambiar vista: '+(demoRole==='jefa'?'Clienta':'Jefa')+' →'),' ',e('button',{onClick:()=>{setDemoEntered(false);setDemoRole('clienta');setNotice('')}},'Salir de demo')):null,
+(!isDemo&&!user)||(isDemo&&!demoEntered)?e('div',{className:'panel login'},e('img',{className:'loginBrand',src:'../assets/img/logo.png',alt:'Manos Monas Home Studio'}),e('h1',null,'Bienvenida al Club Monas'),e('p',null,'Ingresa con tu cuenta de Google (Gmail) o Facebook para consultar tus puntos y desbloquear recompensas.'),e('div',{className:'stack',style:{maxWidth:310,margin:'25px auto'}},button('✉ Continuar con Google',()=>login('google'),'full',busy),button('ⓕ Continuar con Facebook',()=>login('facebook'),'secondary full',busy)),isDemo?e('div',{className:'notice'},'Modo demostración: los botones solo abren una clienta ficticia. Para usar el inicio de sesión real debes conectar Firebase.'):e('p',{className:'tiny'},'Solo la jefa registra servicios y aprueba premios.'),error?e('div',{className:'notice error',role:'alert'},error):null):e(React.Fragment,null,
+e('section',{className:'hero'},e('div',null,e('small',null,'Un detalle para ti'),e('h1',null,isAdmin?'Belleza que se recompensa':'Tu belleza tiene premio'),e('p',null,isAdmin?'Gestiona el programa de fidelización de tu salón desde un mismo lugar.':'Por cada visita a Manos Monas acumulas puntos para elegir tus premios favoritos.')),e('div',{className:'mascotHero','aria-hidden':true},e('img',{src:'./images/monita.webp',className:'mascotImage',alt:'',width:99,height:170}),e('span',{className:'mascotStar mascotStarOne'},'✦'),e('span',{className:'mascotStar mascotStarTwo'},'✧'))),
+error?e('div',{className:'notice error',role:'alert',style:{marginTop:16}},error):null,
+notice?e('div',{className:'notice ok',role:'status',style:{marginTop:16}},notice):null,
+e('main',{className:'tabEntrance',key:tab},tab==='recompensas'?rewardsView():tab==='perfil'?profileView():tab==='reservas'?e(BookingPanel,{key:(isDemo?'demo':user?.uid)+'-'+isAdmin,admin:isAdmin,demo:isDemo,uid:user?.uid,clients:clientList,demoRows:demoReservations,setDemoRows:setDemoReservations}):isAdmin&&tab==='admin'?adminView():null),
+e('nav',{className:'nav','aria-label':'Navegación'},isAdmin?navButton('admin','Jefa','⚙️'):null,navButton('recompensas','Recompensas','🎁'),navButton('reservas','Reservas','🗓️'),navButton('perfil','Perfil','👤'))),
+visibleUnlock?e(UnlockMoment,{key:visibleUnlock.uid,moment:visibleUnlock,onClose:()=>setUnlockMoment(null),onView:viewUnlocked}):null,
+e('div',{className:'footer'},'Hecho con ♡ para Manos Monas Home Studio · San Juan de Lurigancho')));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(e(App));
+})();
+</script></body></html>
