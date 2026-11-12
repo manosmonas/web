@@ -313,7 +313,7 @@ function rewardCard(r){
     e('h3',null,r.name),
     e('div',{className:'tiny'},r.points+' puntos'),
     pointsReady?e('div',{className:'rewardGoal'},e('div',{className:'miniMeter','aria-hidden':true},e('span',{style:{width:Math.min(100,Math.max(0,(current?.points||0)/r.points*100))+'%'}})),e('div',{className:'rewardGoalText'},unlocked?'¡Disponible!':'Te faltan '+Math.max(0,r.points-(current?.points||0)).toLocaleString('es-PE')+' pts')):null,
-    button(pending?'⏳ Solicitud pendiente':unlocked?'Solicitar canje':'🔒 Bloqueado',
+    button(pending?'⏳ Solicitud pendiente':unlocked?'Canjear':'🔒 Bloqueado',
       ()=>{setRewardToConfirm(r.id);setError('');setNotice('')},
       'full',!unlocked||pending||(!isDemo&&(!db||!user||!pointsReady))),
     pending?e('div',{className:'tiny',style:{marginTop:9}},'La jefa debe aprobar la solicitud.'):null,
