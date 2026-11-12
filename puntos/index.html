@@ -46,6 +46,8 @@
 @keyframes gift-hop{0%,100%{transform:translateY(0) rotate(0) scale(1)}35%{transform:translateY(-8px) rotate(-13deg) scale(1.15)}65%{transform:translateY(-2px) rotate(9deg) scale(1.04)}}@keyframes gift-spark{0%{opacity:0;transform:rotate(var(--angle)) translateX(2px) scale(.3)}25%{opacity:1}100%{opacity:0;transform:rotate(var(--angle)) translateX(32px) scale(.65)}}
 @media(max-width:520px){.nav{bottom:max(8px,env(safe-area-inset-bottom));width:calc(100% - 20px);padding:6px}.nav button{min-height:52px}.shell{padding-bottom:calc(108px + env(safe-area-inset-bottom))}}
 @media(prefers-reduced-motion:reduce){.clubBoot,.photoFrame img{transition:none!important}.bootMascot,.bootSpark,.bootMeter span,.photoPlaceholder,.hero small,.hero h1,.hero p,.login h1,.login p,.tabEntrance>*,.tabEntrance>.grid .reward,.giftNav.active .giftEmoji,.giftSparkBurst i{animation:none!important}.giftSparkBurst{display:none}.photo-ready img{transform:none}}
+
+.birthdayCard{margin-top:18px;padding:15px;background:#fff6ef;border:1px solid #f2dfd1;border-radius:15px}.birthdayHeading{display:flex;align-items:center;gap:10px}.birthdayHeading>span{font-size:29px}.birthdayHeading h3{margin:0 0 4px;color:#835733;font-size:16px}.birthdayHeading p{margin:0;color:#a17b67;font-size:12px;line-height:1.45}.birthdayCard>.tiny{line-height:1.5;margin:10px 0}.birthdayForm{display:grid;gap:9px}.birthdayFields{display:grid;grid-template-columns:1fr 1.7fr;gap:8px}.birthdayFields label{font-size:12px;color:#896c7a;font-weight:700;display:grid;gap:5px}.birthdayFields select{padding:10px;min-width:0}.birthdayCard .button{font-size:12px}
 </style>
 <link rel="preload" as="image" href="./images/monita.webp">
 </head><body>
@@ -109,6 +111,44 @@ function RewardPhoto({id,alt,kind='card',eager=false}){
     e('div',{className:'photoPlaceholder','aria-hidden':true},e('span',null,'✦')),
     state!=='error'?e('img',{src:'./images/rewards/'+id+'.webp',alt,loading:eager?'eager':'lazy',decoding:'async',width:176,height:220,onLoad:()=>setState('ready'),onError:()=>setState('error')}):e('span',{className:'photoFallback',role:'img','aria-label':alt},'🎁')
   );
+}
+const MONTHS=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+function birthdayMax(month){return month===2?29:[4,6,9,11].includes(month)?30:31}
+function BirthdayEditor({uid,demo}){
+  const [saved,setSaved]=useState(null),[day,setDay]=useState(''),[month,setMonth]=useState(''),[status,setStatus]=useState(demo?'ready':'loading'),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
+  useEffect(()=>{
+    if(demo){setStatus('ready');return}
+    if(!db||!uid){setStatus('error');return}
+    return db.collection('birthdays').doc(uid).onSnapshot(snapshot=>{
+      const value=snapshot.exists?snapshot.data():null;
+      setSaved(value);setDay(value?String(value.day):'');setMonth(value?String(value.month):'');setStatus('ready');
+    },()=>setStatus('error'));
+  },[uid,demo]);
+  async function save(ev){
+    ev.preventDefault();
+    const d=Number(day),m=Number(month);
+    if(!Number.isInteger(d)||!Number.isInteger(m)||m<1||m>12||d<1||d>birthdayMax(m)){setMessage('Selecciona un día y un mes válidos.');return}
+    setBusy(true);setMessage('');
+    try{
+      if(demo)setSaved({day:d,month:m});else await db.collection('birthdays').doc(uid).set({day:d,month:m,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+      setMessage('¡Tu cumpleaños está guardado!');
+    }catch(ex){setMessage('No pudimos guardar tu cumpleaños. Inténtalo de nuevo.')}finally{setBusy(false)}
+  }
+  async function remove(){
+    setBusy(true);setMessage('');
+    try{if(!demo)await db.collection('birthdays').doc(uid).delete();setSaved(null);setDay('');setMonth('');setMessage('Eliminamos tu cumpleaños.')}
+    catch(ex){setMessage('No pudimos eliminarlo. Inténtalo de nuevo.')}finally{setBusy(false)}
+  }
+  return e('section',{className:'birthdayCard'},
+    e('div',{className:'birthdayHeading'},e('span',{'aria-hidden':true},'🎂'),e('div',null,e('h3',null,'Mi cumpleaños'),e('p',null,saved?'Celebramos contigo el '+saved.day+' de '+MONTHS[saved.month-1].toLowerCase()+'.':'Cuéntanos cuándo cumples años para sorprenderte en tu día.'))),
+    e('p',{className:'tiny'},'Opcional. Solo guardamos día y mes; tú y la administración del salón podrán consultarlo para saludos y beneficios de cumpleaños.'),
+    status==='loading'?e('p',{className:'tiny',role:'status'},'Cargando tu cumpleaños…'):status==='error'?e('p',{className:'tiny',role:'status'},'El registro de cumpleaños todavía no está disponible.'):e('form',{className:'birthdayForm',onSubmit:save},
+      e('div',{className:'birthdayFields'},
+        e('label',null,'Día',e('select',{required:true,value:day,onChange:ev=>setDay(ev.target.value)},e('option',{value:''},'Día'),Array.from({length:birthdayMax(Number(month))},(_,i)=>e('option',{key:i+1,value:String(i+1)},i+1)))),
+        e('label',null,'Mes',e('select',{required:true,value:month,onChange:ev=>{const m=ev.target.value;setMonth(m);if(Number(day)>birthdayMax(Number(m)))setDay('')}},e('option',{value:''},'Mes'),MONTHS.map((name,i)=>e('option',{key:i+1,value:String(i+1)},name))))),
+      e('button',{type:'submit',className:'button full',disabled:busy||!day||!month},busy?'Guardando…':'Guardar cumpleaños'),
+      saved?e('button',{type:'button',className:'button secondary full',disabled:busy,onClick:remove},'Eliminar cumpleaños'):null),
+    message?e('p',{className:'tiny',role:'status'},message):null);
 }
 function App(){
 const [demoEntered,setDemoEntered]=useState(false),[demoProvider,setDemoProvider]=useState('Google');
@@ -371,6 +411,7 @@ function profileView(){
       e('div',{className:'profileStats'},stat('Puntos',pointsReady?(current?.points??0).toLocaleString('es-PE'):'…'),stat('Visitas',pointsReady?(current?.visits??0):'…'),stat('Canjes aprobados',approvedCount)),
       !pointsReady?e('div',{className:'notice',role:'status'},profileStatus==='error'?'No se pudo leer tu saldo. Revisa tu conexión.':'Consultando tu saldo guardado…'):null,
       e('div',{className:'profileDetails'},info('Premios disponibles',unlockedCount===null?'…':String(unlockedCount)),info('Última visita',lastVisit?ts(lastVisit.createdAt):'Sin visitas'),memberDate?info('Miembro desde',memberDate):null,provider?info('Cuenta vinculada',provider):null),
+      e(BirthdayEditor,{key:isDemo?'demo':user?.uid,uid:user?.uid,demo:isDemo}),
       isAdmin?e('div',{className:'tiny',style:{marginTop:12}},'Este es tu perfil personal. Gestiona a las clientas desde el menú Jefa.'):null,
       e('div',{className:'profileActions'},button('Ver recompensas',()=>{setTab('recompensas');setNotice('');setError('')},'full'),!isDemo?button('Cerrar sesión',logout,'secondary full'):null)
     ),

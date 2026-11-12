@@ -129,6 +129,23 @@ service cloud.firestore {
           || (request.resource.data.lastEventType == 'void' && validVoidBalance(uid)));
       allow delete: if false;
     }
+    // Cumpleaños opcional: solo día y mes, sin acceso a los saldos.
+    function validBirthday() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['day','month','updatedAt'])
+        && d.keys().hasOnly(['day','month','updatedAt'])
+        && d.day is int && d.month is int
+        && d.month >= 1 && d.month <= 12
+        && d.day >= 1
+        && d.day <= (d.month == 2 ? 29 : d.month in [4,6,9,11] ? 30 : 31)
+        && d.updatedAt == request.time;
+    }
+    match /birthdays/{uid} {
+      allow get: if owns(uid) || isAdmin();
+      allow list: if isAdmin();
+      allow create, update: if owns(uid) && validBirthday();
+      allow delete: if owns(uid);
+    }
     match /visits/{id} {
       allow get, list: if signedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
       allow create: if isAdmin()
