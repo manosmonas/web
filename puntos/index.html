@@ -204,7 +204,9 @@ function ClientReminders({uid,demo,bookings}){
  const [messages,setMessages]=useState([]),[status,setStatus]=useState(''),[enabled,setEnabled]=useState(false),[working,setWorking]=useState(false);
  useEffect(()=>{if(demo||!uid||!db)return;return db.collection('users').doc(uid).collection('reminders').orderBy('createdAt','desc').limit(20).onSnapshot(s=>setMessages(s.docs.map(x=>({id:x.id,...x.data()}))),()=>setMessages([]))},[uid,demo]);
  useEffect(()=>{setEnabled(false);setStatus('');if(demo||!uid)return;try{setEnabled(localStorage.getItem('monas-push-uid')===uid&&window.Notification?.permission==='granted')}catch(_){}},[uid,demo]);
- const live=messages.filter(m=>bookings.some(b=>b.id===m.reservationId&&b.date===m.date&&b.start===m.start&&b.status==='confirmed'));
+ const limaNow=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date());
+ const today=limaNow.slice(0,10),hhmm=limaNow.slice(11,16).split(':').map(Number),nowMinutes=hhmm[0]*60+hhmm[1];
+ const live=messages.filter(m=>m.date===today&&m.start>nowMinutes&&bookings.some(b=>b.id===m.reservationId&&b.date===m.date&&b.start===m.start&&b.status==='confirmed'));
  async function activate(){
   if(working)return;setWorking(true);setStatus('');
   try{
@@ -335,7 +337,7 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
  const dayRows=upcoming.filter(b=>b.date===date);
  return e('section',{className:'bookingSection'},
   section(admin?'Agenda de reservas':'Mis reservas',admin?'Acuerda por WhatsApp y registra la cita aquí.':'Tus citas confirmadas por el salón.'),
-  !admin?e(ClientReminders,{uid,demo,bookings:visible}):null,
+
   error?e('div',{className:'notice error',role:'alert'},error):null,notice?e('div',{className:'notice ok',role:'status'},notice):null,
   !ready?e('div',{className:'panel'},error?'Reservas no disponibles.':'Cargando reservas…'):e(React.Fragment,null,
    admin?e(React.Fragment,null,
@@ -368,6 +370,7 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
     e('div',{className:'bookingAgenda'},Object.entries(staffNames).map(([id,name])=>e('div',{className:'panel',key:id},e('h3',null,name),dayRows.filter(b=>b.staffId===id).length?dayRows.filter(b=>b.staffId===id).map(b=>e('div',{className:'bookingSlot staff-'+b.staffId,key:b.id},e('strong',null,clock(b.start)+' – '+clock(b.end)),e('span',null,b.clientName+' · '+b.service),btn('Editar',()=>editBooking(b),true))):e('p',{className:'tiny'},'Sin citas registradas.')))),
     section('Próximas reservas')):null,
    upcoming.length?upcoming.map(card):e('div',{className:'panel empty'},admin?'Aún no hay reservas próximas.':'Todavía no tienes una próxima cita. Acuerda tu atención por WhatsApp.'),
+   !admin?e(ClientReminders,{uid,demo,bookings:visible}):null,
    past.length?e('details',{className:'panel bookingHistory'},e('summary',null,'Historial de reservas'),past.map(card)):null));
 }
 function App(){
@@ -390,6 +393,7 @@ const [unlockMoment,setUnlockMoment]=useState(null);
 
 const liveWrites=window.MANOS_MONAS_ENABLE_WRITES===true;
 const isDemo=!configured||new URLSearchParams(window.location.search).has('demo');
+useEffect(()=>{if(isDemo||!user||admin||!window.MANOS_MONAS_VAPID_KEY)return;let unsub;try{if(firebase.messaging.isSupported())unsub=firebase.messaging().onMessage(payload=>{try{if(localStorage.getItem('monas-push-uid')!==user.uid)return;setNotice(payload.notification?.body||'Tienes un recordatorio de tu cita en Club Monas.')}catch(_){}})}catch(_){}return()=>unsub?.()},[isDemo,user?.uid,admin]);
 const canVoid=isDemo||liveWrites;
 const current=isDemo?demoClientState:(user?(profile?.uid===user.uid?profile:{uid:user.uid,displayName:user.displayName||'Clienta',email:user.email||'',photoURL:user.photoURL||'',points:null,visits:null}):null);
 const visibleVisits=isDemo?demoVisitsState:visits;
