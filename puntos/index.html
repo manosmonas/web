@@ -50,6 +50,30 @@
 .birthdayCard{margin-top:18px;padding:15px;background:#fff6ef;border:1px solid #f2dfd1;border-radius:15px}.birthdayHeading{display:flex;align-items:center;gap:10px}.birthdayHeading>span{font-size:29px}.birthdayHeading h3{margin:0 0 4px;color:#835733;font-size:16px}.birthdayHeading p{margin:0;color:#a17b67;font-size:12px;line-height:1.45}.birthdayCard>.tiny{line-height:1.5;margin:10px 0}.birthdayForm{display:grid;gap:9px}.birthdayFields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) minmax(0,1.1fr);gap:6px}.birthdayFields label{font-size:12px;color:#896c7a;font-weight:700;display:grid;gap:5px}.birthdayFields select{padding:10px;min-width:0}.birthdayCard .button{font-size:12px}
 
 .birthdayLabel{flex:1;min-width:0}.birthdayPencil{display:grid;place-items:center;width:40px;height:40px;flex:0 0 40px;background:#fff;border:1px solid #efd3e1;border-radius:12px;color:#a54374;padding:0;cursor:pointer}.birthdayPencil:disabled{opacity:.45}.birthdayCard .birthdayForm{margin-top:12px}.birthdayFields{grid-template-columns:minmax(0,.8fr) minmax(0,1.6fr) minmax(0,1fr)}.birthdayFields input,.birthdayFields select{width:100%;min-width:0;height:44px;padding:8px 6px;font-size:16px}.birthdayRemove{background:none;border:0;color:#a54374;text-decoration:underline;font-size:12px;padding:7px}.birthdayInvite{width:min(390px,calc(100% - 28px));max-height:calc(100% - 32px);border:1px solid #f1cddd;border-radius:22px;background:#fffafc;color:#57364a;padding:24px;box-shadow:0 20px 80px #63304555;overflow:auto;text-align:center}.birthdayInvite::backdrop{background:#42263d99;backdrop-filter:blur(3px)}.birthdayInviteIcon{font-size:44px;animation:boot-float 2s ease-in-out infinite}.birthdayInvite h2{font-size:23px;margin:8px 0}.birthdayInvite>p{color:#956b81;font-size:14px;margin:8px 0 20px}.birthdayInvite .birthdayForm{text-align:left}.birthdayInvite .birthdayForm>.tiny{margin:5px 0;font-size:11px;line-height:1.5}.birthdayInvite .button{text-align:center}@media(prefers-reduced-motion:reduce){.birthdayInviteIcon{animation:none}}
+
+/* Recompensas vivas: movimiento mínimo, solo cuando se pueden canjear. */
+.tabEntrance>.grid .reward.locked{animation:none;transform:none;background:#f5f0f3;border-color:#e9e1e6}
+.reward.locked .rewardArt{opacity:.83;filter:none}
+.reward.locked .rewardArt img{filter:saturate(.42) brightness(.74)}
+.reward.locked h3{color:#76636e}
+.reward.locked .rewardGoalText{color:#826f79}
+.reward.locked .miniMeter span{background:#bfabb5}
+.reward.locked .photoPlaceholder{animation:none;background:#e9e0e5}
+.reward.available{border-color:#e8bdcf;box-shadow:0 4px 15px #b95c8520}
+.tabEntrance>.grid .reward.available{animation:reward-float 4.6s ease-in-out infinite;animation-delay:0s}
+.tabEntrance>.grid .reward.available:nth-child(even){animation-delay:-2.3s}
+.tabEntrance>.grid .reward.available.justUnlocked{animation:reward-awake .85s cubic-bezier(.2,.7,.3,1) both,reward-float 4.6s .85s ease-in-out infinite}
+.tabEntrance>.grid .reward.available:focus-within,.tabEntrance>.grid .reward.available.confirming{animation:none;transform:none}
+.reward.available .rewardArt{transition:opacity .45s ease,filter .45s ease}
+.reward.available>.button:not(:disabled){position:relative;overflow:hidden;isolation:isolate;background:linear-gradient(110deg,#a54374,#b65d8c,#a54374);box-shadow:0 3px 9px #a5437426}
+.reward.available>.button:not(:disabled)::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 35%,#ffffff26 50%,transparent 65%);transform:translateX(-130%);animation:reward-button-shine 6s ease-in-out infinite}
+.reward.available.confirming>.button::after,.reward.available:focus-within>.button::after{animation:none;opacity:0}
+.reward.justUnlocked .rewardArt .photo-ready img{animation:reward-photo-awake .85s ease-out both}
+@keyframes reward-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes reward-awake{0%{transform:translateY(0);filter:saturate(.7)}55%{transform:translateY(-4px);filter:saturate(1.08);box-shadow:0 0 0 2px #e5b1cf,0 5px 17px #c28aaf38}100%{transform:translateY(0);filter:none}}
+@keyframes reward-photo-awake{0%{filter:saturate(.45) brightness(.78);transform:scale(1)}100%{filter:none;transform:scale(1)}}
+@keyframes reward-button-shine{0%,75%{transform:translateX(-130%)}95%,100%{transform:translateX(130%)}}
+@media(prefers-reduced-motion:reduce){.tabEntrance>.grid .reward.available,.reward.available>.button::after,.reward.justUnlocked .rewardArt img{animation:none!important;transform:none!important}.reward.available>.button::after{display:none}}
 </style>
 <link rel="preload" as="image" href="./images/monita.webp">
 </head><body>
@@ -392,7 +416,7 @@ function rewardCard(r){
   const unlocked=pointsReady&&(current?.points||0)>=r.points;
   const pending=visibleClientRequests.some(x=>x.rewardId===r.id&&x.status==='pending'&&x.userId===(user?.uid||'demo'));
   const confirming=rewardToConfirm===r.id&&!pending&&unlocked;
-  return e('article',{id:'reward-'+r.id,className:'reward'+(!unlocked?' locked':'')+(celebration?.unlocked.includes(r.id)?' justUnlocked':''),key:r.id},
+  return e('article',{id:'reward-'+r.id,className:'reward'+(!unlocked?' locked':pending?' pendingReward':' available')+(confirming?' confirming':'')+(celebration?.unlocked.includes(r.id)?' justUnlocked':''),key:r.id},
     e('div',{className:'rewardArt'},e(RewardPhoto,{key:r.id,id:r.id,alt:r.name+' (imagen referencial)'}),!unlocked?e('span',{className:'rewardLock','aria-hidden':true},'🔒'):celebration?.unlocked.includes(r.id)?e('span',{className:'rewardLock unlockMark','aria-hidden':true},'✨'):null),
     e('h3',null,r.name),
     e('div',{className:'tiny'},r.points+' puntos'),
