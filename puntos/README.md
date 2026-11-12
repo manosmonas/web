@@ -45,12 +45,19 @@ En esta fase, **«Aprobada» es el estado final necesario**; no crear un estado 
 
 **Activación de operación desde URL normal (11/11/2026):** habilitados los botones «Acreditar puntos» y «Anular atención» sin parámetros `?live` o `?void`. La jefa debe comprobar una vez que ambos aparecen y funcionan en la dirección habitual. No cambia las reglas publicadas ni la web comercial.
 
-## Notificaciones push (pendiente)
+## Notificaciones push (pendiente de activación)
 
-- Implementar notificaciones push para Club Monas, sin retrasar el lanzamiento del MVP presencial.
-- Eventos propuestos: puntos acreditados, nueva recompensa desbloqueada y solicitud de canje aprobada o rechazada para la clienta; nueva solicitud de canje para la jefa.
-- Evaluar Firebase Cloud Messaging (FCM) para web y futura app móvil, incluyendo consentimiento explícito, gestión de suscripciones/tokens y permisos por rol. Validar compatibilidad de navegadores y dispositivos antes de elegir la implementación.
-- No enviar promociones sin consentimiento ni exponer datos personales en las notificaciones. No crear reservas ni cambiar el flujo presencial como parte de esta tarea.
+**Decisión 12/11/2026:** configurar un canal de notificaciones de Club Monas para avisos de servicio y campañas promocionales, en web y futura app móvil. No limitarlo a recordatorios de reservas.
+
+- [ ] Activar Firebase Cloud Messaging (FCM), configurar Web Push y VAPID, desplegar las funciones programadas y reglas necesarias en el proyecto existente `manos-monas-puntos`; validar permisos, entrega en Android/iOS y navegador, costos y seguridad.
+- [ ] Recordatorios de citas a las 8:00 a. m. del mismo día y una hora antes (America/Lima). La lógica está preparada en `feature/reservas-mvp`, pero no desplegada. Actualizar ante cambios de horario y cancelar avisos de citas anuladas; evitar duplicados.
+- [ ] Avisos transaccionales: reserva confirmada, reagendamiento confirmado o solicitado (según rol), cancelación, puntos acreditados, recompensa desbloqueada, canje aprobado o rechazado.
+- [ ] Promociones: permitir a la jefa preparar y enviar campañas de Manos Monas (ofertas, novedades y promociones especiales), con título, mensaje, enlace a la app y envío inmediato o programado. Incorporar vista previa y confirmación antes de enviar.
+- [ ] Permitir segmentar promociones por preferencias y consentimiento; gestionar suscripciones y tokens por dispositivo, baja de promociones, frecuencia y horario razonables. Separar avisos de servicio de publicidad, y no exponer datos personales en la pantalla bloqueada.
+- [ ] Probar notificaciones con la app abierta y cerrada, manejo de permisos denegados, dispositivos compartidos, cierre de sesión y cambios de cuenta.
+- [ ] Futuro: avisos de nuevas citas y cambios para Doris y Miluzka. Por ahora no notificar a las especialistas.
+
+**Estado:** tarea registrada; no se han habilitado ni enviado notificaciones push reales. La vista de reservas y la activación simulada están en la demo; el backend de recordatorios está preparado en la rama de reservas. Mantener intacta la web comercial y el flujo presencial de canje.
 
 ## Otras tareas para después del MVP
 - Corregir carga de foto de perfil (actualmente puede mostrar monita de reserva).
