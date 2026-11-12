@@ -82,6 +82,7 @@
 @keyframes coin-land{0%{opacity:0;transform:translate(-50%,0) scale(.4)}40%{opacity:1;transform:translate(-50%,-7px) scale(1.2)}100%{opacity:0;transform:translate(-50%,-15px) scale(.6)}}
 .pointsBurst.mascotBurst{animation:monas-pop .3s ease both}.pointsBurst .mascotMessage strong{font-variant-numeric:tabular-nums}.giftNav .pointsAlert{position:absolute;right:calc(50% - 22px);top:-4px;width:11px;height:11px;background:#d6a13d;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 2px #e6bf6d40}.demoPointButton{margin:8px 0 0;width:100%;font-size:12px}
 @media(prefers-reduced-motion:reduce){.coinLane{display:none}.coinReceiving .goalFill{transition:none!important}}
+.activityMore{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:12px;padding:12px;background:#fff5f9;border:1px solid #efd7e4;border-radius:12px;color:#a54374;font-size:13px;font-weight:800;cursor:pointer}.activityMore span{font-size:16px;line-height:1}.activityMore:focus-visible{outline:2px solid #a54374;outline-offset:3px}
 </style>
 <link rel="preload" as="image" href="./images/monita.webp">
 </head><body>
@@ -233,6 +234,8 @@ const [voidTarget,setVoidTarget]=useState(null),[voidReason,setVoidReason]=useSt
 const [rewardToConfirm,setRewardToConfirm]=useState(null);
 const [profileStatus,setProfileStatus]=useState('sin sesión');
 const [giftTap,setGiftTap]=useState(0);
+const [activityExpanded,setActivityExpanded]=useState(false);
+useEffect(()=>{setActivityExpanded(false)},[user?.uid,demoEntered,tab]);
 
 const [animatedPoints,setAnimatedPoints]=useState(null),[celebration,setCelebration]=useState(null);
 
@@ -509,7 +512,11 @@ function rewardsView(){
     ),
     e('div',{className:'sectionTitle'},e('div',null,e('h2',null,'Elige tu recompensa'),e('p',null,'Los premios se desbloquean con tus puntos.'))),
     e('div',{className:'grid'},REWARDS.map(rewardCard)),e('p',{className:'rewardPhotoNote'},'Imágenes referenciales de los servicios.'),
-    e('div',{className:'sectionTitle'},e('h2',null,'Tu actividad')),e('div',{className:'panel'},visibleVisits.length?visibleVisits.map(v=>{const cancelled=visibleClientVoids.find(c=>c.visitId===v.id);return e('div',{className:'listEntry',key:v.id},e('div',null,e('strong',null,v.serviceName),e('div',{className:'tiny'},ts(v.createdAt)),cancelled?e('div',{className:'tiny'},'Anulada: '+cancelled.reason):null),e('strong',{style:{color:cancelled?'#927887':'#a54475'}},cancelled?'Anulada':'+'+v.points+' pts'))}):isDemo?demoVisitsState.map(v=>e('div',{className:'listEntry',key:v.id},e('span',null,v.serviceName),e('strong',null,'+'+v.points+' pts'))):e('div',{className:'empty'},'Aún no registramos servicios. Después de tu primera atención aparecerán aquí.'))
+    e('div',{className:'sectionTitle'},e('h2',null,'Tu actividad')),
+    e('div',{className:'panel activityPanel'},
+      (activityExpanded?visibleVisits:visibleVisits.slice(0,2)).map(v=>{const cancelled=visibleClientVoids.find(c=>c.visitId===v.id);return e('div',{className:'listEntry',key:v.id},e('div',null,e('strong',null,v.serviceName),e('div',{className:'tiny'},ts(v.createdAt)),cancelled?e('div',{className:'tiny'},'Anulada: '+cancelled.reason):null),e('strong',{style:{color:cancelled?'#927887':'#a54475'}},cancelled?'Anulada':'+'+v.points+' pts'))}),
+      !visibleVisits.length?e('div',{className:'empty'},'Aún no registramos servicios. Después de tu primera atención aparecerán aquí.'):null,
+      visibleVisits.length>2?e('button',{type:'button',className:'activityMore','aria-expanded':activityExpanded,onClick:()=>setActivityExpanded(v=>!v)},activityExpanded?'Ver menos':'Ver más',e('span',{'aria-hidden':true},activityExpanded?'⌃':'⌄')):null)
   );
 }
 function avatar(size=58){const p=user?.photoURL||current?.photoURL||(user?.providerData||[]).find(x=>x?.photoURL)?.photoURL;const safeUrl=typeof p==='string'&&/^https:\/\//i.test(p)?p:null;return e('span',{className:'avatar',style:{width:size,height:size,fontSize:Math.round(size*.46)},'aria-label':safeUrl?'Foto de perfil':'Avatar de perfil'},'🐒',safeUrl?e('img',{src:safeUrl,alt:'Tu foto de perfil',referrerPolicy:'no-referrer',onError:ev=>{ev.currentTarget.style.display='none'}}):null)}
