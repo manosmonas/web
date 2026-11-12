@@ -74,6 +74,14 @@
 @keyframes reward-photo-awake{0%{filter:saturate(.45) brightness(.78);transform:scale(1)}100%{filter:none;transform:scale(1)}}
 @keyframes reward-button-shine{0%,75%{transform:translateX(-130%)}95%,100%{transform:translateX(130%)}}
 @media(prefers-reduced-motion:reduce){.tabEntrance>.grid .reward.available,.reward.available>.button::after,.reward.justUnlocked .rewardArt img{animation:none!important;transform:none!important}.reward.available>.button::after{display:none}}
+
+/* Las monedas de cada nueva acreditación aterrizan exactamente sobre el progreso. */
+.goalMeter{isolation:isolate}.goalMeter.coinReceiving{z-index:2}.coinReceiving .goalFill{transition:width .09s linear}.coinReceiving .goalTrack{box-shadow:inset 0 1px 4px #92561c22,0 0 16px #efc66a99}
+.coinLane{position:absolute;left:0;right:0;top:5px;height:21px;pointer-events:none;z-index:4;overflow:visible}.incomingCoin{position:absolute;left:0;top:0;width:23px;height:23px;font-size:12px;opacity:0;animation:coin-deposit .56s calc(var(--i)*.1s) cubic-bezier(.25,.65,.34,1) both;transform-origin:center;will-change:transform,opacity}.coinLandingSpark{position:absolute;left:var(--land);top:0;color:#b78025;font-size:19px;line-height:20px;transform:translateX(-50%);opacity:0;animation:coin-land .36s calc(.53s + var(--i)*.1s) ease-out both;text-shadow:0 0 7px #fff2a5}
+@keyframes coin-deposit{0%{left:var(--start);transform:translate(-50%,-64px) rotate(-45deg) scale(.65);opacity:0}20%{opacity:1;transform:translate(-50%,-48px) rotate(-5deg) scale(1)}78%{opacity:1;transform:translate(-50%,-8px) rotate(150deg) scale(.9)}100%{left:var(--land);transform:translate(-50%,0) rotate(250deg) scale(.25);opacity:0}}
+@keyframes coin-land{0%{opacity:0;transform:translate(-50%,0) scale(.4)}40%{opacity:1;transform:translate(-50%,-7px) scale(1.2)}100%{opacity:0;transform:translate(-50%,-15px) scale(.6)}}
+.pointsBurst.mascotBurst{animation:monas-pop .3s ease both}.pointsBurst .mascotMessage strong{font-variant-numeric:tabular-nums}.giftNav .pointsAlert{position:absolute;right:calc(50% - 22px);top:-4px;width:11px;height:11px;background:#d6a13d;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 2px #e6bf6d40}.demoPointButton{margin:8px 0 0;width:100%;font-size:12px}
+@media(prefers-reduced-motion:reduce){.coinLane{display:none}.coinReceiving .goalFill{transition:none!important}}
 </style>
 <link rel="preload" as="image" href="./images/monita.webp">
 </head><body>
@@ -230,7 +238,7 @@ const [profileStatus,setProfileStatus]=useState('sin sesión');
 const [giftTap,setGiftTap]=useState(0);
 
 const [animatedPoints,setAnimatedPoints]=useState(null),[celebration,setCelebration]=useState(null);
-const previousBalance=useRef(null),displayedBalance=useRef(null);
+
 const liveWrites=window.MANOS_MONAS_ENABLE_WRITES===true;
 const isDemo=!configured||new URLSearchParams(window.location.search).has('demo');
 const birthday=useBirthday(isDemo?'demo':user?.uid,isDemo,isDemo?demoEntered:!!user);
@@ -254,33 +262,69 @@ const actualBalance=pointsReady&&current&&Number.isFinite(current.points)?curren
 const ownRequests=visibleClientRequests.filter(x=>x.userId===(user?.uid||'demo'));
 const approvedCount=ownRequests.filter(x=>x.status==='approved').length;
 const unlockedCount=pointsReady?REWARDS.filter(r=>(current?.points||0)>=r.points).length:null;
-// Animate only real changes for the same profile; never celebrate the initial balance or a new login.
+// El saldo visto se conserva por cuenta y navegador, solo después de mostrar la celebración.
+const [seenBalance,setSeenBalance]=useState(null),[profileFresh,setProfileFresh]=useState(false);
+const [pageVisible,setPageVisible]=useState(document.visibilityState!=='hidden');
+const seenRef=useRef(null);
+useEffect(()=>{const change=()=>setPageVisible(document.visibilityState!=='hidden');document.addEventListener('visibilitychange',change);return()=>document.removeEventListener('visibilitychange',change)},[]);
+const rewardsVisible=tab==='recompensas'&&pageVisible&&!bootPending&&(isDemo?demoEntered:!!user);
 useEffect(()=>{
-  if(!balanceUID||actualBalance===null){previousBalance.current=null;displayedBalance.current=null;setAnimatedPoints(null);setCelebration(null);return;}
-  const before=previousBalance.current;
-  previousBalance.current={uid:balanceUID,points:actualBalance};
-  if(!before||before.uid!==balanceUID||before.points===actualBalance){displayedBalance.current=actualBalance;setAnimatedPoints(actualBalance);return;}
-  const gain=actualBalance-before.points;
-  const newlyUnlocked=gain>0?REWARDS.filter(r=>before.points<r.points&&actualBalance>=r.points):[];
-  const start=displayedBalance.current??before.points;
-  setAnimatedPoints(start);
-  if(gain>0)setCelebration({gain,unlocked:newlyUnlocked.map(r=>r.id),name:newlyUnlocked[newlyUnlocked.length-1]?.name||null,goalId:newlyUnlocked[newlyUnlocked.length-1]?.id||null});else setCelebration(null);
-  const reduce=typeof window.matchMedia==='function'&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let frame=0,timer=0;
-  if(reduce||typeof window.requestAnimationFrame!=='function'){displayedBalance.current=actualBalance;setAnimatedPoints(actualBalance)}else{
-    let begin=null;
-    const tick=now=>{if(begin===null)begin=now;const p=Math.min(1,(now-begin)/680);const value=Math.round(start+(actualBalance-start)*(1-Math.pow(1-p,3)));displayedBalance.current=value;setAnimatedPoints(value);if(p<1)frame=window.requestAnimationFrame(tick);};
+  if(!balanceUID||actualBalance===null||!(isDemo||profileFresh)){return}
+  const key='monas-seen-points-v1-'+balanceUID;
+  let seen=seenRef.current;
+  if(!seen||seen.uid!==balanceUID){
+    let stored=null;
+    if(!isDemo){try{const raw=localStorage.getItem(key);if(raw!==null&&/^\d+$/.test(raw))stored=Number(raw)}catch(_){}}
+    const first=stored===null&&!isDemo;
+    seen={uid:balanceUID,points:stored??(isDemo?actualBalance:0),first};
+    seenRef.current=seen;setSeenBalance({...seen});
+  }
+  function remember(points){
+    seen={uid:balanceUID,points,first:false};seenRef.current=seen;setSeenBalance({...seen});
+    if(!isDemo){try{localStorage.setItem(key,String(points))}catch(_){}}
+  }
+  const before=seen.points;
+  if(actualBalance<=before){
+    if(actualBalance<before||seen.first)remember(actualBalance);
+    setAnimatedPoints(actualBalance);setCelebration(null);return;
+  }
+  if(!rewardsVisible){setAnimatedPoints(actualBalance);setCelebration(null);return}
+  const gain=actualBalance-before;
+  const crossed=REWARDS.filter(r=>before<r.points&&actualBalance>=r.points);
+  const goal=crossed[crossed.length-1]||REWARDS.find(r=>actualBalance<r.points)||REWARDS[REWARDS.length-1];
+  const count=9;
+  setAnimatedPoints(before);
+  setCelebration({gain,from:before,to:actualBalance,first:seen.first,unlocked:crossed.map(r=>r.id),name:crossed[crossed.length-1]?.name||null,goalId:goal.id,complete:false,count});
+  let frame=0,finish=0,hide=0,started=null;
+  const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  function complete(){
+    setAnimatedPoints(actualBalance);remember(actualBalance);
+    setCelebration(c=>c?{...c,complete:true}:null);
+    hide=window.setTimeout(()=>setCelebration(null),crossed.length?2600:1600);
+  }
+  if(reduced||!window.requestAnimationFrame){complete()}
+  else {
+    // Las monedas llegan una por una (560 ms de vuelo, 100 ms entre ellas).
+    // El contador y la barra se actualizan a medida que van aterrizando.
+    const tick=now=>{
+      if(started===null)started=now;
+      const elapsed=now-started;
+      const landed=Math.max(0,Math.min(count,(elapsed-560)/100+1));
+      const value=Math.round(before+gain*landed/count);
+      setAnimatedPoints(value);
+      if(elapsed<1360)frame=window.requestAnimationFrame(tick);else complete();
+    };
     frame=window.requestAnimationFrame(tick);
   }
-  if(gain>0)timer=window.setTimeout(()=>setCelebration(null),newlyUnlocked.length?4800:3000);
-  return()=>{if(frame&&typeof window.cancelAnimationFrame==='function')window.cancelAnimationFrame(frame);if(timer)window.clearTimeout(timer);};
-},[balanceUID,actualBalance]);
+  return()=>{if(frame)window.cancelAnimationFrame(frame);if(finish)window.clearTimeout(finish);if(hide)window.clearTimeout(hide)};
+},[balanceUID,actualBalance,profileFresh,isDemo,rewardsVisible]);
+const pendingPoints=!!(seenBalance?.uid===balanceUID&&actualBalance!==null&&actualBalance>seenBalance.points);
 const showError=x=>{setError(errMsg(x));setNotice('')};const showNotice=x=>{setNotice(x);setError('')};
-useEffect(()=>{if(!auth||isDemo){setLoading(false);return}const unsub=auth.onAuthStateChanged(u=>{setUser(u);setTab('recompensas');setProfile(null);setProfileStatus(u?'cargando':'sin sesión');setLoading(false);setAdmin(false);setAdminStatus('comprobando');setClients([]);setVisits([]);setClientRequests([]);setAdminRequests([]);setClientVoids([]);setAdminVisits([]);setAdminVoids([]);setVoidTarget(null);setVoidReason('');setRewardToConfirm(null)});return unsub},[isDemo]);
+useEffect(()=>{if(!auth||isDemo){setLoading(false);return}const unsub=auth.onAuthStateChanged(u=>{setUser(u);setProfileFresh(false);setTab('recompensas');setProfile(null);setProfileStatus(u?'cargando':'sin sesión');setLoading(false);setAdmin(false);setAdminStatus('comprobando');setClients([]);setVisits([]);setClientRequests([]);setAdminRequests([]);setClientVoids([]);setAdminVisits([]);setAdminVoids([]);setVoidTarget(null);setVoidReason('');setRewardToConfirm(null)});return unsub},[isDemo]);
 useEffect(()=>{if(!db||!user)return;setAdminStatus('comprobando');setProfileStatus('cargando');const ref=db.collection('users').doc(user.uid);
 // Crear un perfil nuevo dentro de una transacción evita borrar puntos acreditados simultáneamente.
 let subscribed=true,initialRoleResolved=false;
-const u1=ref.onSnapshot(s=>{if(!subscribed)return;if(s.exists){setProfile({uid:s.id,...s.data()});setProfileStatus('listo')}else{setProfile(null);setProfileStatus('creando')}},x=>{if(!subscribed)return;setProfileStatus('error');showError(x)});
+const u1=ref.onSnapshot({includeMetadataChanges:true},s=>{if(!subscribed)return;setProfileFresh(!s.metadata?.fromCache&&!s.metadata?.hasPendingWrites);if(s.exists){setProfile({uid:s.id,...s.data()});setProfileStatus('listo')}else{setProfile(null);setProfileStatus('creando')}},x=>{if(!subscribed)return;setProfileStatus('error');showError(x)});
 db.runTransaction(async t=>{const existing=await t.get(ref);if(!existing.exists)t.set(ref,{displayName:user.displayName||'Clienta',email:user.email||'',photoURL:user.photoURL||'',points:0,visits:0,lastEventId:'',lastEventType:'none',createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()})}).catch(x=>{if(subscribed){setProfileStatus('error');showError(x)}});
 const u2=db.collection('admins').doc(user.uid).onSnapshot({includeMetadataChanges:true},s=>{if(!subscribed)return;if(s.metadata?.fromCache&&!initialRoleResolved)return;const enabled=s.exists&&s.data()?.enabled===true;setAdmin(enabled);setAdminStatus(enabled?'habilitada':s.exists?'enabled no es booleano true':'no existe admins/'+user.uid);if(!initialRoleResolved){initialRoleResolved=true;setTab(enabled?'admin':'recompensas')}else if(!enabled){setTab(t=>t==='admin'?'recompensas':t)}},x=>{if(!subscribed)return;setAdmin(false);setTab(t=>t==='admin'?'recompensas':t);setAdminStatus('error Firebase: '+errMsg(x));showError(x)});
 return()=>{subscribed=false;u1();u2()}},[user]);
@@ -442,23 +486,25 @@ function rewardsView(){
   const goal=achieved||activeReward||REWARDS[REWARDS.length-1];
   const allUnlocked=pointsReady&&!activeReward;
   const progress=pointsReady?Math.min(100,Math.max(0,shown/goal.points*100)):0;
-  const pct=pointsReady?Math.min(100,Math.floor(pts/goal.points*100)):0;
-  const remaining=Math.max(0,goal.points-pts);
+  const pct=pointsReady?Math.min(100,Math.floor(shown/goal.points*100)):0;
+  const remaining=Math.max(0,goal.points-shown);
   const near=pointsReady&&!achieved&&!allUnlocked&&pct>=75;
-  const completed=pointsReady&&(!!achieved||allUnlocked);
+  const completed=pointsReady&&shown>=goal.points&&(!!achieved||allUnlocked);
   const goToPrize=()=>{const el=document.getElementById('reward-'+goal.id);if(el&&typeof el.scrollIntoView==='function')el.scrollIntoView({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});};
   return e(React.Fragment,null,
     e('div',{className:'sectionTitle'},e('div',null,e('h2',null,'Tus puntos, tus premios'),e('p',null,'Cada visita te acerca a tu próxima recompensa.'))),
     e('div',{className:'pointsCard'+(celebration?' pointsCelebrating':'')+(near?' goalNear':'')+(completed?' goalComplete':'')},
       e('div',{className:'pointsRow'},e('div',null,e('div',{className:'eyebrow'},'Tu saldo disponible'),e('div',{className:'points'},pointsReady?shown.toLocaleString('es-PE'):'…',' ',e('span',null,'puntos'))),e('span',{className:'monasCoin coinBalance','aria-hidden':true},'M')),
-      celebration?e('div',{className:'pointsBurst mascotBurst',role:'status'},e('img',{src:'./images/monita.webp',className:'mascotCelebrate',alt:'',width:99,height:170}),e('div',{className:'mascotMessage'},e('strong',null,'+'+celebration.gain+' puntos ✨'),e('span',null,celebration.name?'¡Desbloqueaste '+celebration.name+'!':'¡Cada visita te acerca a tu premio!')),e('div',{className:'sparkles','aria-hidden':true},[0,1,2,3,4,5].map(i=>e('i',{key:i,style:{'--i':i}},i%2?'✦':'★'))),e('div',{className:'coinRain','aria-hidden':true},[0,1,2,3,4,5,6].map(i=>e('span',{key:i,className:'monasCoin flyingCoin',style:{'--i':i}},'M')))):null,
-      e('div',{className:'goalHeader'},e('div',{className:'goalThumb'},e(RewardPhoto,{key:goal.id,id:goal.id,alt:'',kind:'thumb',eager:true})),e('div',{className:'goalCopy'},e('div',{className:'eyebrow'},completed?'¡Meta alcanzada!':near?'¡Estás muy cerca!':'Tu próxima recompensa'),e('strong',null,goal.name),e('span',null,pointsReady?(completed?'¡Ya puedes solicitar tu premio!':pts.toLocaleString('es-PE')+' / '+goal.points.toLocaleString('es-PE')+' puntos'):'Cargando tu progreso…')),e('span',{className:'goalPercent'},pointsReady?pct+'%':'…')),
-      e('div',{className:'goalMeter'+(completed?' goalMeterFull':''),role:'progressbar','aria-label':'Progreso hacia '+goal.name,'aria-valuemin':0,'aria-valuemax':goal.points,'aria-valuenow':Math.min(goal.points,pts),'aria-valuetext':pointsReady?pct+'% completado':'Cargando'},
+      celebration?e('div',{className:'pointsBurst mascotBurst',role:'status'},e('img',{src:'./images/monita.webp',className:'mascotCelebrate',alt:'',width:99,height:170}),e('div',{className:'mascotMessage'},e('strong',null,(celebration.first?'':'+' )+celebration.gain+' puntos ✨'),e('span',null,celebration.first?'¡Estos son tus puntos acumulados!':celebration.name?(celebration.complete?'¡Desbloqueaste '+celebration.name+'!':'¡Estás a punto de desbloquear '+celebration.name+'!'):'¡Has recibido nuevos puntitos!')),e('div',{className:'sparkles','aria-hidden':true},[0,1,2,3,4,5].map(i=>e('i',{key:i,style:{'--i':i}},i%2?'✦':'★')))):null,
+      e('div',{className:'goalHeader'},e('div',{className:'goalThumb'},e(RewardPhoto,{key:goal.id,id:goal.id,alt:'',kind:'thumb',eager:true})),e('div',{className:'goalCopy'},e('div',{className:'eyebrow'},completed?'¡Meta alcanzada!':near?'¡Estás muy cerca!':'Tu próxima recompensa'),e('strong',null,goal.name),e('span',null,pointsReady?(completed?'¡Ya puedes solicitar tu premio!':shown.toLocaleString('es-PE')+' / '+goal.points.toLocaleString('es-PE')+' puntos'):'Cargando tu progreso…')),e('span',{className:'goalPercent'},pointsReady?pct+'%':'…')),
+      e('div',{className:'goalMeter'+(completed?' goalMeterFull':'')+(celebration&&!celebration.complete?' coinReceiving':''),role:'progressbar','aria-label':'Progreso hacia '+goal.name,'aria-valuemin':0,'aria-valuemax':goal.points,'aria-valuenow':Math.min(goal.points,pts),'aria-valuetext':pointsReady?pct+'% completado':'Cargando'},
         e('div',{className:'goalTrack'},e('div',{className:'goalFill',style:{width:progress+'%'}},e('div',{className:'goalSheen'}),progress>0?e('span',{className:'goalTip'}):null)),
-        e('div',{className:'goalTicks','aria-hidden':true},[0,25,50,75,100].map(n=>e('span',{key:n,style:{left:n+'%'}},n===100?'★':n===0?'':'·')))
+        e('div',{className:'goalTicks','aria-hidden':true},[0,25,50,75,100].map(n=>e('span',{key:n,style:{left:n+'%'}},n===100?'★':n===0?'':'·'))),
+        celebration&&!celebration.complete?e('div',{className:'coinLane','aria-hidden':true,key:'deposit-'+celebration.from+'-'+celebration.to},Array.from({length:celebration.count},(_,i)=>{const land=Math.max(3,Math.min(97,(celebration.from+(celebration.to-celebration.from)*(i+1)/celebration.count)/goal.points*100))+'%';const style={'--i':i,'--start':(12+(i*23)%77)+'%','--land':land};return e(React.Fragment,{key:i},e('span',{className:'monasCoin incomingCoin',style},'M'),e('span',{className:'coinLandingSpark',style},'✦'))})):null
       ),
       e('div',{className:'goalFooter'},e('strong',null,pointsReady?(completed?'🎉 ¡Lo lograste!':'Te faltan '+remaining.toLocaleString('es-PE')+' puntos'):'Sincronizando saldo…'),pointsReady?e('button',{className:'goalLink',onClick:goToPrize},completed?'Ver mi premio →':'Ver recompensa →'):null),
-      allUnlocked?e('p',{className:'tiny goalAll'},'¡Tienes puntos suficientes para todos los premios! Elige tu favorito.'):null
+      allUnlocked&&(!celebration||celebration.complete)?e('p',{className:'tiny goalAll'},'¡Tienes puntos suficientes para todos los premios! Elige tu favorito.'):null,
+      isDemo?e('button',{className:'button secondary demoPointButton',disabled:!!celebration,onClick:()=>setDemoClientState(c=>({...c,points:c.points+30}))},'Prueba: recibir +30 puntos'):null
     ),
     e('div',{className:'sectionTitle'},e('div',null,e('h2',null,'Elige tu recompensa'),e('p',null,'Los premios se desbloquean con tus puntos.'))),
     e('div',{className:'grid'},REWARDS.map(rewardCard)),e('p',{className:'rewardPhotoNote'},'Imágenes referenciales de los servicios.'),
@@ -542,6 +588,7 @@ function navButton(id,label,icon){
   const selected=tab===id, gift=id==='recompensas';
   return e('button',{key:id,className:(selected?'active ':'')+(gift?'giftNav':''),'aria-current':selected?'page':undefined,onClick:()=>{if(gift)setGiftTap(n=>n+1);setTab(id);setNotice('');setError('');if(typeof window.scrollTo==='function')window.scrollTo({top:0,behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}},
     e('span',{className:'navIcon'+(gift?' giftNavIcon':''),'aria-hidden':true},gift?e('span',{className:'giftEmoji',key:'gift-'+giftTap+'-'+selected},icon):icon,
+      gift&&pendingPoints&&!selected?e('span',{className:'pointsAlert',role:'img','aria-label':'Tienes nuevos puntos'}):null,
       gift&&selected?e('span',{className:'giftSparkBurst',key:'spark-'+giftTap,'aria-hidden':true},[0,1,2,3,4,5].map(n=>e('i',{key:n,style:{'--n':n}},n%2?'✧':'✦'))):null),label);
 }
 if(bootPending)return null;
