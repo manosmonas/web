@@ -83,6 +83,13 @@
 .pointsBurst.mascotBurst{animation:monas-pop .3s ease both}.pointsBurst .mascotMessage strong{font-variant-numeric:tabular-nums}.giftNav .pointsAlert{position:absolute;right:calc(50% - 22px);top:-4px;width:11px;height:11px;background:#d6a13d;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 2px #e6bf6d40}.demoPointButton{margin:8px 0 0;width:100%;font-size:12px}
 @media(prefers-reduced-motion:reduce){.coinLane{display:none}.coinReceiving .goalFill{transition:none!important}}
 .activityMore{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:12px;padding:12px;background:#fff5f9;border:1px solid #efd7e4;border-radius:12px;color:#a54374;font-size:13px;font-weight:800;cursor:pointer}.activityMore span{font-size:16px;line-height:1}.activityMore:focus-visible{outline:2px solid #a54374;outline-offset:3px}
+
+/* Momento del logro: una vista, foco sobre la foto y partículas doradas. */
+.unlockMoment{position:fixed;width:min(390px,calc(100% - 28px));max-height:calc(100dvh - 24px);margin:auto;border:1px solid #f1d4e2;border-radius:26px;padding:26px 22px 22px;background:radial-gradient(ellipse at 50% 48%,#fff0cd 0%,#fff9ee 36%,#fff5fa 73%);box-shadow:0 22px 90px #53203b66;text-align:center;color:#563147;overflow:auto;animation:unlock-moment-in .36s cubic-bezier(.2,.75,.3,1) both}
+.unlockMoment::backdrop{background:#41283f9c;backdrop-filter:blur(4px)}.unlockClose{position:absolute;right:12px;top:12px;display:grid;place-items:center;width:33px;height:33px;border:1px solid #efd7e1;border-radius:50%;background:#fff;color:#a66a85;font-size:23px;line-height:1;cursor:pointer}.unlockKicker{font-size:10px;letter-spacing:.19em;font-weight:800;color:#b17a32;margin:6px 26px 10px}.unlockMoment h2{font-family:'Playfair Display',Georgia,serif;font-size:clamp(25px,6vw,31px);line-height:1.14;margin:0;color:#783c60}.unlockIntro{font-size:13px;color:#947082;margin:10px 0 5px}.unlockStage{position:relative;isolation:isolate;width:240px;max-width:100%;height:202px;margin:15px auto 11px;display:grid;place-items:center}.unlockHalo{position:absolute;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle,#ffe7a5aa 0%,#f6d48566 45%,transparent 72%);animation:unlock-halo 2.4s ease-in-out infinite}.unlockPrizePhoto{position:relative;width:135px;height:169px;border:3px solid #fff8e8;border-radius:19px;overflow:hidden;box-shadow:0 0 0 1px #dfb65d,0 9px 28px #a76a3845;animation:unlock-prize-in .55s .12s cubic-bezier(.2,.75,.3,1.15) both;z-index:1}.unlockSparkLayer{position:absolute;inset:0;pointer-events:none;z-index:2}.unlockSpark{position:absolute;left:50%;top:50%;color:#cb9634;font-size:var(--size);text-shadow:0 0 7px #fff4a5;opacity:0;animation:unlock-sparkle 1.45s calc(.12s + var(--d)) ease-out both;transform-origin:0 0}.unlockCheck{position:absolute;right:calc(50% - 83px);bottom:10px;z-index:3;display:grid;place-items:center;width:35px;height:35px;background:linear-gradient(145deg,#ffe9a2,#d5a139);border:2px solid #fff6d6;border-radius:50%;font-size:20px;color:#815516;font-weight:900;box-shadow:0 3px 8px #a76a3833;animation:unlock-prize-in .4s .5s both}.unlockPrizeName{font-size:21px;font-weight:800;line-height:1.2;color:#563147}.unlockPoints{font-size:14px;color:#a77a32;font-weight:800;margin:6px 0}.unlockHint{font-size:13px;line-height:1.45;color:#947082;margin:12px 0 15px}.unlockOtherPrizes{display:grid;gap:5px;background:#fff9ec;border:1px solid #f0dbad;border-radius:12px;padding:10px;margin-top:11px;font-size:12px;text-align:left;color:#8e6531}.unlockOtherPrizes strong{font-size:11px;text-transform:uppercase;letter-spacing:.06em}.unlockView{font-size:15px;padding:14px 10px;background:linear-gradient(100deg,#a54374,#b45b8b);box-shadow:0 5px 15px #a5437430}.unlockMoment button:focus-visible{outline:2px solid #8c3b68;outline-offset:3px}
+@keyframes unlock-moment-in{from{opacity:0;transform:scale(.94) translateY(12px)}to{opacity:1;transform:none}}@keyframes unlock-prize-in{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}@keyframes unlock-halo{0%,100%{transform:scale(.94);opacity:.75}50%{transform:scale(1.08);opacity:1}}@keyframes unlock-sparkle{0%{opacity:0;transform:rotate(var(--a)) translateX(25px) scale(.2)}22%{opacity:1}65%{opacity:1;transform:rotate(var(--a)) translateX(var(--r)) rotate(calc(-1 * var(--a))) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateX(calc(var(--r) + 14px)) rotate(calc(-1 * var(--a))) scale(.4)}}
+@media(max-height:620px){.unlockMoment{padding:18px}.unlockStage{height:158px;margin:8px auto}.unlockPrizePhoto{width:104px;height:130px}.unlockHalo{width:150px;height:150px}.unlockIntro{margin:5px 0}.unlockHint{margin:8px 0}.unlockMoment h2{font-size:24px}}
+@media(prefers-reduced-motion:reduce){.unlockMoment,.unlockPrizePhoto,.unlockCheck,.unlockHalo,.unlockSpark{animation:none!important;transform:none!important}.unlockSparkLayer{display:none}}
 </style>
 <link rel="preload" as="image" href="./images/monita.webp">
 </head><body>
@@ -223,6 +230,29 @@ function BirthdayInvite({birthday}){
     e('p',null,'¡Queremos sorprenderte en tu día!'),
     e(BirthdayForm,{birthday,initial:true,onClose:()=>birthday.setPrompt(false)}));
 }
+// Un solo escenario de celebración, incluso cuando se desbloquean varios premios.
+function UnlockMoment({moment,onClose,onView}){
+  const ref=useRef(null);
+  const prizes=moment.ids.map(id=>REWARDS.find(r=>r.id===id)).filter(Boolean);
+  const main=prizes[prizes.length-1];
+  useEffect(()=>{const node=ref.current;if(node&&!node.open)node.showModal();return()=>{if(node?.open)node.close()}},[]);
+  if(!main)return null;
+  return e('dialog',{ref,className:'unlockMoment','aria-labelledby':'unlockTitle',onCancel:ev=>{ev.preventDefault();onClose()}},
+    e('button',{type:'button',className:'unlockClose','aria-label':'Cerrar celebración',onClick:onClose},'×'),
+    e('div',{className:'unlockKicker'},'✦ CLUB MONAS ✦'),
+    e('h2',{id:'unlockTitle'},prizes.length===1?'¡Nueva recompensa desbloqueada!':'¡Nuevas recompensas desbloqueadas!'),
+    e('p',{className:'unlockIntro'},'¡Lo lograste! Tus visitas se convierten en premios.'),
+    e('div',{className:'unlockStage','aria-hidden':true},
+      e('div',{className:'unlockHalo'}),
+      e('div',{className:'unlockPrizePhoto'},e(RewardPhoto,{key:main.id,id:main.id,alt:'',eager:true})),
+      e('div',{className:'unlockSparkLayer'},Array.from({length:12},(_,i)=>e('span',{key:i,className:'unlockSpark',style:{'--a':(i*30)+'deg','--d':(i%3)*.07+'s','--r':(i%2?116:94)+'px','--size':(i%3===0?23:15)+'px'}},i%2?'✧':'✦'))),
+      e('span',{className:'unlockCheck'},'✓')),
+    e('div',{className:'unlockPrizeName'},main.name),
+    e('div',{className:'unlockPoints'},'✦ '+main.points.toLocaleString('es-PE')+' puntos'),
+    prizes.length>1?e('div',{className:'unlockOtherPrizes'},e('strong',null,'También desbloqueaste'),...prizes.slice(0,-1).map(r=>e('span',{key:r.id},'✓ '+r.name+' · '+r.points+' pts'))):null,
+    e('p',{className:'unlockHint'},'Tu premio ya está disponible para canjear.'),
+    e('button',{type:'button',className:'button full unlockView',onClick:()=>onView(main.id),autoFocus:true},prizes.length===1?'Ver mi recompensa':'Ver mis recompensas'));
+}
 function App(){
 const [demoEntered,setDemoEntered]=useState(true),[demoProvider,setDemoProvider]=useState('Google');
 const [demoClientState,setDemoClientState]=useState(demoClient),[demoVisitsState,setDemoVisitsState]=useState(demoVisits),[demoRequestsState,setDemoRequestsState]=useState([]);
@@ -238,6 +268,7 @@ const [activityExpanded,setActivityExpanded]=useState(false);
 useEffect(()=>{setActivityExpanded(false)},[user?.uid,demoEntered,tab]);
 
 const [animatedPoints,setAnimatedPoints]=useState(null),[celebration,setCelebration]=useState(null);
+const [unlockMoment,setUnlockMoment]=useState(null);
 
 const liveWrites=window.MANOS_MONAS_ENABLE_WRITES===true;
 const isDemo=true;
@@ -302,6 +333,7 @@ useEffect(()=>{
   function complete(){
     setAnimatedPoints(actualBalance);remember(actualBalance);
     setCelebration(c=>c?{...c,complete:true}:null);
+    if(crossed.length)setUnlockMoment(old=>({uid:balanceUID,ids:[...new Set([...(old?.uid===balanceUID?old.ids:[]),...crossed.map(r=>r.id)])]}));
     hide=window.setTimeout(()=>setCelebration(null),crossed.length?2600:1600);
   }
   if(reduced||!window.requestAnimationFrame){complete()}
@@ -321,8 +353,10 @@ useEffect(()=>{
   return()=>{if(frame)window.cancelAnimationFrame(frame);if(hide)window.clearTimeout(hide)};
 },[balanceUID,actualBalance,profileFresh,isDemo,rewardsVisible]);
 const pendingPoints=!!(seenBalance?.uid===balanceUID&&actualBalance!==null&&actualBalance>seenBalance.points);
+const visibleUnlock=unlockMoment?.uid===balanceUID&&rewardsVisible?unlockMoment:null;
+function viewUnlocked(id){setUnlockMoment(null);setTab('recompensas');window.requestAnimationFrame(()=>document.getElementById('reward-'+id)?.scrollIntoView({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'}))}
 const showError=x=>{setError(errMsg(x));setNotice('')};const showNotice=x=>{setNotice(x);setError('')};
-useEffect(()=>{if(!auth||isDemo){setLoading(false);return}const unsub=auth.onAuthStateChanged(u=>{setUser(u);setProfileFresh(false);setTab('recompensas');setProfile(null);setProfileStatus(u?'cargando':'sin sesión');setLoading(false);setAdmin(false);setAdminStatus('comprobando');setClients([]);setVisits([]);setClientRequests([]);setAdminRequests([]);setClientVoids([]);setAdminVisits([]);setAdminVoids([]);setVoidTarget(null);setVoidReason('');setRewardToConfirm(null)});return unsub},[isDemo]);
+useEffect(()=>{if(!auth||isDemo){setLoading(false);return}const unsub=auth.onAuthStateChanged(u=>{setUser(u);setUnlockMoment(null);setProfileFresh(false);setTab('recompensas');setProfile(null);setProfileStatus(u?'cargando':'sin sesión');setLoading(false);setAdmin(false);setAdminStatus('comprobando');setClients([]);setVisits([]);setClientRequests([]);setAdminRequests([]);setClientVoids([]);setAdminVisits([]);setAdminVoids([]);setVoidTarget(null);setVoidReason('');setRewardToConfirm(null)});return unsub},[isDemo]);
 useEffect(()=>{if(!db||!user)return;setAdminStatus('comprobando');setProfileStatus('cargando');const ref=db.collection('users').doc(user.uid);
 // Crear un perfil nuevo dentro de una transacción evita borrar puntos acreditados simultáneamente.
 let subscribed=true,initialRoleResolved=false;
@@ -508,7 +542,7 @@ function rewardsView(){
       ),
       e('div',{className:'goalFooter'},e('strong',null,pointsReady?(completed?'🎉 ¡Lo lograste!':'Te faltan '+remaining.toLocaleString('es-PE')+' puntos'):'Sincronizando saldo…'),pointsReady?e('button',{className:'goalLink',onClick:goToPrize},completed?'Ver mi premio →':'Ver recompensa →'):null),
       allUnlocked&&(!celebration||celebration.complete)?e('p',{className:'tiny goalAll'},'¡Tienes puntos suficientes para todos los premios! Elige tu favorito.'):null,
-      isDemo?e('button',{className:'button secondary demoPointButton',disabled:!!celebration,onClick:()=>setDemoClientState(c=>({...c,points:c.points+30}))},'Prueba: recibir +30 puntos'):null
+      isDemo?e(React.Fragment,null,e('button',{className:'button secondary demoPointButton',disabled:!!celebration,onClick:()=>setDemoClientState(c=>({...c,points:c.points+30}))},'Prueba: recibir +30 puntos'),activeReward?e('button',{className:'button secondary demoPointButton',disabled:!!celebration,onClick:()=>setDemoClientState(c=>({...c,points:activeReward.points}))},'Prueba: desbloquear próximo premio'):null):null
     ),
     e('div',{className:'sectionTitle'},e('div',null,e('h2',null,'Elige tu recompensa'),e('p',null,'Los premios se desbloquean con tus puntos.'))),
     e('div',{className:'grid'},REWARDS.map(rewardCard)),e('p',{className:'rewardPhotoNote'},'Imágenes referenciales de los servicios.'),
@@ -610,6 +644,7 @@ notice?e('div',{className:'notice ok',role:'status',style:{marginTop:16}},notice
 e('main',{className:'tabEntrance',key:tab},tab==='recompensas'?rewardsView():tab==='perfil'?profileView():tab==='reservas'?e('div',{className:'panel',style:{marginTop:24,textAlign:'center',padding:42}},e('div',{style:{fontSize:48}},'🗓️'),e('h2',null,'Reservas, próximamente'),e('p',{className:'muted'},'Estamos preparando una manera más sencilla de reservar tus servicios.')):isAdmin&&tab==='admin'?adminView():null),
 e('nav',{className:'nav','aria-label':'Navegación'},isAdmin?navButton('admin','Jefa','⚙️'):null,navButton('recompensas','Recompensas','🎁'),navButton('perfil','Perfil','👤'))),
 birthday.prompt?e(BirthdayInvite,{birthday}):null,
+visibleUnlock&&!birthday.prompt?e(UnlockMoment,{key:visibleUnlock.uid,moment:visibleUnlock,onClose:()=>setUnlockMoment(null),onView:viewUnlocked}):null,
 e('div',{className:'footer'},'Hecho con ♡ para Manos Monas Home Studio · San Juan de Lurigancho')));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(e(App));
