@@ -13,6 +13,12 @@
 .locked .rewardArt{filter:none;opacity:1}.locked .rewardArt img{filter:saturate(.65) brightness(.82)}
 .rewardArt .rewardLock{position:absolute;top:9px;right:9px;width:32px;height:32px;display:grid;place-items:center;background:#fffdf9ed;border:1px solid #fff;border-radius:50%;font-size:15px;box-shadow:0 2px 8px #48263d30}
 .rewardPhotoNote{color:#927887;font-size:11px;margin:8px 0 0}
+
+/* Club Monas: microinteracciones y perfil (solo presentación). */
+.pointsCard{position:relative;isolation:isolate}.points{font-variant-numeric:tabular-nums}.pointsRibbon{display:inline-block}.pointsCelebrating{border-color:#e9a5c5;box-shadow:0 0 0 3px #f7dce9,0 12px 32px #bf669d18}.pointsCelebrating .pointsRibbon{animation:monas-bounce .65s ease both}.pointsBurst{position:relative;display:grid;gap:3px;background:#fff0f7;border:1px solid #f3d4e3;border-radius:12px;padding:12px 14px;margin:12px 0;color:#a54374;animation:monas-pop .35s ease both}.pointsBurst span{font-size:12px;color:#805d72}.sparkles{position:absolute;inset:0;pointer-events:none;overflow:hidden}.sparkles i{position:absolute;left:calc(10% + var(--i)*15%);top:60%;font-style:normal;font-size:16px;color:#d99e37;animation:monas-sparkle 1.2s calc(var(--i)*.075s) ease-out both}.justUnlocked{animation:monas-unlock .75s ease-out both;box-shadow:0 0 0 2px #eab1cc,0 8px 22px #ad5f8d25}.unlockMark{color:#be8534}.meter span{transition:width .7s cubic-bezier(.2,.75,.25,1)}.headerAccount{border:0;background:none;padding:0;border-radius:50%;display:grid;place-items:center}.profilePanel{padding:22px}.profileIdentity{min-width:0;overflow-wrap:anywhere}.profileIdentity h3{margin:4px 0;font-size:20px}.profileStats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:20px 0}.profileStat{background:#fff4f8;border:1px solid #f2e0e9;border-radius:13px;padding:12px 7px;text-align:center}.profileStat .bigStat{font-size:24px}.profileStat .tiny{font-size:11px}.profileDetails{border-top:1px solid #f3e4eb}.infoRow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f3e4eb;font-size:13px;color:#927887}.infoRow strong{color:#473240;text-align:right;max-width:58%;overflow-wrap:anywhere}.profileActions{display:grid;gap:9px;margin-top:18px}.request-approved{background:#eaf8f0;color:#286947}.request-pending{background:#fff1de;color:#896321}.request-rejected{background:#ffe9e9;color:#982d46}.nav{position:sticky;bottom:12px;gap:5px}.nav button{flex:1;min-width:0;padding:10px 8px}.nav button.active .navIcon{animation:monas-pop .25s ease}
+@keyframes monas-pop{from{opacity:.4;transform:scale(.92)}to{opacity:1;transform:scale(1)}}@keyframes monas-bounce{0%,100%{transform:translateY(0) rotate(0)}45%{transform:translateY(-9px) rotate(-10deg)}}@keyframes monas-sparkle{0%{opacity:0;transform:translateY(8px) scale(.3)}35%{opacity:1}100%{opacity:0;transform:translateY(-35px) rotate(35deg) scale(.7)}}@keyframes monas-unlock{0%{transform:scale(.97);filter:brightness(.95)}60%{transform:scale(1.025);filter:brightness(1.08)}100%{transform:scale(1);filter:none}}
+@media(max-width:520px){.profilePanel{padding:16px}.profileStats{gap:6px}.profileStat .bigStat{font-size:22px}.profileStat .tiny{font-size:10px}.profileIdentity h3{font-size:17px}.nav button{font-size:12px}.top .toolbar{gap:5px}.top .chip{font-size:10px}.pointsBurst{padding:10px}}
+@media(prefers-reduced-motion:reduce){.pointsRibbon,.pointsBurst,.sparkles i,.justUnlocked,.nav button.active .navIcon{animation:none!important}.meter span{transition:none!important}.sparkles{display:none}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js" crossorigin></script>
 <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
@@ -37,7 +43,7 @@ window.MANOS_MONAS_ENABLE_WRITES = true;
 <script>
 (function(){
 'use strict';
-const e=React.createElement,{useState,useEffect}=React;
+const e=React.createElement,{useState,useEffect,useRef}=React;
 const REWARDS=[{id:'manicura',name:'Manicura clásica',points:200,emoji:'💅'},{id:'pedicura',name:'Pedicura clásica',points:400,emoji:'🦶'},{id:'lifting',name:'Lifting de pestañas',points:650,emoji:'👁️'},{id:'alisado',name:'Descuento en alisado',points:1000,emoji:'✨'}];
 const SERVICES=[{id:'manicura',name:'Manicura',points:30},{id:'pedicura',name:'Pedicura',points:40},{id:'pestanas',name:'Pestañas',points:50},{id:'mechas',name:'Mechas',points:90},{id:'alisado',name:'Alisado',points:110}];
 const configured=!!(window.MANOS_MONAS_FIREBASE.apiKey&&window.MANOS_MONAS_FIREBASE.projectId);
@@ -57,6 +63,8 @@ const [demoVoids,setDemoVoids]=useState([]),[clientVoids,setClientVoids]=useStat
 const [voidTarget,setVoidTarget]=useState(null),[voidReason,setVoidReason]=useState('');
 const [rewardToConfirm,setRewardToConfirm]=useState(null);
 const [profileStatus,setProfileStatus]=useState('sin sesión');
+const [animatedPoints,setAnimatedPoints]=useState(null),[celebration,setCelebration]=useState(null);
+const previousBalance=useRef(null),displayedBalance=useRef(null);
 const liveWrites=window.MANOS_MONAS_ENABLE_WRITES===true;
 const isDemo=!configured||new URLSearchParams(window.location.search).has('demo');
 const canVoid=isDemo||liveWrites;
@@ -72,6 +80,32 @@ const clientList=isDemo?[demoClientState]:clients;
 const activeClient=clientList.find(c=>c.uid===chosenClient)||clientList[0];
 const activeReward=REWARDS.filter(r=>(current?.points||0)<r.points).sort((a,b)=>a.points-b.points)[0];
 const pointsReady=isDemo||profileStatus==='listo';
+const balanceUID=isDemo?'demo':user?.uid;
+const actualBalance=pointsReady&&current&&Number.isFinite(current.points)?current.points:null;
+const ownRequests=visibleClientRequests.filter(x=>x.userId===(user?.uid||'demo'));
+const approvedCount=ownRequests.filter(x=>x.status==='approved').length;
+const unlockedCount=pointsReady?REWARDS.filter(r=>(current?.points||0)>=r.points).length:null;
+// Animate only real changes for the same profile; never celebrate the initial balance or a new login.
+useEffect(()=>{
+  if(!balanceUID||actualBalance===null){previousBalance.current=null;displayedBalance.current=null;setAnimatedPoints(null);setCelebration(null);return;}
+  const before=previousBalance.current;
+  previousBalance.current={uid:balanceUID,points:actualBalance};
+  if(!before||before.uid!==balanceUID||before.points===actualBalance){displayedBalance.current=actualBalance;setAnimatedPoints(actualBalance);return;}
+  const gain=actualBalance-before.points;
+  const newlyUnlocked=gain>0?REWARDS.filter(r=>before.points<r.points&&actualBalance>=r.points):[];
+  const start=displayedBalance.current??before.points;
+  setAnimatedPoints(start);
+  if(gain>0)setCelebration({gain,unlocked:newlyUnlocked.map(r=>r.id),name:newlyUnlocked[0]?.name||null});else setCelebration(null);
+  const reduce=typeof window.matchMedia==='function'&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let frame=0,timer=0;
+  if(reduce||typeof window.requestAnimationFrame!=='function'){displayedBalance.current=actualBalance;setAnimatedPoints(actualBalance)}else{
+    let begin=null;
+    const tick=now=>{if(begin===null)begin=now;const p=Math.min(1,(now-begin)/680);const value=Math.round(start+(actualBalance-start)*(1-Math.pow(1-p,3)));displayedBalance.current=value;setAnimatedPoints(value);if(p<1)frame=window.requestAnimationFrame(tick);};
+    frame=window.requestAnimationFrame(tick);
+  }
+  if(gain>0)timer=window.setTimeout(()=>setCelebration(null),3600);
+  return()=>{if(frame&&typeof window.cancelAnimationFrame==='function')window.cancelAnimationFrame(frame);if(timer)window.clearTimeout(timer);};
+},[balanceUID,actualBalance]);
 const showError=x=>{setError(errMsg(x));setNotice('')};const showNotice=x=>{setNotice(x);setError('')};
 useEffect(()=>{if(!auth||isDemo){setLoading(false);return}const unsub=auth.onAuthStateChanged(u=>{setUser(u);setTab('recompensas');setProfile(null);setProfileStatus(u?'cargando':'sin sesión');setLoading(false);setAdmin(false);setAdminStatus('comprobando');setClients([]);setVisits([]);setClientRequests([]);setAdminRequests([]);setClientVoids([]);setAdminVisits([]);setAdminVoids([]);setVoidTarget(null);setVoidReason('');setRewardToConfirm(null)});return unsub},[isDemo]);
 useEffect(()=>{if(!db||!user)return;setAdminStatus('comprobando');setProfileStatus('cargando');const ref=db.collection('users').doc(user.uid);
@@ -213,8 +247,8 @@ function rewardCard(r){
   const unlocked=pointsReady&&(current?.points||0)>=r.points;
   const pending=visibleClientRequests.some(x=>x.rewardId===r.id&&x.status==='pending'&&x.userId===(user?.uid||'demo'));
   const confirming=rewardToConfirm===r.id&&!pending&&unlocked;
-  return e('article',{className:'reward'+(!unlocked?' locked':''),key:r.id},
-    e('div',{className:'rewardArt'},e('img',{src:'./images/rewards/'+r.id+'.webp',alt:r.name+' (imagen referencial)',loading:'lazy',decoding:'async',width:176,height:220}),!unlocked?e('span',{className:'rewardLock','aria-hidden':true},'🔒'):null),
+  return e('article',{className:'reward'+(!unlocked?' locked':'')+(celebration?.unlocked.includes(r.id)?' justUnlocked':''),key:r.id},
+    e('div',{className:'rewardArt'},e('img',{src:'./images/rewards/'+r.id+'.webp',alt:r.name+' (imagen referencial)',loading:'lazy',decoding:'async',width:176,height:220}),!unlocked?e('span',{className:'rewardLock','aria-hidden':true},'🔒'):celebration?.unlocked.includes(r.id)?e('span',{className:'rewardLock unlockMark','aria-hidden':true},'✨'):null),
     e('h3',null,r.name),
     e('div',{className:'tiny'},r.points+' puntos'),
     button(pending?'⏳ Solicitud pendiente':unlocked?'Solicitar canje':'🔒 Bloqueado',
@@ -231,9 +265,28 @@ function rewardCard(r){
     ):null
   );
 }
-function rewardsView(){const pts=pointsReady?(current?.points||0):0;return e(React.Fragment,null,e('div',{className:'sectionTitle'},e('div',null,e('h2',null,'Tus puntos, tus premios'),e('p',null,'Cada visita te acerca a tu próxima recompensa.'))),e('div',{className:'pointsCard'},e('div',{className:'pointsRow'},e('div',null,e('div',{className:'eyebrow'},'Tu saldo disponible'),e('div',{className:'points'},pointsReady?pts.toLocaleString('es-PE'):'…',' ',e('span',null,'puntos'))),e('span',{style:{fontSize:34}},'🎀')),e('div',{className:'meter'},e('span',{style:{width:activeReward?Math.min(100,pts/activeReward.points*100)+'%':'100%'}})),e('div',{className:'tiny'},pointsReady?(activeReward?'Te faltan '+(activeReward.points-pts)+' puntos para '+activeReward.name+'.':'¡Tienes puntos para las recompensas disponibles!'):'Sincronizando tu saldo con Firebase…')),e('div',{className:'sectionTitle'},e('div',null,e('h2',null,'Elige tu recompensa'),e('p',null,'Los premios se desbloquean con tus puntos.'))),e('div',{className:'grid'},REWARDS.map(rewardCard)),e('p',{className:'rewardPhotoNote'},'Imágenes referenciales de los servicios.'),e('div',{className:'sectionTitle'},e('h2',null,'Tu actividad')),e('div',{className:'panel'},visibleVisits.length?visibleVisits.map(v=>{const cancelled=visibleClientVoids.find(c=>c.visitId===v.id);return e('div',{className:'listEntry',key:v.id},e('div',null,e('strong',null,v.serviceName),e('div',{className:'tiny'},ts(v.createdAt)),cancelled?e('div',{className:'tiny'},'Anulada: '+cancelled.reason):null),e('strong',{style:{color:cancelled?'#927887':'#a54475'}},cancelled?'Anulada':'+'+v.points+' pts'))}):isDemo?demoVisitsState.map(v=>e('div',{className:'listEntry',key:v.id},e('span',null,v.serviceName),e('strong',null,'+'+v.points+' pts'))):e('div',{className:'empty'},'Aún no registramos servicios. Después de tu primera atención aparecerán aquí.')))}
+function rewardsView(){const pts=pointsReady?(current?.points||0):0;return e(React.Fragment,null,e('div',{className:'sectionTitle'},e('div',null,e('h2',null,'Tus puntos, tus premios'),e('p',null,'Cada visita te acerca a tu próxima recompensa.'))),e('div',{className:'pointsCard'+(celebration?' pointsCelebrating':'')},e('div',{className:'pointsRow'},e('div',null,e('div',{className:'eyebrow'},'Tu saldo disponible'),e('div',{className:'points'},pointsReady?(animatedPoints??pts).toLocaleString('es-PE'):'…',' ',e('span',null,'puntos'))),e('span',{className:'pointsRibbon',style:{fontSize:34},'aria-hidden':true},'🎀')),celebration?e('div',{className:'pointsBurst',role:'status'},e('strong',null,'+'+celebration.gain+' puntos ✨'),e('span',null,celebration.name?'¡Desbloqueaste '+celebration.name+'!':'¡Cada visita te acerca a tu premio!'),e('div',{className:'sparkles','aria-hidden':true},[0,1,2,3,4,5].map(i=>e('i',{key:i,style:{'--i':i}},i%2?'✦':'★')))):null,e('div',{className:'meter'},e('span',{style:{width:activeReward?Math.min(100,pts/activeReward.points*100)+'%':'100%'}})),e('div',{className:'tiny'},pointsReady?(activeReward?'Te faltan '+(activeReward.points-pts)+' puntos para '+activeReward.name+'.':'¡Tienes puntos para las recompensas disponibles!'):'Sincronizando tu saldo con Firebase…')),e('div',{className:'sectionTitle'},e('div',null,e('h2',null,'Elige tu recompensa'),e('p',null,'Los premios se desbloquean con tus puntos.'))),e('div',{className:'grid'},REWARDS.map(rewardCard)),e('p',{className:'rewardPhotoNote'},'Imágenes referenciales de los servicios.'),e('div',{className:'sectionTitle'},e('h2',null,'Tu actividad')),e('div',{className:'panel'},visibleVisits.length?visibleVisits.map(v=>{const cancelled=visibleClientVoids.find(c=>c.visitId===v.id);return e('div',{className:'listEntry',key:v.id},e('div',null,e('strong',null,v.serviceName),e('div',{className:'tiny'},ts(v.createdAt)),cancelled?e('div',{className:'tiny'},'Anulada: '+cancelled.reason):null),e('strong',{style:{color:cancelled?'#927887':'#a54475'}},cancelled?'Anulada':'+'+v.points+' pts'))}):isDemo?demoVisitsState.map(v=>e('div',{className:'listEntry',key:v.id},e('span',null,v.serviceName),e('strong',null,'+'+v.points+' pts'))):e('div',{className:'empty'},'Aún no registramos servicios. Después de tu primera atención aparecerán aquí.')))}
 function avatar(size=58){const p=user?.photoURL||current?.photoURL||(user?.providerData||[]).find(x=>x?.photoURL)?.photoURL;const safeUrl=typeof p==='string'&&/^https:\/\//i.test(p)?p:null;return e('span',{className:'avatar',style:{width:size,height:size,fontSize:Math.round(size*.46)},'aria-label':safeUrl?'Foto de perfil':'Avatar de perfil'},'🐒',safeUrl?e('img',{src:safeUrl,alt:'Tu foto de perfil',referrerPolicy:'no-referrer',onError:ev=>{ev.currentTarget.style.display='none'}}):null)}
-function profileView(){return e(React.Fragment,null,e('div',{className:'sectionTitle'},e('h2',null,'Mi perfil')),e('div',{className:'panel'},e('div',{className:'profile'},avatar(68),e('div',null,e('h3',null,current?.displayName||'Clienta'),e('div',{className:'tiny'},current?.email||''))),e('div',{className:'adminGrid',style:{marginTop:25}},e('div',null,e('div',{className:'bigStat'},pointsReady?(current?.points??0).toLocaleString('es-PE'):'…'),e('div',{className:'tiny'},pointsReady?'Puntos disponibles · Firebase':'Sincronizando puntos…')),e('div',null,e('div',{className:'bigStat'},pointsReady?(current?.visits??0):'…'),e('div',{className:'tiny'},'Visitas registradas'))),!pointsReady?e('div',{className:'notice',role:'status',style:{marginTop:16}},profileStatus==='error'?'No se pudo leer tu saldo desde Firebase. Revisa el mensaje de error.':'Consultando tu saldo guardado…'):null,isAdmin?e('div',{className:'notice',style:{marginTop:18}},'Estás viendo tu propio perfil de administradora. El saldo de cada clienta aparece en el panel Jefa → Registrar atención.'):null,!isDemo?e('div',{style:{marginTop:24}},button('Cerrar sesión',logout,'secondary')):null),e('div',{className:'sectionTitle'},e('h2',null,'Mis solicitudes')),e('div',{className:'panel'},visibleClientRequests.filter(x=>x.userId===(user?.uid||'demo')).length?visibleClientRequests.filter(x=>x.userId===(user?.uid||'demo')).map(r=>e('div',{className:'listEntry',key:r.id},e('span',null,REWARDS.find(z=>z.id===r.rewardId)?.name||r.rewardId),e('span',{className:'pill'},r.status==='pending'?'Pendiente':r.status==='approved'?'Aprobada':'Rechazada'))):e('div',{className:'empty'},'Aún no tienes solicitudes de canje.')))}
+function profileView(){
+  const lastVisit=visibleVisits.find(v=>!visibleClientVoids.some(c=>c.visitId===v.id));
+  const memberDate=current?.createdAt?.toDate?current.createdAt.toDate().toLocaleDateString('es-PE',{month:'long',year:'numeric'}):null;
+  const provider=isDemo?demoProvider:(user?.providerData||[]).map(x=>x.providerId==='google.com'?'Google':x.providerId==='facebook.com'?'Facebook':null).filter(Boolean).join(' · ');
+  const stat=(label,value)=>e('div',{className:'profileStat'},e('div',{className:'bigStat'},value),e('div',{className:'tiny'},label));
+  const info=(label,value)=>e('div',{className:'infoRow'},e('span',null,label),e('strong',null,value||'—'));
+  return e(React.Fragment,null,
+    e('div',{className:'sectionTitle'},e('h2',null,'Mi perfil')),
+    e('div',{className:'panel profilePanel'},
+      e('div',{className:'profile'},avatar(72),e('div',{className:'profileIdentity'},e('div',{className:'eyebrow'},isAdmin?'Jefa de salón':'Miembro del Club Monas'),e('h3',null,current?.displayName||'Clienta'),e('div',{className:'tiny'},current?.email||'Correo no disponible'))),
+      e('div',{className:'profileStats'},stat('Puntos',pointsReady?(current?.points??0).toLocaleString('es-PE'):'…'),stat('Visitas',pointsReady?(current?.visits??0):'…'),stat('Canjes aprobados',approvedCount)),
+      !pointsReady?e('div',{className:'notice',role:'status'},profileStatus==='error'?'No se pudo leer tu saldo. Revisa tu conexión.':'Consultando tu saldo guardado…'):null,
+      e('div',{className:'profileDetails'},info('Premios disponibles',unlockedCount===null?'…':String(unlockedCount)),info('Última visita',lastVisit?ts(lastVisit.createdAt):'Sin visitas'),memberDate?info('Miembro desde',memberDate):null,provider?info('Cuenta vinculada',provider):null),
+      isAdmin?e('div',{className:'tiny',style:{marginTop:12}},'Este es tu perfil personal. Gestiona a las clientas desde el menú Jefa.'):null,
+      e('div',{className:'profileActions'},button('Ver recompensas',()=>{setTab('recompensas');setNotice('');setError('')},'full'),!isDemo?button('Cerrar sesión',logout,'secondary full'):null)
+    ),
+    e('div',{className:'sectionTitle'},e('h2',null,'Mis solicitudes')),
+    e('div',{className:'panel'},ownRequests.length?ownRequests.map(r=>e('div',{className:'listEntry',key:r.id},e('div',null,e('strong',null,REWARDS.find(z=>z.id===r.rewardId)?.name||r.rewardId),r.createdAt?e('div',{className:'tiny'},ts(r.createdAt)):null),e('span',{className:'pill request-'+r.status},r.status==='pending'?'Pendiente':r.status==='approved'?'Aprobada':'Rechazada'))):e('div',{className:'empty'},'Aún no tienes solicitudes de canje.'))
+  );
+}
 
 function adminView(){
   const recent=visibleAdminVisits.filter(v=>!activeClient||!v.userId||v.userId===activeClient.uid).slice(0,20);
@@ -285,9 +338,9 @@ function adminView(){
     ):null
   );
 }
-function navButton(id,label,icon){return e('button',{key:id,className:tab===id?'active':'',onClick:()=>{setTab(id);setNotice('');setError('')}},e('span',{className:'navIcon'},icon),label)}
+function navButton(id,label,icon){return e('button',{key:id,className:tab===id?'active':'','aria-current':tab===id?'page':undefined,onClick:()=>{setTab(id);setNotice('');setError('');if(typeof window.scrollTo==='function')window.scrollTo({top:0,behavior:'smooth'})}},e('span',{className:'navIcon','aria-hidden':true},icon),label)}
 if(loading||(!isDemo&&user&&db&&adminStatus==='comprobando'))return e('div',{className:'shell'},e('p',null,'Cargando Manos Monas…'));
-return e('div',{className:'page'},e('div',{className:'shell'},e('header',{className:'top'},e('div',{className:'brand'},e('div',{className:'mark'},e('img',{src:'../assets/img/logo.png',alt:'Logo de Manos Monas',loading:'eager'})),e('div',null,e('h2',null,'MANOS MONAS'),e('div',{className:'eyebrow'},'HOME STUDIO'),e('div',{className:'caption'},'Club de recompensas'))),e('div',{className:'toolbar',style:{alignItems:'center',justifyContent:'flex-end'}},user?avatar(38):null,e('span',{className:'chip'},isDemo?'◉ Demo':isAdmin?'✦ Jefa de salón':'♡ Mi cuenta'),(user||isDemo&&demoEntered)?e('button',{className:'button secondary',onClick:logout,disabled:busy,style:{padding:'9px 12px',whiteSpace:'nowrap'}},'Salir ↪'):null)),
+return e('div',{className:'page'},e('div',{className:'shell'},e('header',{className:'top'},e('div',{className:'brand'},e('div',{className:'mark'},e('img',{src:'../assets/img/logo.png',alt:'Logo de Manos Monas',loading:'eager'})),e('div',null,e('h2',null,'MANOS MONAS'),e('div',{className:'eyebrow'},'HOME STUDIO'),e('div',{className:'caption'},'Club de recompensas'))),e('div',{className:'toolbar',style:{alignItems:'center',justifyContent:'flex-end'}},(user||isDemo&&demoEntered)?e('button',{className:'headerAccount',onClick:()=>{setTab('perfil');setNotice('');setError('')},'aria-label':'Abrir mi perfil'},avatar(38)):null,e('span',{className:'chip'},isDemo?'◉ Demo':isAdmin?'✦ Jefa de salón':'♡ Mi cuenta'))),
 !isDemo&&user&&db&&new URLSearchParams(window.location.search).get('live')==='1'?e('div',{className:'notice',style:{marginBottom:16}},e('strong',null,'Prueba de permisos Firebase'),e('div',{style:{marginTop:7,overflowWrap:'anywhere'}},'UID de esta sesión: ',e('code',null,user.uid)),e('div',{style:{marginTop:4}},'Acceso al menú Jefa: ',adminStatus),e('div',{className:'tiny',style:{marginTop:5}},'Si no está habilitada, comprueba que el documento admins tenga este mismo UID y enabled de tipo booleano verdadero.')):null,
 isDemo&&demoEntered?e('div',{className:'notice'},'Modo demostración · Ingreso simulado con '+demoProvider+'. Los cambios NO se guardan hasta configurar Firebase. ',e('button',{onClick:()=>{setDemoRole(demoRole==='jefa'?'clienta':'jefa');setTab('recompensas');setNotice('')}},'Cambiar vista: '+(demoRole==='jefa'?'Clienta':'Jefa')+' →'),' ',e('button',{onClick:()=>{setDemoEntered(false);setDemoRole('clienta');setNotice('')}},'Salir de demo')):null,
 (!isDemo&&!user)||(isDemo&&!demoEntered)?e('div',{className:'panel login'},e('img',{className:'loginBrand',src:'../assets/img/logo.png',alt:'Manos Monas Home Studio'}),e('h1',null,'Bienvenida al Club Monas'),e('p',null,'Ingresa con tu cuenta de Google (Gmail) o Facebook para consultar tus puntos y desbloquear recompensas.'),e('div',{className:'stack',style:{maxWidth:310,margin:'25px auto'}},button('✉ Continuar con Google',()=>login('google'),'full',busy),button('ⓕ Continuar con Facebook',()=>login('facebook'),'secondary full',busy)),isDemo?e('div',{className:'notice'},'Modo demostración: los botones solo abren una clienta ficticia. Para usar el inicio de sesión real debes conectar Firebase.'):e('p',{className:'tiny'},'Solo la jefa registra servicios y aprueba premios.'),error?e('div',{className:'notice error',role:'alert'},error):null):e(React.Fragment,null,
@@ -295,7 +348,7 @@ e('section',{className:'hero'},e('div',null,e('small',null,'Un detalle para ti')
 error?e('div',{className:'notice error',role:'alert',style:{marginTop:16}},error):null,
 notice?e('div',{className:'notice ok',role:'status',style:{marginTop:16}},notice):null,
 tab==='recompensas'?rewardsView():tab==='perfil'?profileView():tab==='reservas'?e('div',{className:'panel',style:{marginTop:24,textAlign:'center',padding:42}},e('div',{style:{fontSize:48}},'🗓️'),e('h2',null,'Reservas, próximamente'),e('p',{className:'muted'},'Estamos preparando una manera más sencilla de reservar tus servicios.')):isAdmin&&tab==='admin'?adminView():null,
-e('nav',{className:'nav','aria-label':'Navegación'},navButton('recompensas','Recompensas','🎁'),navButton('perfil','Perfil','👤'),navButton('reservas','Reservas','📅'),isAdmin?navButton('admin','Jefa','⚙️'):null)),
+e('nav',{className:'nav','aria-label':'Navegación'},isAdmin?navButton('admin','Jefa','⚙️'):null,navButton('recompensas','Recompensas','🎁'),navButton('perfil','Perfil','👤'))),
 e('div',{className:'footer'},'Hecho con ♡ para Manos Monas Home Studio · San Juan de Lurigancho')));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(e(App));
