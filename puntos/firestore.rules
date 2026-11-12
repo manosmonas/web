@@ -129,15 +129,21 @@ service cloud.firestore {
           || (request.resource.data.lastEventType == 'void' && validVoidBalance(uid)));
       allow delete: if false;
     }
-    // Cumpleaños opcional: solo día y mes, sin acceso a los saldos.
+    // Fecha de nacimiento voluntaria; día, mes y año requeridos al guardarla.
     function validBirthday() {
       let d = request.resource.data;
-      return d.keys().hasAll(['day','month','updatedAt'])
-        && d.keys().hasOnly(['day','month','updatedAt'])
-        && d.day is int && d.month is int
+      return d.keys().hasAll(['day','month','year','updatedAt'])
+        && d.keys().hasOnly(['day','month','year','updatedAt'])
+        && d.day is int && d.month is int && d.year is int
+        && d.year >= 1900 && d.year <= request.time.year()
         && d.month >= 1 && d.month <= 12
         && d.day >= 1
-        && d.day <= (d.month == 2 ? 29 : d.month in [4,6,9,11] ? 30 : 31)
+        && d.day <= (d.month == 2
+          ? (d.year % 4 == 0 && (d.year % 100 != 0 || d.year % 400 == 0) ? 29 : 28)
+          : d.month in [4,6,9,11] ? 30 : 31)
+        && (d.year < request.time.year()
+          || d.month < request.time.month()
+          || (d.month == request.time.month() && d.day <= request.time.day()))
         && d.updatedAt == request.time;
     }
     match /birthdays/{uid} {
