@@ -177,7 +177,7 @@ service cloud.firestore {
         && d.userId is string && exists(userPath(d.userId))
         && d.clientName is string && d.clientName.size() <= 200
         && (d.staffId == 'm1' || d.staffId == 'm2')
-        && (d.service == 'Uñas' || d.service == 'Pestañas' || d.service == 'Cabello')
+        && (d.get('service', '') == 'Uñas' || d.get('service', '') == serviceName('pestanas') || d.get('service', '') == 'Cabello')
         && d.date is string && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && d.start is int && d.end is int && d.start >= 900 && d.end <= 1320
         && d.end - d.start >= 15 && d.end - d.start <= 420
