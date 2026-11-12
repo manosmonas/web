@@ -321,7 +321,7 @@ function rewardCard(r){
       e('strong',null,'¿Solicitar '+r.name+'?'),
       e('p',{className:'tiny',style:{margin:'8px 0'}},'Al canjear este servicio se restarán '+r.points+' puntos de tu saldo.'),
       e('div',{className:'toolbar'},
-        button('Confirmar solicitud',()=>requestReward(r),'full'),
+        button('Canjear',()=>requestReward(r),'full'),
         button('Cancelar',()=>setRewardToConfirm(null),'secondary')
       )
     ):null
