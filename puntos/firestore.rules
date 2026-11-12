@@ -184,6 +184,11 @@ service cloud.firestore {
         && d.status in ['confirmed','cancelled']
         && d.rescheduleRequested is bool && d.updatedAt == request.time;
     }
+    match /users/{uid}/reminders/{id} {
+      allow get, list: if owns(uid);
+      allow write: if false;
+    }
+    match /clubPushDevices/{id} { allow read, write: if false; }
     match /reservations/{id} {
       allow get, list: if signedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
       allow create: if isAdmin() && validReservation()

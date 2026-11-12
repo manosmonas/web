@@ -1,0 +1,17 @@
+{
+  "name": "Club Monas",
+  "short_name": "Club Monas",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fff7fa",
+  "theme_color": "#a54374",
+  "icons": [
+    {
+      "src": "../assets/img/logo.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
+  ]
+}
