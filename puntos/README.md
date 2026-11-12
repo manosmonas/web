@@ -87,3 +87,14 @@ En esta fase, **«Aprobada» es el estado final necesario**; no crear un estado 
 - [ ] Diseñar una celebración especial para el primer canje.
 - [ ] Añadir una transición que amplíe la foto del premio al abrir su detalle.
 - [ ] Reproducir estas interacciones en la app nativa cuando se desarrolle.
+
+## Próximo proyecto — App de asistencia a la movilidad para personas ciegas
+
+**Estado:** idea registrada; siguiente aplicación después de Club Monas, no forma parte del MVP actual.
+
+- Objetivo: ayudar a personas ciegas o con baja visión a desplazarse con mayor autonomía, detectando el entorno y proporcionando orientación sobre el camino.
+- Explorar cámara y sensores del teléfono, estimación de profundidad y detección de obstáculos, desniveles, escalones y superficies de paso.
+- Comunicar advertencias y orientaciones por audio y vibración, con una interfaz accesible y baja latencia.
+- Primer paso: investigar viabilidad y diseñar un prototipo en entornos controlados, con participación de personas ciegas y especialistas en orientación y movilidad.
+- Seguridad: no afirmar que una ruta o pisada es segura cuando no se puede comprobar. La aplicación debe expresar incertidumbre y funcionar como apoyo complementario al bastón, perro guía y otras ayudas; no sustituirlos. Validar rigurosamente antes de cualquier uso en la vía pública.
+
