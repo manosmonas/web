@@ -101,15 +101,25 @@
 @media(min-width:700px){.calendarDay{flex-basis:130px}}@media(prefers-reduced-motion:reduce){.quickBooking,.quickBooking.bookingClosing,.quickBooking .quickStep,.bookingSection .notice.ok,.bookingSlot{animation:none!important}.calendarHourButton,.quickBooking .choice{transition:none!important}}
 
 /* Color de reserva persistente: la selección es un contorno, no borra la ocupación. */
-.calendarHourButton.hourBookedM1{background:#f4c8df;border-color:#d9a1bf;color:#813158;animation:reservation-painted .36s ease-out both}
-.calendarHourButton.hourBookedM2{background:#d5e1fb;border-color:#aabde8;color:#3f5594;animation:reservation-painted .36s ease-out both}
-.calendarHourButton.hourBookedBoth{background:linear-gradient(90deg,#f4c8df 0%,#f4c8df 49%,#d5e1fb 51%,#d5e1fb 100%);border-color:#bea9d6;color:#5d3e70;animation:reservation-painted .36s ease-out both}
+.calendarHourButton.hourBookedM1{background:#f4c8df;border-color:#d9a1bf;color:#813158;animation:none}
+.calendarHourButton.hourBookedM2{background:#d5e1fb;border-color:#aabde8;color:#3f5594;animation:none}
+.calendarHourButton.hourBookedBoth{background:linear-gradient(90deg,#f4c8df 0%,#f4c8df 49%,#d5e1fb 51%,#d5e1fb 100%);border-color:#bea9d6;color:#5d3e70;animation:none}
 .calendarHourButton.hourSelected.hourBookedM1,.calendarHourButton.hourSelected.hourBookedM2,.calendarHourButton.hourSelected.hourBookedBoth{outline:2px solid #a54374;outline-offset:1px;box-shadow:0 3px 10px #a543742b}
 .calendarHourButton.hourUnavailable.hourBookedBoth{opacity:1;cursor:not-allowed}
-@keyframes reservation-painted{from{transform:scale(.96);filter:brightness(1.12)}to{transform:scale(1);filter:none}}
+@keyframes reservation-painted{0%{opacity:.7}100%{opacity:0}}
 @media(prefers-reduced-motion:reduce){.calendarHourButton.hourBookedM1,.calendarHourButton.hourBookedM2,.calendarHourButton.hourBookedBoth{animation:none!important}}
 
 .bookingReminder{display:grid;gap:12px;animation:booking-enter .3s ease-out both}.bookingReminderHead{display:flex;gap:12px;align-items:center}.bookingReminderHead>span{font-size:27px}.bookingReminderHead p{margin:4px 0 0}.bookingReminderMessage{background:#fff4e3;border:1px solid #f0dbb5;border-radius:12px;padding:12px;color:#855e29;font-size:13px;font-weight:700;animation:booking-step .3s ease-out both}.bookingReminderMessage .tiny{margin-top:5px;font-weight:400}.clientBookingHero{border-color:#e9bfd5;background:linear-gradient(140deg,#fff,#fff2f8);animation:booking-enter .32s ease-out both}.clientBookingHero .bookingTop>strong{font-size:20px}.clientBookingHero .bookingDetails{background:#fff9fc;border:1px solid #f1e0e9;border-radius:12px;padding:12px}.bookingNextLabel{color:#a54374;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px}.bookingCard .button{transition:transform .16s ease,background .18s ease}.bookingCard .button:active{transform:scale(.97)}@media(prefers-reduced-motion:reduce){.bookingReminder,.bookingReminderMessage,.clientBookingHero{animation:none!important}}
+
+/* Keep the actual hour visible; animate only a decorative overlay. */
+.calendarHourButton{position:relative;isolation:isolate;overflow:hidden;min-height:44px;opacity:1;visibility:visible;filter:none;transform:none}
+.calendarHourButton.hourBookedM1,.calendarHourButton.hourBookedM2,.calendarHourButton.hourBookedBoth{animation:none!important;filter:none!important;transform:none!important;opacity:1!important;visibility:visible!important}
+.calendarHourButton.hourBookedM1{background:#f4c8df;color:#813158;border-color:#d9a1bf}
+.calendarHourButton.hourBookedM2{background:#d5e1fb;color:#3f5594;border-color:#aabde8}
+.calendarHourButton.hourBookedBoth{background:linear-gradient(90deg,#f4c8df 0%,#f4c8df 49%,#d5e1fb 51%,#d5e1fb 100%);color:#5d3e70;border-color:#bea9d6}
+.calendarHourButton.hourBookedM1::after,.calendarHourButton.hourBookedM2::after,.calendarHourButton.hourBookedBoth::after{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;border-radius:inherit;background:#ffffff70;opacity:0;animation:reservation-painted .35s ease-out}
+.calendarHourButton .hourText{position:relative;z-index:1}
+@media(prefers-reduced-motion:reduce){.calendarHourButton::after{animation:none!important}}
 </style>
 <link rel="preload" as="image" href="./images/monita.webp">
 </head><body>
@@ -349,7 +359,7 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
        const selected=slot?.date===day&&slot?.start===start&&!closing;
        const paint=m1&&m2?' hourBookedBoth':m1?' hourBookedM1':m2?' hourBookedM2':'';
        const description=m1&&m2?'Doris y Miluzka con reservas':m1?'Doris con reserva':m2?'Miluzka con reserva':'Libre';
-       return e('button',{key:start,type:'button',className:'calendarHourButton'+(selected?' hourSelected':'')+(occupied?' hourUnavailable':'')+paint,disabled:busy||occupied,'aria-pressed':selected,'aria-label':dateText(day)+' '+clock(start)+' · '+description+(occupied?' · sin disponibilidad al inicio':''),title:description,onClick:()=>pickSlot(day,start)},(start/60-12)+':00 pm',occupied?e('small',null,'Ocupado'):null)
+       return e('button',{key:start,type:'button',className:'calendarHourButton'+(selected?' hourSelected':'')+(occupied?' hourUnavailable':'')+paint,disabled:busy||occupied,'aria-pressed':selected,'aria-label':dateText(day)+' '+clock(start)+' · '+description+(occupied?' · sin disponibilidad al inicio':''),title:description,onClick:()=>pickSlot(day,start)},e('span',{className:'hourText'},(start/60-12)+':00 pm'),occupied?e('small',{className:'hourText'},'Ocupado'):null)
       })
      ))),
      e('p',{className:'tiny calendarFoot'},'3:00 pm – 10:00 pm · Toca una hora.')),
