@@ -119,6 +119,7 @@
 .calendarHourButton.hourBookedBoth{background:linear-gradient(90deg,#f4c8df 0%,#f4c8df 49%,#d5e1fb 51%,#d5e1fb 100%);color:#5d3e70;border-color:#bea9d6}
 .calendarHourButton.hourBookedM1::after,.calendarHourButton.hourBookedM2::after,.calendarHourButton.hourBookedBoth::after{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;border-radius:inherit;background:#ffffff70;opacity:0;animation:reservation-painted .35s ease-out}
 .calendarHourButton .hourText{position:relative;z-index:1}
+.calendarServiceIcons{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:3px;max-width:100%}.calendarServiceIcon{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:7px;background:#ffffffb8;color:#813158;flex:0 0 20px}.calendarServiceIcon.staff-m2{color:#3f5594}.calendarServiceIcon svg{width:16px;height:16px;display:block}.calendarHourButton:has(.calendarServiceIcons){padding:4px 2px;gap:2px}
 @media(prefers-reduced-motion:reduce){.calendarHourButton::after{animation:none!important}}
 
 /* Visible compact calendar legend; colors match occupied hour cells exactly. */
@@ -331,6 +332,12 @@ function BirthdayInvite({birthday}){
 function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
  const staffNames={'m1':'Doris','m2':'Miluzka'};
  const services=['Uñas','Pestañas','Cabello'];
+ function serviceKind(name){const n=String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();return /una|manic|pedic|gel|acril/.test(n)?'nails':/pestana|lifting|ceja/.test(n)?'lashes':/cabello|alisado|mecha|tinte|corte/.test(n)?'hair':'other'}
+ function serviceIcon(b){
+  const kind=serviceKind(b.service);
+  const paths=kind==='nails'?['M8 13V6a1.4 1.4 0 0 1 2.8 0v5','M10.8 11V4.5a1.4 1.4 0 0 1 2.8 0V11','M13.6 11V5.8a1.4 1.4 0 0 1 2.8 0V12','M16.4 12V8a1.4 1.4 0 0 1 2.8 0v7c0 4-2.7 6-6.2 6h-2c-2.6 0-4-1.5-5.1-3.3l-2.1-3.5a1.5 1.5 0 0 1 2.4-1.7L8 15']:kind==='lashes'?['M3 10q9 10 18 0','M5 12l-2 3M8 14l-1 4M12 15v4M16 14l1 4M19 12l2 3']:kind==='hair'?['M7 21c-4-2-4-5-2-9C6 8 5 3 12 3s6 5 7 9c2 4 2 7-2 9','M12 3c0 6-6 7-6 13 0 2 1 4 3 5','M12 3c1 5 5 6 6 11 1 3 0 5-2 7','M10 20c2-2 2-5 2-8']:['M12 3l2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z'];
+  return e('span',{key:b.id,className:'calendarServiceIcon staff-'+b.staffId,title:(staffNames[b.staffId]||'')+' · '+(b.service||'Servicio'), 'aria-hidden':true},e('svg',{viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.65,strokeLinecap:'round',strokeLinejoin:'round'},...paths.map((d,i)=>e('path',{key:i,d}))));
+ }
  const today=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
  const minutes=t=>Number(t.split(':')[0])*60+Number(t.split(':')[1]);
  const clock=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
@@ -450,13 +457,14 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
       ...hours.map(start=>{
        const active=bookings.filter(x=>x.status==='confirmed'&&x.date===day);
        // Paint every hourly block touched by a booking; availability is checked separately at its start.
-       const m1=active.some(x=>x.staffId==='m1'&&x.start<start+60&&x.end>start);
-       const m2=active.some(x=>x.staffId==='m2'&&x.start<start+60&&x.end>start);
+       const hourBookings=active.filter(x=>x.start<start+60&&x.end>start).sort((a,b)=>String(a.staffId).localeCompare(String(b.staffId))||a.start-b.start);
+       const m1=hourBookings.some(x=>x.staffId==='m1');
+       const m2=hourBookings.some(x=>x.staffId==='m2');
        const occupied=Object.keys(staffNames).every(id=>active.some(x=>x.id!==edit&&x.staffId===id&&x.start<start+15&&x.end>start));
        const selected=slot?.date===day&&slot?.start===start&&!closing;
        const paint=m1&&m2?' hourBookedBoth':m1?' hourBookedM1':m2?' hourBookedM2':'';
-       const description=m1&&m2?'Doris y Miluzka con reservas':m1?'Doris con reserva':m2?'Miluzka con reserva':'Libre';
-       return e('button',{key:start,type:'button',className:'calendarHourButton'+(selected?' hourSelected':'')+(occupied?' hourUnavailable':'')+paint,disabled:busy||occupied,'aria-pressed':selected,'aria-label':dateText(day)+' '+clock(start)+' · '+description+(occupied?' · sin disponibilidad al inicio':''),title:description,onClick:()=>pickSlot(day,start)},e('span',{className:'hourText'},(start/60-12)+':00 pm'),occupied?e('small',{className:'hourText'},'Ocupado'):null)
+       const description=hourBookings.length?hourBookings.map(b=>(staffNames[b.staffId]||'Especialista')+': '+(b.service||'Servicio')).join(' · '):'Libre';
+       return e('button',{key:start,type:'button',className:'calendarHourButton'+(selected?' hourSelected':'')+(occupied?' hourUnavailable':'')+paint,disabled:busy||occupied,'aria-pressed':selected,'aria-label':dateText(day)+' '+clock(start)+' · '+description+(occupied?' · sin disponibilidad al inicio':''),title:description,onClick:()=>pickSlot(day,start)},e('span',{className:'hourText'},(start/60-12)+':00 pm'),hourBookings.length?e('span',{className:'calendarServiceIcons'},...hourBookings.map(serviceIcon)):null,occupied?e('small',{className:'hourText'},'Ocupado'):null)
       })
      ))),
      e('p',{className:'tiny calendarFoot'},'3:00 pm – 10:00 pm · Toca una hora para reservar.')),
