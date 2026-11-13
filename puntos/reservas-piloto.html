@@ -120,6 +120,13 @@
 .calendarHourButton.hourBookedM1::after,.calendarHourButton.hourBookedM2::after,.calendarHourButton.hourBookedBoth::after{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;border-radius:inherit;background:#ffffff70;opacity:0;animation:reservation-painted .35s ease-out}
 .calendarHourButton .hourText{position:relative;z-index:1}
 @media(prefers-reduced-motion:reduce){.calendarHourButton::after{animation:none!important}}
+
+/* Visible compact calendar legend; colors match occupied hour cells exactly. */
+.calendarColorLegend{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:8px 16px;margin:0 0 12px;padding:8px 10px;background:#fff8fb;border:1px solid #f0e2e9;border-radius:11px;font-size:12px;color:#5d4856}
+.calendarColorLegend .legendItem{display:inline-flex;align-items:center;gap:6px;font-weight:700;white-space:nowrap}
+.calendarColorLegend .legendSwatch{display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid transparent;flex:0 0 14px}
+.legendDoris{background:#f4c8df;border-color:#d9a1bf!important}.legendMiluzka{background:#d5e1fb;border-color:#aabde8!important}.legendBoth{background:linear-gradient(90deg,#f4c8df 0%,#f4c8df 49%,#d5e1fb 51%,#d5e1fb 100%);border-color:#bea9d6!important}
+@media(max-width:520px){.calendarColorLegend{gap:7px 12px;font-size:11px;padding:7px 6px}}
 </style>
 <link rel="preload" as="image" href="./images/monita.webp">
 <link rel="manifest" href="./manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"></head><body>
@@ -354,6 +361,7 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
     e('div',{className:'panel quickCalendar'},
      e('div',{className:'calendarBar'},e('button',{type:'button',className:'calendarArrow','aria-label':'Semana anterior',disabled:anchor<=today(),onClick:()=>changeWeek(-7)},'‹'),e('div',null,e('strong',null,dateText(days[0])+' – '+dateText(days[7])),e('span',null,'Desliza para ver más días')),e('button',{type:'button',className:'calendarArrow','aria-label':'Semana siguiente',onClick:()=>changeWeek(7)},'›')),
      
+     e('div',{className:'calendarKey calendarColorLegend','aria-label':'Colores de las especialistas'},e('span',{className:'legendItem'},e('i',{className:'legendSwatch legendDoris','aria-hidden':true}),staffNames.m1),e('span',{className:'legendItem'},e('i',{className:'legendSwatch legendMiluzka','aria-hidden':true}),staffNames.m2),e('span',{className:'legendItem'},e('i',{className:'legendSwatch legendBoth','aria-hidden':true}),'Ambas')),
      e('div',{className:'calendarScroll',ref:calendarRef},days.map(day=>e('div',{className:'calendarDay',key:day},
       e('div',{className:'calendarDayHead'},e('span',null,new Intl.DateTimeFormat('es-PE',{weekday:'short',timeZone:'UTC'}).format(new Date(day+'T12:00:00Z'))),e('strong',null,day.slice(-2)),e('small',null,new Intl.DateTimeFormat('es-PE',{month:'short',timeZone:'UTC'}).format(new Date(day+'T12:00:00Z')))),
       ...hours.map(start=>{
