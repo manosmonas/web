@@ -45,6 +45,14 @@ En esta fase, **«Aprobada» es el estado final necesario**; no crear un estado 
 
 **Activación de operación desde URL normal (11/11/2026):** habilitados los botones «Acreditar puntos» y «Anular atención» sin parámetros `?live` o `?void`. La jefa debe comprobar una vez que ambos aparecen y funcionan en la dirección habitual. No cambia las reglas publicadas ni la web comercial.
 
+## Créditos de desarrollo y publicidad
+
+**Decisión de marca:** toda publicidad de Manos Monas Club debe incluir el crédito visible **«Software desarrollado por AGNE»** (Agilidad para Negocios).
+
+- [ ] Incluir el crédito en flyers, videos, reels, historias, banners, anuncios y piezas de lanzamiento de la aplicación, incluida la campaña navideña.
+- [ ] Mantener el crédito legible y consistente, sin desplazar la identidad principal de Manos Monas Club.
+- [ ] Revisar las piezas existentes antes de publicarlas y agregar el crédito cuando falte.
+
 ## Notificaciones push (pendiente de activación)
 
 **Decisión 12/11/2026:** configurar un canal de notificaciones de Club Monas para avisos de servicio y campañas promocionales, en web y futura app móvil. No limitarlo a recordatorios de reservas.
