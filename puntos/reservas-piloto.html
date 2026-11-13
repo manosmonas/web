@@ -128,8 +128,6 @@
 .legendDoris{background:#f4c8df;border-color:#d9a1bf!important}.legendMiluzka{background:#d5e1fb;border-color:#aabde8!important}.legendBoth{background:linear-gradient(90deg,#f4c8df 0%,#f4c8df 49%,#d5e1fb 51%,#d5e1fb 100%);border-color:#bea9d6!important}
 @media(max-width:520px){.calendarColorLegend{gap:7px 12px;font-size:11px;padding:7px 6px}}
 
-/* Select a day without opening a booking. */
-.calendarDayHead{width:100%;border:1px solid transparent;cursor:pointer;transition:background .2s ease,color .2s ease,transform .16s ease,box-shadow .2s ease}.calendarDayHead:not(:disabled):active{transform:scale(.96)}.calendarDayHead.agendaDaySelected{background:#a54374;color:white;border-color:#a54374;box-shadow:0 3px 9px #a5437433}.calendarDayHead.agendaDaySelected span,.calendarDayHead.agendaDaySelected small{color:#fff}.bookingAgenda>.panel{animation:booking-step .24s ease-out both}@media(prefers-reduced-motion:reduce){.calendarDayHead{transition:none}.bookingAgenda>.panel{animation:none}}
 </style>
 <link rel="preload" as="image" href="./images/monita.webp">
 <link rel="manifest" href="./manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"></head><body>
@@ -257,7 +255,7 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
  const [rows,setRows]=useState([]),[ready,setReady]=useState(demo),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [date,setDate]=useState(today()),[time,setTime]=useState('15:00'),[duration,setDuration]=useState('60'),[staff,setStaff]=useState('m1'),[service,setService]=useState(''),[client,setClient]=useState(''),[notes,setNotes]=useState(''),[edit,setEdit]=useState(null),[ask,setAsk]=useState(null);
  const [anchor,setAnchor]=useState(today()),[slot,setSlot]=useState(null),[search,setSearch]=useState(''),[customMinutes,setCustomMinutes]=useState('');
- const calendarRef=useRef(null),saving=useRef(false),initialAgendaDay=useRef(false);
+ const calendarRef=useRef(null),saving=useRef(false);
  const addDays=(d,n)=>{const v=new Date(d+'T12:00:00Z');v.setUTCDate(v.getUTCDate()+n);return v.toISOString().slice(0,10)};
  const days=Array.from({length:8},(_,i)=>addDays(anchor,i));
  const hours=Array.from({length:7},(_,i)=>900+i*60);
@@ -279,9 +277,9 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
  function reset(){if(closeTimer.current)window.clearTimeout(closeTimer.current);if(!slot||reduceMotion()){clearBooking();return}setClosing(true);closeTimer.current=window.setTimeout(()=>{closeTimer.current=null;clearBooking()},210)}
  function reopen(){if(closeTimer.current)window.clearTimeout(closeTimer.current);closeTimer.current=null;setClosing(false)}
  function editBooking(b){if(busy)return;reopen();setEdit(b.id);setDate(b.date);setTime(clock(b.start));setSlot({date:b.date,start:b.start});setAnchor(b.date);setDuration(String(b.end-b.start));setStaff(b.staffId);setClient(b.userId);setService(services.includes(b.service)?b.service:'');setNotes(b.notes||'');setError('');setNotice('');window.scrollTo({top:0,behavior:'smooth'})}
- function pickSlot(day,start){if(busy)return;initialAgendaDay.current=true;reopen();setSlot({date:day,start});setDate(day);setTime(clock(start));setStaff('');setClient(edit?client:'');setService('');setCustomMinutes('');setSearch('');setError('');setNotice('')}
+ function pickSlot(day,start){if(busy)return;reopen();setSlot({date:day,start});setDate(day);setTime(clock(start));setStaff('');setClient(edit?client:'');setService('');setCustomMinutes('');setSearch('');setError('');setNotice('')}
  function staffFree(id,mins=15){return slot&&!conflict(bookings.filter(b=>b.status==='confirmed'&&b.date===slot.date),{userId:client,staffId:id,start:slot.start,end:slot.start+mins},edit)&&slot.start+mins<=1320}
- function changeWeek(n){if(busy)return;const next=addDays(anchor,n)<today()?today():addDays(anchor,n);setAnchor(next);selectAgendaDay(next);if(calendarRef.current)calendarRef.current.scrollLeft=0}
+ function changeWeek(n){if(busy)return;const next=addDays(anchor,n)<today()?today():addDays(anchor,n);setAnchor(next);if(calendarRef.current)calendarRef.current.scrollLeft=0}
  function conflict(slots,next,id){return slots.some(x=>x.id!==id&&(x.staffId===next.staffId||x.userId===next.userId)&&x.start<next.end&&next.start<x.end)}
  async function save(chosenMinutes){
   if(!admin||busy||closing||saving.current||!slot)return;
@@ -354,15 +352,6 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
    !cancelled&&!admin?b.rescheduleRequested?e('p',{className:'tiny'},'La jefa revisará tu solicitud. Tu horario sigue vigente.'):ask===b.id?e('div',{className:'notice'},'¿Solicitar otro horario? Tu cita original se mantiene.',e('div',{className:'toolbar',style:{marginTop:8}},btn('Enviar solicitud',()=>request(b)),btn('Volver',()=>setAsk(null),true))):btn('Solicitar reagendar',()=>setAsk(b.id),true):null);
  }
  const upcoming=visible.filter(b=>b.status==='confirmed'&&b.date>=today()),past=visible.filter(b=>b.status==='cancelled'||b.date<today()).reverse();
- const dayRows=upcoming.filter(b=>b.date===date);
- useEffect(()=>{
-  if(!admin||!ready||initialAgendaDay.current)return;
-  initialAgendaDay.current=true;
-  const first=upcoming[0]?.date||today();
-  setDate(first);
-  if(first>addDays(today(),7))setAnchor(first);
- },[admin,ready,upcoming]);
- function selectAgendaDay(day){if(busy)return;initialAgendaDay.current=true;if(slot&&slot.date!==day){reopen();clearBooking()}setDate(day);}
  return e('section',{className:'bookingSection'},
   section(admin?'Agenda de reservas':'Mis reservas',admin?'Acuerda por WhatsApp y registra la cita aquí.':'Tus citas confirmadas por el salón.'),
 
@@ -374,7 +363,7 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
      
      e('div',{className:'calendarKey calendarColorLegend','aria-label':'Colores de las especialistas'},e('span',{className:'legendItem'},e('i',{className:'legendSwatch legendDoris','aria-hidden':true}),staffNames.m1),e('span',{className:'legendItem'},e('i',{className:'legendSwatch legendMiluzka','aria-hidden':true}),staffNames.m2),e('span',{className:'legendItem'},e('i',{className:'legendSwatch legendBoth','aria-hidden':true}),'Ambas')),
      e('div',{className:'calendarScroll',ref:calendarRef},days.map(day=>e('div',{className:'calendarDay',key:day},
-      e('button',{type:'button',className:'calendarDayHead'+(date===day?' agendaDaySelected':''),'aria-pressed':date===day,'aria-label':'Ver agenda del '+dateText(day),disabled:busy,onClick:()=>selectAgendaDay(day)},e('span',null,new Intl.DateTimeFormat('es-PE',{weekday:'short',timeZone:'UTC'}).format(new Date(day+'T12:00:00Z'))),e('strong',null,day.slice(-2)),e('small',null,new Intl.DateTimeFormat('es-PE',{month:'short',timeZone:'UTC'}).format(new Date(day+'T12:00:00Z')))),
+      e('div',{className:'calendarDayHead'},e('span',null,new Intl.DateTimeFormat('es-PE',{weekday:'short',timeZone:'UTC'}).format(new Date(day+'T12:00:00Z'))),e('strong',null,day.slice(-2)),e('small',null,new Intl.DateTimeFormat('es-PE',{month:'short',timeZone:'UTC'}).format(new Date(day+'T12:00:00Z')))),
       ...hours.map(start=>{
        const active=bookings.filter(x=>x.status==='confirmed'&&x.date===day);
        // Paint every hourly block touched by a booking; availability is checked separately at its start.
@@ -387,7 +376,7 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
        return e('button',{key:start,type:'button',className:'calendarHourButton'+(selected?' hourSelected':'')+(occupied?' hourUnavailable':'')+paint,disabled:busy||occupied,'aria-pressed':selected,'aria-label':dateText(day)+' '+clock(start)+' · '+description+(occupied?' · sin disponibilidad al inicio':''),title:description,onClick:()=>pickSlot(day,start)},e('span',{className:'hourText'},(start/60-12)+':00 pm'),occupied?e('small',{className:'hourText'},'Ocupado'):null)
       })
      ))),
-     e('p',{className:'tiny calendarFoot'},'Toca un día para ver sus citas · Toca una hora para reservar.')),
+     e('p',{className:'tiny calendarFoot'},'3:00 pm – 10:00 pm · Toca una hora para reservar.')),
     slot?e('div',{className:'panel quickBooking'+(closing?' bookingClosing':''),ref:quickRef,key:slot.date+'-'+slot.start,'aria-hidden':closing||undefined},
       e('div',{className:'quickTitle'},e('div',null,e('span',{className:'eyebrow'},edit?'Reagendar cita':'Nueva reserva'),e('h3',null,dateText(slot.date)+' · '+clock(slot.start)),staff?e('span',{className:'staffSelection staff-'+staff},staffNames[staff]):null),e('button',{className:'calendarArrow',type:'button','aria-label':'Cerrar reserva',disabled:busy||closing,onClick:reset},'×')),
       e('div',{className:'quickStep',key:'specialist'},e('strong',null,'1. Especialista'),e('div',{className:'quickChoices'},Object.entries(staffNames).map(([id,name],i)=>{const free=staffFree(id);return e('button',{key:id,type:'button',className:'choice specialistChoice staff-'+id+(staff===id?' selectedChoice':''),disabled:busy||closing||!free,'aria-pressed':staff===id,onClick:()=>{setStaff(id);setService('');setCustomMinutes('')}},name,e('small',null,free?'Disponible':'🔒 Ocupada'))}))),
@@ -395,8 +384,6 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
       client&&staff?e('div',{className:'quickStep',key:'service'},e('strong',null,'3. Servicio'),e('div',{className:'quickChoices three'},services.map((name,i)=>e('button',{key:name,type:'button',className:'choice'+(service===name?' selectedChoice':''),onClick:()=>setService(name)},['💅','👁️','💇'][i]+' '+name)))):null,
       client&&staff&&service?e('div',{className:'quickStep',key:'duration'},e('strong',null,'4. Duración · toca para reservar'),e('p',{className:'tiny'},'Al elegir el tiempo se guarda automáticamente la cita.'),e('div',{className:'quickChoices three'},[30,45,60,90,120,180].map(m=>e('button',{type:'button',key:m,className:'choice durationChoice',disabled:busy||closing||!staffFree(staff,m),onClick:()=>save(m)},m<60?m+' min':Math.floor(m/60)+' h'+(m%60?' '+m%60+' min':'')))),e('div',{className:'customDuration'},e('input',{type:'number',inputMode:'numeric',min:15,max:420,placeholder:'Otros min',value:customMinutes,onChange:ev=>setCustomMinutes(ev.target.value),'aria-label':'Duración personalizada en minutos'}),e('button',{type:'button',className:'button',disabled:busy||closing||!Number.isInteger(Number(customMinutes))||Number(customMinutes)<15||!staffFree(staff,Number(customMinutes)),onClick:()=>save(Number(customMinutes))},busy?'Guardando…':'Reservar')),busy?e('p',{role:'status',className:'tiny'},'Guardando reserva…'):null):null
      ):null,
-    section('Agenda del día',dateText(date)+' · '+dayRows.length+(dayRows.length===1?' cita':' citas')),
-    e('div',{className:'bookingAgenda',key:date},Object.entries(staffNames).map(([id,name])=>e('div',{className:'panel',key:id},e('h3',null,name),dayRows.filter(b=>b.staffId===id).length?dayRows.filter(b=>b.staffId===id).map(b=>e('div',{className:'bookingSlot staff-'+b.staffId,key:b.id},e('strong',null,clock(b.start)+' – '+clock(b.end)),e('span',null,b.clientName+' · '+b.service),btn('Editar',()=>editBooking(b),true))):e('p',{className:'tiny'},'Sin citas para este día.')))),
     section('Próximas reservas')):null,
    upcoming.length?upcoming.map(card):e('div',{className:'panel empty'},admin?'Aún no hay reservas próximas.':'Todavía no tienes una próxima cita. Acuerda tu atención por WhatsApp.'),
    !admin&&demo?e(ClientReminders,{uid,demo,bookings:visible}):null,
