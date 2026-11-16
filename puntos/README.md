@@ -1,11 +1,25 @@
-# Club Monas · MVP de puntos y recompensas
+# Manos Monas Club · Puntos, reservas y cumpleaños
 
 **Web:** https://manosmonas.github.io/web/puntos/  
 **Demo funcional sin base de datos:** https://manosmonas.github.io/web/puntos/?demo=1
 
 La web comercial existente `/web/` permanece intacta; todo el MVP reside dentro de `/web/puntos/`.
 
-## Funciona ahora (11/11/2026)
+
+## Versión unificada — 15/11/2026
+
+Esta sección describe la integración actual; las notas fechadas más abajo son antecedentes.
+
+- Una sola aplicación en `puntos/index.html`: perfil, puntos, visitas, canjes, reservas y cumpleaños.
+- Se conservaron el diseño navideño, la monita Gioconda, las fotos actuales de servicios y los iconos en la agenda.
+- `reservas-piloto.html` redirige a la aplicación principal conservando los parámetros. Las dos demos antiguas redirigen a `?demo=1`, sin escribir datos reales.
+- Se conservaron las reglas de `feature/reservas-mvp`, que ya incluyen cumpleaños y reservas. Integrarlas en GitHub **no las publica en Firebase**.
+- Las notificaciones reales siguen desactivadas; la clave VAPID está vacía. No se desplegaron funciones ni se activaron envíos.
+- Facebook requiere validación de la configuración externa de Meta.
+- Las pruebas automáticas de esta integración usan cuentas y datos simulados. No acreditan el funcionamiento con cuentas reales ni la seguridad de las reglas desplegadas.
+- Proyecto existente: `manos-monas-puntos`. No se modifica la web comercial fuera de `puntos/`.
+
+## Antecedentes: funciona ahora (11/11/2026)
 - Diseño responsivo React para navegador de computadora y celular.
 - Inicio de sesión real con Google y Facebook mediante Firebase Authentication, sujeto a la configuración del proveedor Meta.
 - Botón visible de cerrar sesión; encabezado, perfil, recompensas y menú.
