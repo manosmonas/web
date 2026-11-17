@@ -153,8 +153,27 @@
 .nav{background:#fff9f8;border-color:#ebc7c4}.nav button.active{background:#f9dee3;color:#a32842}.footer{color:#a36f75}
 @media(max-width:520px){.hero{min-height:160px;gap:5px;padding:19px 14px}.hero h1{font-size:25px;line-height:1.15}.mascotHero{flex-basis:95px;min-height:128px}.mascotImage{width:95px;height:128px}.tabEntrance>.grid{row-gap:20px}.mascotCelebrate{width:66px;height:82px}}
 @media(prefers-reduced-motion:reduce){.tabEntrance>.grid .reward.available,.tabEntrance>.grid .reward.available.justUnlocked,.christmasSpark{animation:none!important;transform:none!important}}
+
+/* Carrusel de novedades para clientas: imágenes de servicios y premios, con autoplay accesible. */
+.clientPromoSwiper{position:relative;margin:2px 0 25px;border:1px solid #e7c7a5;border-radius:23px;overflow:hidden;background:#5d263d;box-shadow:0 10px 25px #6d304022;isolation:isolate}
+.promoSlide{position:relative;display:flex;align-items:center;min-height:230px;aspect-ratio:2.05/1;color:#fff;overflow:hidden;touch-action:pan-y;animation:promo-fade .5s ease both}
+.promoSlide>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 42%;z-index:-2}
+.promoSlide:before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#361824ed 0%,#522038cf 43%,#52203835 100%)}
+.promoSlideCopy{width:min(72%,500px);padding:26px 48px;position:relative;z-index:1;text-shadow:0 2px 8px #25101e7a}
+.promoSlideEyebrow{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border:1px solid #f9df9c88;border-radius:999px;background:#482035a8;color:#ffe6ab;font-size:10px;letter-spacing:.12em;font-weight:800;text-transform:uppercase}
+.promoSlideCopy h2{font-family:'Playfair Display',serif;font-size:clamp(23px,4vw,37px);line-height:1.05;margin:12px 0 8px;color:#fff9ec}
+.promoSlideCopy p{font-size:13px;line-height:1.45;color:#fff0e9;margin:0 0 14px;max-width:330px}
+.promoSlideCTA{border:1px solid #ffe3ae;background:linear-gradient(110deg,#b33c58,#d15e68);color:#fff;border-radius:999px;padding:9px 14px;font-size:12px;font-weight:800;box-shadow:0 4px 12px #35152355}
+.promoGift{position:absolute;right:22px;bottom:18px;width:56px;height:56px;display:grid;place-items:center;border-radius:18px;background:#fff5e9e8;border:1px solid #f7dfbc;color:#ab2947;font-size:30px;box-shadow:0 7px 18px #32101f55;transform:rotate(5deg)}
+.promoControl{position:absolute;top:50%;z-index:2;transform:translateY(-50%);width:34px;height:34px;border:1px solid #fff8;border-radius:50%;background:#3b1d30a8;color:#fff;font-size:22px;line-height:1;display:grid;place-items:center}
+.promoControl.prev{left:10px}.promoControl.next{right:10px}
+.promoDots{position:absolute;z-index:3;bottom:13px;left:50%;transform:translateX(-50%);display:flex;gap:6px;align-items:center;padding:5px 8px;border:1px solid #ffffff55;border-radius:999px;background:#39202ca8;backdrop-filter:blur(5px)}
+.promoDot{width:7px;height:7px;padding:0;border:0;border-radius:50%;background:#fff9;transition:width .2s ease,background .2s ease}.promoDot.active{width:20px;border-radius:999px;background:#ffe3a1}
+@keyframes promo-fade{from{opacity:.65;transform:scale(1.01)}to{opacity:1;transform:scale(1)}}
+@media(max-width:520px){.clientPromoSwiper{margin:0 0 21px;border-radius:20px}.promoSlide{min-height:205px;aspect-ratio:1.68/1}.promoSlide>img{object-position:center 42%}.promoSlide:before{background:linear-gradient(90deg,#361824e8 0%,#522038b8 55%,#52203820 100%)}.promoSlideCopy{width:84%;padding:20px 40px}.promoSlideCopy h2{font-size:25px;margin:10px 0 6px}.promoSlideCopy p{font-size:12px;margin-bottom:11px}.promoSlideEyebrow{font-size:9px}.promoGift{right:13px;bottom:16px;width:42px;height:42px;font-size:24px;border-radius:14px}.promoControl{width:30px;height:30px;font-size:19px}.promoControl.prev{left:7px}.promoControl.next{right:7px}.promoDots{bottom:9px}}
+@media(prefers-reduced-motion:reduce){.promoSlide{animation:none}.promoDot{transition:none}}
 </style>
-<link rel="preload" as="image" href="./images/monita-gioconda.webp">
+<link rel="preload" as="image" href="../assets/img/promo_gel.png">
 <link rel="manifest" href="./manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"></head><body>
 <div id="clubBoot" class="clubBoot" role="status" aria-live="polite">
   <div class="bootCard">
@@ -503,6 +522,33 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
    upcoming.length?upcoming.map(card):e('div',{className:'panel empty'},admin?'Aún no hay reservas próximas.':'Todavía no tienes una próxima cita. Acuerda tu atención por WhatsApp.'),
    !admin&&demo?e(ClientReminders,{uid,demo,bookings:visible}):null,
    past.length?e('details',{className:'panel bookingHistory'},e('summary',null,'Historial de reservas'),past.map(card)):null));
+}
+function ClientPromoSwiper({onExplore}){
+ const slides=[
+  {image:'../assets/img/promo_gel.png',alt:'Diseño de manicura en tonos vino con brillo',eyebrow:'Trabajos del estudio',title:'Manos listas para celebrar',copy:'Ideas de manicura elegantes para tus momentos especiales.',gift:'✨'},
+  {image:'../assets/img/promo_rubber.png',alt:'Diseño de uñas con acabado prolijo',eyebrow:'Manicura',title:'Un acabado que se nota',copy:'Encuentra inspiración para tu próximo diseño.',gift:'💅'},
+  {image:'../assets/img/promo_pestanas.png',alt:'Servicio de pestañas realizado en el estudio',eyebrow:'Pestañas',title:'Una mirada para brillar',copy:'Descubre los servicios de belleza de Manos Monas.',gift:'👁️'},
+  {image:'../assets/img/promo_alisados3.png',alt:'Cabello liso y brillante',eyebrow:'Cabello',title:'Renueva tu look',copy:'Conoce nuestros trabajos y elige tu favorito.',gift:'💇'},
+  {image:'./images/rewards/manicura.webp',alt:'Manicura clásica, una de las recompensas del Club',eyebrow:'Tus visitas suman',title:'Tu próxima manicura puede ser un regalo',copy:'Acumula puntos y acércate a tus premios favoritos.',gift:'🎁'},
+  {image:'./images/rewards/pedicura.webp',alt:'Pedicura clásica disponible como recompensa',eyebrow:'Especial Navidad',title:'Celebra con recompensas',copy:'Cada visita te acerca a una sorpresa del Club Monas.',gift:'🎄'}
+ ];
+ const [active,setActive]=useState(0),[paused,setPaused]=useState(false);
+ const touchStart=useRef(null);
+ useEffect(()=>{
+  if(paused||window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;
+  const timer=window.setInterval(()=>{if(document.visibilityState==='visible')setActive(index=>(index+1)%slides.length)},4800);
+  return()=>window.clearInterval(timer);
+ },[paused,slides.length]);
+ const go=step=>setActive(index=>(index+step+slides.length)%slides.length);
+ const slide=slides[active];
+ return e('section',{className:'clientPromoSwiper','aria-label':'Trabajos, promociones y recompensas',onMouseEnter:()=>setPaused(true),onMouseLeave:()=>setPaused(false),onFocusCapture:()=>setPaused(true),onBlurCapture:ev=>{if(!ev.currentTarget.contains(ev.relatedTarget))setPaused(false)},onTouchStartCapture:ev=>{touchStart.current=ev.changedTouches[0].clientX;setPaused(true)},onTouchEndCapture:ev=>{if(touchStart.current!==null){const delta=ev.changedTouches[0].clientX-touchStart.current;if(Math.abs(delta)>42)go(delta<0?1:-1);touchStart.current=null;setPaused(false)}}},
+  e('div',{className:'promoSlide',role:'group','aria-roledescription':'diapositiva','aria-label':(active+1)+' de '+slides.length,key:active},
+   e('img',{src:slide.image,alt:slide.alt,loading:active===0?'eager':'lazy'}),
+   e('div',{className:'promoSlideCopy'},e('span',{className:'promoSlideEyebrow'},slide.gift,' ',slide.eyebrow),e('h2',null,slide.title),e('p',null,slide.copy),e('button',{type:'button',className:'promoSlideCTA',onClick:onExplore},'Ver recompensas')),
+   e('span',{className:'promoGift','aria-hidden':true},slide.gift)),
+  e('button',{type:'button',className:'promoControl prev','aria-label':'Diapositiva anterior',onClick:()=>go(-1)},'‹'),
+  e('button',{type:'button',className:'promoControl next','aria-label':'Siguiente diapositiva',onClick:()=>go(1)},'›'),
+  e('div',{className:'promoDots','aria-label':'Elegir diapositiva'},slides.map((item,index)=>e('button',{key:item.image,type:'button',className:'promoDot'+(active===index?' active':''),'aria-label':'Mostrar diapositiva '+(index+1),'aria-current':active===index?'true':undefined,onClick:()=>setActive(index)}))));
 }
 function App(){
 const [demoEntered,setDemoEntered]=useState(false),[demoProvider,setDemoProvider]=useState('Google');
@@ -891,7 +937,7 @@ return e('div',{className:'page'},e('div',{className:'shell'},e('header',{classN
 !isDemo&&user&&db&&new URLSearchParams(window.location.search).get('live')==='1'?e('div',{className:'notice',style:{marginBottom:16}},e('strong',null,'Prueba de permisos Firebase'),e('div',{style:{marginTop:7,overflowWrap:'anywhere'}},'UID de esta sesión: ',e('code',null,user.uid)),e('div',{style:{marginTop:4}},'Acceso al menú Jefa: ',adminStatus),e('div',{className:'tiny',style:{marginTop:5}},'Si no está habilitada, comprueba que el documento admins tenga este mismo UID y enabled de tipo booleano verdadero.')):null,
 isDemo&&demoEntered?e('div',{className:'notice'},'Modo demostración · Ingreso simulado con '+demoProvider+'. Los cambios son simulados y no modifican tu cuenta real. ',e('button',{onClick:()=>{setDemoRole(demoRole==='jefa'?'clienta':'jefa');setTab('recompensas');setNotice('')}},'Cambiar vista: '+(demoRole==='jefa'?'Clienta':'Jefa')+' →'),' ',e('button',{onClick:()=>{setDemoEntered(false);setDemoRole('clienta');setNotice('')}},'Salir de demo')):null,
 (!isDemo&&!user)||(isDemo&&!demoEntered)?e('div',{className:'panel login'},e('img',{className:'loginBrand',src:'../assets/img/logo.png',alt:'Manos Monas Home Studio'}),e('h1',null,'Bienvenida al Club Monas'),e('p',null,'Ingresa con tu cuenta de Google (Gmail) o Facebook para consultar tus puntos y desbloquear recompensas.'),e('div',{className:'stack',style:{maxWidth:310,margin:'25px auto'}},button('✉ Continuar con Google',()=>login('google'),'full',busy),button('ⓕ Continuar con Facebook',()=>login('facebook'),'secondary full',busy)),isDemo?e('div',{className:'notice'},'Modo demostración: los botones solo abren una clienta ficticia. Para usar tu cuenta real, abre el enlace sin ?demo=1.'):e('p',{className:'tiny'},'Solo la jefa registra servicios y aprueba premios.'),error?e('div',{className:'notice error',role:'alert'},error):null):e(React.Fragment,null,
-e('section',{className:'hero'},e('div',null,e('small',null,'✦ Especial Navidad ✦'),e('h1',null,isAdmin?'Belleza que se recompensa':'Navidad llegó a Manos Monas'),e('p',null,isAdmin?'Gestiona el programa de fidelización de tu salón desde un mismo lugar.':'Esta Navidad, cada visita te acerca a tus premios favoritos.')),e('div',{className:'mascotHero','aria-hidden':true},e('img',{src:'./images/monita-gioconda.webp',className:'mascotImage',alt:'',width:99,height:170}),e('span',{className:'mascotStar mascotStarOne'},'✦'),e('span',{className:'mascotStar mascotStarTwo'},'✧'),e('span',{className:'christmasSpark one'},'❄'),e('span',{className:'christmasSpark two'},'✦'))),
+isAdmin?e('section',{className:'hero adminHero'},e('div',null,e('small',null,'Agenda del salón'),e('h1',null,'Gestiona Manos Monas Club'),e('p',null,'Revisa reservas, clientas y recompensas desde un solo lugar.'))):e(ClientPromoSwiper,{onExplore:()=>setTab('recompensas')}),
 error?e('div',{className:'notice error',role:'alert',style:{marginTop:16}},error):null,
 notice?e('div',{className:'notice ok',role:'status',style:{marginTop:16}},notice):null,
 e('main',{className:'tabEntrance',key:tab},tab==='recompensas'?rewardsView():tab==='perfil'?profileView():tab==='reservas'?e(BookingPanel,{key:(isDemo?'demo':user?.uid)+'-'+isAdmin,admin:isAdmin,demo:isDemo,uid:user?.uid,clients:clientList,demoRows:demoReservations,setDemoRows:setDemoReservations}):isAdmin&&tab==='admin'?adminView():null),
