@@ -176,17 +176,19 @@
 /* La agenda y el perfil reciben microanimaciones propias al seleccionarse. */
 .calendarNav.active .navIcon,.profileNav.active .navIcon{animation:none!important}
 .calendarGlyph,.profileGlyph{display:inline-grid;position:relative;width:27px;height:27px;place-items:center;transform-origin:50% 72%}
-.calendarGlyph svg,.profileGlyph svg{width:27px;height:27px;display:block}
+.calendarGlyph{font-size:23px;line-height:1}
+.profileGlyph img{width:100%;height:100%;display:block;object-fit:contain}
 .calendarNav.active .calendarGlyph{animation:calendar-arrive .68s cubic-bezier(.2,.8,.25,1.05) both}
 .calendarSpark{position:absolute;right:-5px;top:-4px;color:#c38a2e;font-size:12px;opacity:0;animation:calendar-spark .7s ease-out both}
 .calendarNav.active .calendarSpark{animation:calendar-spark .7s .08s ease-out both}
 .profileNav.active .profileGlyph{animation:profile-bloom .68s cubic-bezier(.2,.8,.25,1.05) both;filter:drop-shadow(0 2px 4px #c65d8860)}
-.profileSpark{position:absolute;right:-5px;top:-5px;color:#c38a2e;font-size:11px;opacity:0}
-.profileNav.active .profileSpark{animation:calendar-spark .75s .12s ease-out both}
+.profileSmileGlow{position:absolute;left:63%;top:68%;font-style:normal;font-size:11px;line-height:1;color:#fff8b5;opacity:0;text-shadow:0 0 2px #fff,0 0 5px #ffe16f,0 0 9px #f4a938;pointer-events:none}
+.profileNav.active .profileSmileGlow{animation:smile-flash .82s .16s ease-out both}
 @keyframes calendar-arrive{0%{transform:translateY(0) rotate(0) scale(1)}32%{transform:translateY(-5px) rotate(-9deg) scale(1.13)}58%{transform:translateY(1px) rotate(5deg) scale(.97)}100%{transform:translateY(0) rotate(0) scale(1)}}
 @keyframes profile-bloom{0%{transform:scale(.82) rotate(-10deg)}42%{transform:scale(1.15) rotate(7deg)}72%{transform:scale(.97) rotate(-3deg)}100%{transform:scale(1) rotate(0)}}
 @keyframes calendar-spark{0%{opacity:0;transform:scale(.3) rotate(-25deg)}45%{opacity:1;transform:scale(1.2) rotate(12deg)}100%{opacity:0;transform:translateY(-7px) scale(.7) rotate(40deg)}}
-@media(prefers-reduced-motion:reduce){.calendarNav.active .calendarGlyph,.calendarNav.active .calendarSpark,.profileNav.active .profileGlyph,.profileNav.active .profileSpark{animation:none!important;filter:none}}
+@keyframes smile-flash{0%{opacity:0;transform:scale(.25) rotate(-25deg);filter:brightness(1)}35%{opacity:1;transform:scale(1.65) rotate(12deg);filter:brightness(1.5)}68%{opacity:.85;transform:scale(.85) rotate(35deg)}100%{opacity:0;transform:translate(2px,-2px) scale(.35) rotate(60deg)}}
+@media(prefers-reduced-motion:reduce){.calendarNav.active .calendarGlyph,.calendarNav.active .calendarSpark,.profileNav.active .profileGlyph,.profileNav.active .profileSmileGlow{animation:none!important;filter:none}}
 </style>
 <link rel="preload" as="image" href="../assets/img/promo_gel.png">
 <link rel="manifest" href="./manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"></head><body>
@@ -943,7 +945,7 @@ function adminView(){
 function navButton(id,label,icon){
   const selected=tab===id, gift=id==='recompensas';
   const navClass=id==='reservas'?' calendarNav':id==='perfil'?' profileNav':'';
-  const iconContent=id==='reservas'?e('span',{className:'calendarGlyph'},e('svg',{viewBox:'0 0 28 28',fill:'none','aria-hidden':true},e('rect',{x:4.5,y:6.2,width:19,height:17,rx:4,fill:'#fff4f8',stroke:'#a32842',strokeWidth:1.6}),e('path',{d:'M5 10.5h18M9 4.2v4.3M19 4.2v4.3',stroke:'#a32842',strokeWidth:1.8,strokeLinecap:'round'}),e('path',{d:'M9 14.5h2.2M15 14.5h2.2M9 18.5h2.2M15 18.5h2.2',stroke:'#ce7194',strokeWidth:1.8,strokeLinecap:'round'})),e('i',{className:'calendarSpark','aria-hidden':true},'✦')):id==='perfil'?e('span',{className:'profileGlyph'},e('svg',{viewBox:'0 0 28 28',fill:'none','aria-hidden':true},e('path',{d:'M5.2 12.3C4.1 5.9 7.8 2.1 13.8 2.1c6 0 9.5 4.2 8.1 10.7-.4 2.1-.4 4.4.8 6.1-1.8.1-3-.5-3.7-1.8-.8 2.2-2.8 3.6-6 3.6-3.1 0-5.2-1.4-6-3.6-.5 1.2-1.4 1.8-2.8 1.8.8-2 1.3-4 1-6.6Z',fill:'#8e365c'}),e('ellipse',{cx:14,cy:10.6,rx:5.1,ry:6.2,fill:'#fff0f5',stroke:'#8e365c',strokeWidth:1.1}),e('path',{d:'M9 8.1c1.5.1 3.4-.3 5.2-1.7 1.1 1.4 2.7 2.1 5 2.1-.6-3-2.5-4.7-5.4-4.7-2.7 0-4.3 1.4-4.8 4.3Z',fill:'#8e365c'}),e('path',{d:'M7 24c.5-3.5 3.1-5.6 7-5.6s6.5 2.1 7 5.6',fill:'#f5c5d8',stroke:'#a32842',strokeWidth:1.5,strokeLinecap:'round'}),e('path',{d:'m20.5 4.2 1.4-1.2 1.4 1.2-.2 1.8-1.2.8-1.2-.8-.2-1.8Z',fill:'#e2b557',stroke:'#fff0bd',strokeWidth:.7})),e('i',{className:'profileSpark','aria-hidden':true},'✦')):e('span',{className:'giftEmoji',key:'gift-'+giftTap+'-'+selected},icon);
+  const iconContent=id==='reservas'?e('span',{className:'calendarGlyph'},'🗓️',e('i',{className:'calendarSpark','aria-hidden':true},'✦')):id==='perfil'?e('span',{className:'profileGlyph'},e('img',{src:'./images/profile-girl.webp',alt:'',width:27,height:27}),e('i',{className:'profileSmileGlow','aria-hidden':true},'✦')):e('span',{className:'giftEmoji',key:'gift-'+giftTap+'-'+selected},icon);
   return e('button',{key:id,className:(selected?'active':'')+(gift?' giftNav':'')+navClass,'aria-current':selected?'page':undefined,onClick:()=>{if(gift)setGiftTap(n=>n+1);setTab(id);setNotice('');setError('');if(typeof window.scrollTo==='function')window.scrollTo({top:0,behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}},
     e('span',{className:'navIcon'+(gift?' giftNavIcon':''),'aria-hidden':true},iconContent,
       gift&&pendingPoints&&!selected?e('span',{className:'pointsAlert',role:'img','aria-label':'Tienes nuevos puntos'}):null,
