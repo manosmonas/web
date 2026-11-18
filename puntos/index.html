@@ -242,7 +242,7 @@ window.MANOS_MONAS_VAPID_KEY = ''; // clave pública pendiente de activar
 'use strict';
 if(typeof React==='undefined'||typeof ReactDOM==='undefined'||typeof firebase==='undefined'){window.monasBootError?.();return;}
 const e=React.createElement,{useState,useEffect,useRef}=React;
-const REWARDS=[{id:'manicura',name:'Manicura clásica',points:200,emoji:'💅'},{id:'pedicura',name:'Pedicura clásica',points:400,emoji:'🦶'},{id:'lifting',name:'Lifting de pestañas',points:650,emoji:'👁️'},{id:'alisado',name:'Descuento en alisado',points:1000,emoji:'✨'}];
+const REWARDS=[{id:'manicura',name:'Manicura',points:250,emoji:'💅'},{id:'pedicura',name:'Pedicura',points:250,emoji:'🦶'},{id:'lifting',name:'Lifting de pestañas',points:200,emoji:'👁️'},{id:'laminado-cejas',name:'Laminado de cejas',points:200,emoji:'✨'},{id:'limpieza-facial',name:'Limpieza facial',points:300,emoji:'🧖‍♀️'},{id:'depilacion-hindu',name:'Depilación hindú',points:50,emoji:'🌸'},{id:'alisado',name:'Descuento 50% alisado orgánico',points:750,emoji:'💆‍♀️'}];
 const SERVICES=[{id:'manicura',name:'Manicura',points:30},{id:'pedicura',name:'Pedicura',points:40},{id:'pestanas',name:'Pestañas',points:50},{id:'mechas',name:'Mechas',points:90},{id:'alisado',name:'Alisado',points:110}];
 const configured=!!(window.MANOS_MONAS_FIREBASE.apiKey&&window.MANOS_MONAS_FIREBASE.projectId);
 let auth=null,db=null;
