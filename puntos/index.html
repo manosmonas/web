@@ -252,11 +252,19 @@ const demoClient={uid:'demo',displayName:'Clienta de ejemplo',email:'demo@ejempl
 const demoVisits=[{id:'demo1',serviceName:'Manicura',points:30,createdAt:{toDate:()=>new Date()}}];
 const errMsg=x=>x&&x.message?x.message:String(x);
 const ts=x=>x&&x.toDate?x.toDate().toLocaleDateString('es-PE'):'Hoy';
+const REWARD_IMAGE_URLS={
+  lifting:'https://images.pexels.com/photos/5128219/pexels-photo-5128219.jpeg?auto=compress&cs=tinysrgb&w=1122&h=1402&fit=crop',
+  'laminado-cejas':'https://images.pexels.com/photos/6135621/pexels-photo-6135621.jpeg?auto=compress&cs=tinysrgb&w=1122&h=1402&fit=crop',
+  'limpieza-facial':'https://images.pexels.com/photos/5069454/pexels-photo-5069454.jpeg?auto=compress&cs=tinysrgb&w=1122&h=1402&fit=crop',
+  'depilacion-hindu':'https://images.pexels.com/photos/6135628/pexels-photo-6135628.jpeg?auto=compress&cs=tinysrgb&w=1122&h=1402&fit=crop',
+  alisado:'https://images.pexels.com/photos/29189946/pexels-photo-29189946/pexels-photo-29189946.jpeg?auto=compress&cs=tinysrgb&w=1122&h=1402&fit=crop'
+};
 function RewardPhoto({id,alt,kind='card',eager=false}){
   const [state,setState]=useState('loading');
+  const src=id==='manicura'?'../assets/img/premio_manicura.png':id==='pedicura'?'../assets/img/premio_pedicura.png':REWARD_IMAGE_URLS[id]||'./images/rewards/'+id+'.webp';
   return e('div',{className:'photoFrame photo-'+state+' photo-'+kind},
     e('div',{className:'photoPlaceholder','aria-hidden':true},e('span',null,'✦')),
-    state!=='error'?e('img',{src:id==='manicura'?'../assets/img/premio_manicura.png':id==='pedicura'?'../assets/img/premio_pedicura.png':'./images/rewards/'+id+'.webp',alt,loading:eager?'eager':'lazy',decoding:'async',width:176,height:220,onLoad:()=>setState('ready'),onError:()=>setState('error')}):e('span',{className:'photoFallback',role:'img','aria-label':alt},'🎁')
+    state!=='error'?e('img',{src,alt,loading:eager?'eager':'lazy',decoding:'async',width:176,height:220,onLoad:()=>setState('ready'),onError:()=>setState('error')}):e('span',{className:'photoFallback',role:'img','aria-label':alt},'🎁')
   );
 }
 // Un solo escenario de celebración, incluso cuando se desbloquean varios premios.
