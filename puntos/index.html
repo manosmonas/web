@@ -256,7 +256,7 @@ function RewardPhoto({id,alt,kind='card',eager=false}){
   const [state,setState]=useState('loading');
   return e('div',{className:'photoFrame photo-'+state+' photo-'+kind},
     e('div',{className:'photoPlaceholder','aria-hidden':true},e('span',null,'✦')),
-    state!=='error'?e('img',{src:id==='manicura'?'../assets/img/premio_manicura.png':id==='pedicura'?'../assets/img/premio_pedicura.png':'./images/rewards/'+id+'.webp',alt,loading:eager?'eager':'lazy',decoding:'async',width:176,height:220,onLoad:()=>setState('ready'),onError:()=>setState('error')}):e('span',{className:'photoFallback',role:'img','aria-label':alt},'🎁')
+    state!=='error'?e('img',{src:({manicura:'../assets/img/premio_manicura.png',pedicura:'../assets/img/premio_pedicura.png',lifting:'https://lenalashes.it/assets/images/laminazione-ciglia.jpg','laminado-cejas':'https://www.lashempireaustralia.com.au/cdn/shop/files/Dramaticlookbrowlamination.jpg?v=1774234213&width=1445','limpieza-facial':'https://www.lakshacare.com/assets/images/skin-care/service-image-1.jpg','depilacion-hindu':'https://images.unsplash.com/photo-1519415387722-a1c3bbef716c?auto=format&fit=crop&w=1122&h=1402&q=85',alisado:'https://www.nanoplastia.uk/images/projects/img_6928a5020a0f4.jpeg'})[id]||'./images/rewards/'+id+'.webp',alt,loading:eager?'eager':'lazy',decoding:'async',width:176,height:220,onLoad:()=>setState('ready'),onError:()=>setState('error')}):e('span',{className:'photoFallback',role:'img','aria-label':alt},'🎁')
   );
 }
 // Un solo escenario de celebración, incluso cuando se desbloquean varios premios.
