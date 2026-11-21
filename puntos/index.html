@@ -253,11 +253,8 @@ const demoVisits=[{id:'demo1',serviceName:'Manicura',points:30,createdAt:{toDate
 const errMsg=x=>x&&x.message?x.message:String(x);
 const ts=x=>x&&x.toDate?x.toDate().toLocaleDateString('es-PE'):'Hoy';
 const REWARD_IMAGE_URLS={
-  lifting:'https://images.pexels.com/photos/5128219/pexels-photo-5128219.jpeg?auto=compress&cs=tinysrgb&w=1122&h=1402&fit=crop',
-  'laminado-cejas':'https://images.pexels.com/photos/6135621/pexels-photo-6135621.jpeg?auto=compress&cs=tinysrgb&w=1122&h=1402&fit=crop',
   'limpieza-facial':'https://images.pexels.com/photos/5069454/pexels-photo-5069454.jpeg?auto=compress&cs=tinysrgb&w=1122&h=1402&fit=crop',
-  'depilacion-hindu':'https://images.pexels.com/photos/6135628/pexels-photo-6135628.jpeg?auto=compress&cs=tinysrgb&w=1122&h=1402&fit=crop',
-  alisado:'https://images.pexels.com/photos/29189946/pexels-photo-29189946/free-photo-of-woman-receiving-hair-treatment-in-salon.jpeg?auto=compress&cs=tinysrgb&w=1122&h=1402&fit=crop'
+  'depilacion-hindu':'https://images.pexels.com/photos/6135628/pexels-photo-6135628.jpeg?auto=compress&cs=tinysrgb&w=1122&h=1402&fit=crop'
 };
 function RewardPhoto({id,alt,kind='card',eager=false}){
   const [state,setState]=useState('loading');
