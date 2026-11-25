@@ -24,6 +24,36 @@ exports.unregisterClubPush=onCall({region},async req=>{
  await db.runTransaction(async tx=>{const s=await tx.get(ref);if(s.exists&&s.data().uid===req.auth.uid)tx.delete(ref)});
  return {ok:true};
 });
+exports.testClubPush=onCall({region},async req=>{
+ const uid=req.auth?.uid,token=req.data?.token;
+ if(!uid)throw new HttpsError('unauthenticated','Inicia sesión.');
+ if(!validToken(token))throw new HttpsError('invalid-argument','Registro inválido.');
+ const device=db.collection('clubPushDevices').doc(hash(token));
+ const recentTest=db.collection('clubPushTests').doc(uid);
+ await db.runTransaction(async tx=>{
+  const [registration,previous]=await Promise.all([tx.get(device),tx.get(recentTest)]);
+  if(registration.data()?.uid!==uid||registration.data()?.token!==token){
+   throw new HttpsError('failed-precondition','Vuelve a activar los avisos en este dispositivo.');
+  }
+  const lastTest=previous.data()?.sentAt?.toMillis();
+  if(lastTest!==undefined&&Date.now()-lastTest<60_000){
+   throw new HttpsError('resource-exhausted','Espera un minuto antes de repetir la prueba.');
+  }
+  tx.set(recentTest,{sentAt:FieldValue.serverTimestamp()});
+ });
+ try{
+  await getMessaging().send({token,data:{kind:'test'},notification:{title:'Manos Monas Club',body:'¡Llegó tu aviso de prueba!'},
+   webpush:{headers:{TTL:'120'},notification:{tag:'club-push-test',icon:'https://manosmonas.github.io/web/assets/img/logo.png'},
+    fcmOptions:{link:'https://manosmonas.github.io/web/puntos/?tab=reservas'}}});
+ }catch(error){
+  if(['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(error.code)){
+   throw new HttpsError('failed-precondition','Vuelve a activar los avisos en este dispositivo.');
+  }
+  console.error('Test push delivery failed',error.code||'unknown');
+  throw new HttpsError('unavailable','El servicio de avisos no aceptó la prueba.');
+ }
+ return {accepted:true};
+});
 function limaParts(now){
  const p=Object.fromEntries(new Intl.DateTimeFormat('sv-SE',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(now).map(x=>[x.type,x.value]));
  return {date:p.year+'-'+p.month+'-'+p.day,minute:Number(p.hour)*60+Number(p.minute)};

@@ -365,14 +365,15 @@ function UnlockMoment({moment,onClose,onView}){
     e('button',{type:'button',className:'button full unlockView',onClick:()=>onView(main.id),autoFocus:true},prizes.length===1?'Ver mi recompensa':'Ver mis recompensas'));
 }
 function ClientReminders({uid,demo,bookings,now}){
- const [messages,setMessages]=useState([]),[status,setStatus]=useState(''),[enabled,setEnabled]=useState(false),[working,setWorking]=useState(false);
+ const [messages,setMessages]=useState([]),[status,setStatus]=useState(''),[failed,setFailed]=useState(false);
+ const [enabled,setEnabled]=useState(false),[working,setWorking]=useState('');
  useEffect(()=>{if(demo||!uid||!db)return;return db.collection('users').doc(uid).collection('reminders').orderBy('createdAt','desc').limit(20).onSnapshot(s=>setMessages(s.docs.map(x=>({id:x.id,...x.data()}))),()=>setMessages([]))},[uid,demo]);
  useEffect(()=>{setEnabled(false);setStatus('');if(demo||!uid||!window.MANOS_MONAS_VAPID_KEY)return;try{setEnabled(localStorage.getItem('monas-push-uid')===uid&&window.Notification?.permission==='granted')}catch(_){}},[uid,demo]);
  const limaNow=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(now);
  const today=limaNow.slice(0,10),hhmm=limaNow.slice(11,16).split(':').map(Number),nowMinutes=hhmm[0]*60+hhmm[1];
  const live=messages.filter(m=>m.date===today&&m.start>nowMinutes&&bookings.some(b=>b.id===m.reservationId&&b.date===m.date&&b.start===m.start&&b.status==='confirmed'));
  async function activate(){
-  if(working)return;setWorking(true);setStatus('');
+  if(working)return;setWorking('activate');setStatus('');setFailed(false);
   try{
    if(demo){setEnabled(true);setStatus('Simulación: recordatorios activados. No se enviarán avisos reales.');return}
    if(!window.MANOS_MONAS_VAPID_KEY)throw new ClubActionError('Los avisos del teléfono aún están pendientes de activación.');
@@ -383,14 +384,43 @@ function ClientReminders({uid,demo,bookings,now}){
    if(!token)throw new ClubActionError('No se obtuvo el registro del dispositivo.');
    await firebase.app().functions('us-central1').httpsCallable('registerClubPush')({token});
    localStorage.setItem('monas-push-uid',uid);setEnabled(true);setStatus('¡Recordatorios activados en este dispositivo!');
-  }catch(ex){setStatus(clubError(ex,'No pudimos activar los avisos. Inténtalo de nuevo.'))}finally{setWorking(false)}
+  }catch(ex){setFailed(true);setStatus(clubError(ex,'No pudimos activar los avisos. Inténtalo de nuevo.'))}finally{setWorking('')}
+ }
+ async function testPush(){
+  if(working)return;
+  setWorking('test');setStatus('');setFailed(false);
+  try{
+   if(demo){setStatus('Simulación: en tu cuenta real se enviará un aviso a este dispositivo.');return}
+   if(window.Notification?.permission!=='granted')throw new ClubActionError('Activa el permiso de notificaciones de este navegador y vuelve a tocar «Activar avisos».');
+   const registration=await navigator.serviceWorker.getRegistration('./');
+   if(!registration)throw new ClubActionError('Vuelve a activar los avisos en este navegador.');
+   const token=await firebase.messaging().getToken({vapidKey:window.MANOS_MONAS_VAPID_KEY,serviceWorkerRegistration:registration});
+   if(!token)throw new ClubActionError('Vuelve a activar los avisos en este navegador.');
+   const result=await firebase.app().functions('us-central1').httpsCallable('testClubPush')({token});
+   if(result.data?.accepted!==true)throw new ClubActionError('El servicio de avisos no confirmó el envío.');
+   setStatus('Envío aceptado. El aviso debe aparecer aquí o en las notificaciones de este dispositivo.');
+  }catch(ex){
+   setFailed(true);
+   if(ex instanceof ClubActionError||ex.code==='functions/failed-precondition'){
+    setEnabled(false);
+    try{localStorage.removeItem('monas-push-uid')}catch(_){}
+    setStatus(ex instanceof ClubActionError?ex.message:'Vuelve a activar los avisos en este dispositivo.');
+   }else if(ex.code==='functions/resource-exhausted'){
+    setStatus('Espera un minuto antes de volver a probar.');
+   }else if(ex.code==='functions/unavailable'){
+    setStatus('El servicio de avisos no aceptó el envío. Inténtalo de nuevo.');
+   }else{
+    setStatus(clubError(ex,'No pudimos enviar el aviso de prueba. Inténtalo de nuevo.'));
+   }
+  }finally{setWorking('')}
  }
  const canActivate=demo||Boolean(window.MANOS_MONAS_VAPID_KEY);
  if(!canActivate&&!live.length)return null;
  const example=demo&&enabled;
  return e('div',{className:'panel bookingReminder'},e('div',{className:'bookingReminderHead'},e('span',{'aria-hidden':true},'🔔'),e('div',null,e('strong',null,'Tus recordatorios'),e('p',{className:'tiny'},'El día de tu cita, a las 8:00 a. m. y dos horas antes.'))),
-  canActivate?e('button',{type:'button',className:'button secondary full',disabled:working||enabled,onClick:activate},working?'Activando…':enabled?'✓ Avisos activados':'Activar avisos en mi celular'):null,
-  status?e(ClubFeedback,{tone:enabled?'success':'error',message:status}):null,
+  canActivate?e('button',{type:'button',className:'button secondary full',disabled:!!working||enabled,onClick:activate},working==='activate'?'Activando…':enabled?'✓ Avisos activados':'Activar avisos en mi celular'):null,
+  canActivate&&enabled?e('button',{type:'button',className:'button secondary full',disabled:!!working,onClick:testPush},working==='test'?'Enviando…':'Enviar aviso de prueba'):null,
+  status?e(ClubFeedback,{tone:failed?'error':'success',message:status}):null,
   example?e(ClubFeedback,{title:'Ejemplo · 8:00 a. m.',message:'Hoy tienes una cita en Manos Monas.'}):null,
   example?e(ClubFeedback,{title:'Ejemplo · Dos horas antes',message:'Faltan dos horas para tu cita.'}):null,
   ...live.map(m=>e(ClubFeedback,{key:m.id,title:m.kind==='morning'?'Hoy tienes una cita':m.kind==='twoHours'?'Faltan dos horas para tu cita':'Tu cita se acerca',
