@@ -1,0 +1,22 @@
+{
+  "name": "manos-monas-club-android",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start --dev-client",
+    "android": "expo run:android",
+    "bundle:verify": "expo export --platform android"
+  },
+  "dependencies": {
+    "@react-native-firebase/app": "27.2.0",
+    "@react-native-firebase/auth": "27.2.0",
+    "@react-native-firebase/firestore": "27.2.0",
+    "@react-native-google-signin/google-signin": "17.0.0",
+    "expo": "54.0.38",
+    "expo-dev-client": "~6.0.20",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-safe-area-context": "~5.6.0"
+  }
+}
