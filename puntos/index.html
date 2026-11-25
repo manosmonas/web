@@ -367,6 +367,24 @@ function UnlockMoment({moment,onClose,onView}){
 function ClientReminders({uid,demo,bookings,now}){
  const [messages,setMessages]=useState([]),[status,setStatus]=useState(''),[failed,setFailed]=useState(false);
  const [enabled,setEnabled]=useState(false),[working,setWorking]=useState('');
+ const diagnostics=!demo&&new URLSearchParams(location.search).get('diagnostico')==='push';
+ const [testStarted,setTestStarted]=useState(0),[receivedInBackground,setReceivedInBackground]=useState(false);
+ useEffect(()=>{
+  if(!diagnostics||!testStarted||receivedInBackground||!window.caches)return;
+  let active=true;
+  async function check(){
+   try{
+    const cache=await caches.open('manos-monas-push-diagnostics-v1');
+    const receipt=await cache.match(new URL('push-test-receipt',document.baseURI));
+    if(Number(await receipt?.text())>=testStarted&&active)setReceivedInBackground(true);
+   }catch(_){}
+  }
+  check();
+  const timer=window.setInterval(check,1000);
+  const expiry=window.setTimeout(()=>window.clearInterval(timer),120000);
+  document.addEventListener('visibilitychange',check);
+  return()=>{active=false;window.clearInterval(timer);window.clearTimeout(expiry);document.removeEventListener('visibilitychange',check)};
+ },[diagnostics,testStarted,receivedInBackground]);
  useEffect(()=>{if(demo||!uid||!db)return;return db.collection('users').doc(uid).collection('reminders').orderBy('createdAt','desc').limit(20).onSnapshot(s=>setMessages(s.docs.map(x=>({id:x.id,...x.data()}))),()=>setMessages([]))},[uid,demo]);
  useEffect(()=>{setEnabled(false);setStatus('');if(demo||!uid||!window.MANOS_MONAS_VAPID_KEY)return;try{setEnabled(localStorage.getItem('monas-push-uid')===uid&&window.Notification?.permission==='granted')}catch(_){}},[uid,demo]);
  const limaNow=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(now);
@@ -394,6 +412,11 @@ function ClientReminders({uid,demo,bookings,now}){
    if(window.Notification?.permission!=='granted')throw new ClubActionError('Activa el permiso de notificaciones de este navegador y vuelve a tocar «Activar avisos».');
    const registration=await navigator.serviceWorker.getRegistration('./');
    if(!registration)throw new ClubActionError('Vuelve a activar los avisos en este navegador.');
+   if(diagnostics){
+    await registration.update().catch(()=>{});
+    setReceivedInBackground(false);
+    setTestStarted(Date.now());
+   }
    const token=await firebase.messaging().getToken({vapidKey:window.MANOS_MONAS_VAPID_KEY,serviceWorkerRegistration:registration});
    if(!token)throw new ClubActionError('Vuelve a activar los avisos en este navegador.');
    const result=await firebase.app().functions('us-central1').httpsCallable('testClubPush')({token});
@@ -414,14 +437,28 @@ function ClientReminders({uid,demo,bookings,now}){
    }
   }finally{setWorking('')}
  }
+ async function testSystemNotification(){
+  if(working)return;
+  setWorking('system');setStatus('');setFailed(false);
+  try{
+   const registration=await navigator.serviceWorker.getRegistration('./');
+   if(!registration?.active)throw new ClubActionError('Vuelve a activar los avisos en este navegador.');
+   await registration.showNotification('Manos Monas Club',{body:'Prueba de notificación del equipo.',tag:'monas-local-test',icon:'../assets/img/logo.png'});
+   setStatus('Chrome procesó la prueba local. Busca «Prueba de notificación del equipo» en Windows.');
+  }catch(ex){
+   setFailed(true);setStatus(clubError(ex,'Chrome no pudo mostrar la prueba local.'));
+  }finally{setWorking('')}
+ }
  const canActivate=demo||Boolean(window.MANOS_MONAS_VAPID_KEY);
  if(!canActivate&&!live.length)return null;
  const example=demo&&enabled;
  return e('div',{className:'panel bookingReminder'},e('div',{className:'bookingReminderHead'},e('span',{'aria-hidden':true},'🔔'),e('div',null,e('strong',null,'Tus recordatorios'),e('p',{className:'tiny'},'El día de tu cita, a las 8:00 a. m. y dos horas antes.'))),
   canActivate?e('button',{type:'button',className:'button secondary full',disabled:!!working||enabled,onClick:activate},working==='activate'?'Activando…':enabled?'✓ Avisos activados':'Activar avisos en mi celular'):null,
   canActivate&&enabled?e('button',{type:'button',className:'button secondary full',disabled:!!working,onClick:testPush},working==='test'?'Enviando…':'Enviar aviso de prueba'):null,
+  diagnostics&&enabled?e('button',{type:'button',className:'button secondary full',disabled:!!working,onClick:testSystemNotification},'Probar notificación de Windows'):null,
   working==='test'?e(ClubFeedback,{message:'Para verlo fuera del Club, cambia de pestaña ahora. El aviso se enviará en unos segundos.'}):null,
   status?e(ClubFeedback,{tone:failed?'error':'success',message:status}):null,
+  diagnostics&&receivedInBackground?e(ClubFeedback,{tone:'success',message:'El navegador recibió el push en segundo plano y pidió a Windows que lo mostrara.'}):null,
   example?e(ClubFeedback,{title:'Ejemplo · 8:00 a. m.',message:'Hoy tienes una cita en Manos Monas.'}):null,
   example?e(ClubFeedback,{title:'Ejemplo · Dos horas antes',message:'Faltan dos horas para tu cita.'}):null,
   ...live.map(m=>e(ClubFeedback,{key:m.id,title:m.kind==='morning'?'Hoy tienes una cita':m.kind==='twoHours'?'Faltan dos horas para tu cita':'Tu cita se acerca',
