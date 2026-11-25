@@ -9,6 +9,7 @@ const {createHash}=require('node:crypto');
 initializeApp();
 const db=getFirestore(),region='us-central1',zone='America/Lima';
 const morningMinute=8*60,advanceMinutes=2*60;
+const pushTestDelayMs=6000;
 const hash=t=>createHash('sha256').update(t).digest('hex');
 function validToken(token){return typeof token==='string'&&token.length>=20&&token.length<=4096}
 exports.registerClubPush=onCall({region},async req=>{
@@ -36,11 +37,16 @@ exports.testClubPush=onCall({region},async req=>{
    throw new HttpsError('failed-precondition','Vuelve a activar los avisos en este dispositivo.');
   }
   const lastTest=previous.data()?.sentAt?.toMillis();
-  if(lastTest!==undefined&&Date.now()-lastTest<60_000){
-   throw new HttpsError('resource-exhausted','Espera un minuto antes de repetir la prueba.');
+  if(lastTest!==undefined&&Date.now()-lastTest<pushTestDelayMs){
+   throw new HttpsError('resource-exhausted','La prueba anterior aún se está enviando.');
   }
   tx.set(recentTest,{sentAt:FieldValue.serverTimestamp()});
  });
+ await new Promise(resolve=>setTimeout(resolve,pushTestDelayMs));
+ const registration=(await device.get()).data();
+ if(registration?.uid!==uid||registration?.token!==token){
+  throw new HttpsError('failed-precondition','Vuelve a activar los avisos en este dispositivo.');
+ }
  try{
   await getMessaging().send({token,data:{kind:'test'},notification:{title:'Manos Monas Club',body:'¡Llegó tu aviso de prueba!'},
    webpush:{headers:{TTL:'120'},notification:{tag:'club-push-test',icon:'https://manosmonas.github.io/web/assets/img/logo.png'},
