@@ -2,6 +2,7 @@
 'use strict';
 const {onSchedule}=require('firebase-functions/v2/scheduler');
 const {onCall,HttpsError}=require('firebase-functions/v2/https');
+const {onDocumentCreated}=require('firebase-functions/v2/firestore');
 const {initializeApp}=require('firebase-admin/app');
 const {getFirestore,FieldValue}=require('firebase-admin/firestore');
 const {getMessaging}=require('firebase-admin/messaging');
@@ -70,6 +71,50 @@ function dueKind(b,minute){
  if(b.start===minute+advanceMinutes)return 'twoHours';
  return null;
 }
+function appointmentMessage(start){
+ const hour=Math.floor(start/60),minutes=String(start%60).padStart(2,'0');
+ return {title:'¡Tienes una Cita Programada!',body:'Hoy '+(hour%12||12)+':'+minutes+' '+(hour<12?'a.m.':'p.m.')};
+}
+async function sendClubNotification(uid,id,kind,notification,tab,isCurrent){
+ const devices=await db.collection('clubPushDevices').where('uid','==',uid).get();
+ for(const device of devices.docs){
+  const [current,registration]=await Promise.all([isCurrent(),device.ref.get()]);
+  const reg=registration.data();
+  if(!current||reg?.uid!==uid||!validToken(reg.token))continue;
+  try{
+   await getMessaging().send({token:reg.token,data:{kind},notification,webpush:{headers:{TTL:'600'},
+    notification:{tag:id,icon:'https://manosmonas.github.io/web/assets/img/logo.png'},
+    fcmOptions:{link:'https://manosmonas.github.io/web/puntos/?tab='+tab}}});
+  }catch(error){
+   if(!['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(error.code)){
+    console.error('Push delivery failed',error.code||'unknown');
+    continue;
+   }
+   await db.runTransaction(async tx=>{
+    const current=(await tx.get(device.ref)).data();
+    if(current?.uid===uid&&current.token===reg.token)tx.delete(device.ref);
+   });
+  }
+ }
+}
+exports.pointsEarnedNotification=onDocumentCreated({document:'visits/{visitId}',region:'southamerica-west1'},async event=>{
+ const visit=event.data?.data();
+ if(typeof visit?.userId!=='string'||!visit.userId||!Number.isSafeInteger(visit.points)||visit.points<=0)return;
+ const visitId=event.params.visitId;
+ const id='points-'+visitId;
+ const {userId,points}=visit;
+ const notice=db.collection('users').doc(userId).collection('reminders').doc(id);
+ const reversal=db.collection('voids').doc('void-'+visitId);
+ const created=await db.runTransaction(async tx=>{
+  const [previous,voided]=await Promise.all([tx.get(notice),tx.get(reversal)]);
+  if(previous.exists||voided.exists)return false;
+  tx.create(notice,{kind:'points',visitId,points,createdAt:FieldValue.serverTimestamp()});
+  return true;
+ });
+ if(!created)return;
+ await sendClubNotification(userId,id,'points',{title:'¡Ganaste '+points+' puntos!',body:'Ya puedes verlos en Manos Monas Club.'},
+  'recompensas',async()=>!(await reversal.get()).exists);
+});
 exports.bookingReminders=onSchedule({region,schedule:'* 8,13-19 * * *',timeZone:zone,timeoutSeconds:120,retryCount:2},async event=>{
  const scheduled=new Date(event.scheduleTime),actual=new Date();
  if(!Number.isFinite(scheduled.getTime())||actual-scheduled>10*60*1000)return;
@@ -93,13 +138,9 @@ exports.bookingReminders=onSchedule({region,schedule:'* 8,13-19 * * *',timeZone:
    return true;
   });
   if(!claimed)continue;
-  const devices=await db.collection('clubPushDevices').where('uid','==',b.userId).get();
-  for(const device of devices.docs){
-   const [fresh,registration]=await Promise.all([doc.ref.get(),device.ref.get()]);
-   const f=fresh.data(),reg=registration.data();
-   if(!f||f.status!=='confirmed'||f.date!==date||f.start!==b.start||f.userId!==b.userId||!reg||reg.uid!==b.userId)continue;
-   try{await getMessaging().send({token:reg.token,notification:{title:'Manos Monas Club',body:kind==='morning'?'Hoy tienes una cita. Consulta los detalles en Reservas.':'Faltan dos horas para tu cita. Consulta los detalles en Reservas.'},webpush:{headers:{TTL:'600'},notification:{tag:id,icon:'https://manosmonas.github.io/web/assets/img/logo.png'},fcmOptions:{link:'https://manosmonas.github.io/web/puntos/?tab=reservas'}}})}
-   catch(err){if(['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(err.code)){await db.runTransaction(async tx=>{const v=await tx.get(device.ref);if(v.exists&&v.data().uid===b.userId&&v.data().token===reg.token)tx.delete(device.ref)})}else console.error('Push delivery failed',err.code||err.message)}
-  }
+  await sendClubNotification(b.userId,id,'appointment',appointmentMessage(b.start),'reservas',async()=>{
+   const f=(await doc.ref.get()).data();
+   return f?.status==='confirmed'&&f.date===date&&f.start===b.start&&f.userId===b.userId;
+  });
  }
 });
