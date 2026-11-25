@@ -206,6 +206,28 @@
 .clientBookingTime{color:#8e3d6b;font-size:19px;font-weight:800;margin:6px 0}
 .clientBookingStaff{border-top:1px solid #f0e2e9;margin:12px 0 0;padding-top:9px;color:#695465}
 .clientBookingStaff strong{color:#321b2e}
+.notice{border:1px solid #ead2e1;background:#fff5fb;color:#60304c;border-radius:16px}
+.clubFeedback{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:start;gap:10px;margin:12px 0;padding:12px;background:#fff5fb;color:#552640;border:1px solid #e9cfe0;border-radius:16px;text-align:left}
+.clubFeedback.success{background:#fffaf1;border-color:#e7d3a6;color:#654414}
+.clubFeedback.error{background:#fff0f4;border-color:#edc1d2;color:#772847}
+.clubFeedbackIcon,.clubDialogIcon{display:grid;place-items:center;width:34px;height:34px;border-radius:12px;background:#f3dce9;color:#85365f;font-weight:800}
+.clubFeedback.success .clubFeedbackIcon{background:#f4e5c2;color:#785118}
+.clubFeedback.error .clubFeedbackIcon,.clubDialog.danger .clubDialogIcon{background:#f5d6e2;color:#872849}
+.clubFeedbackCopy{min-width:0;line-height:1.36;font-size:13px;overflow-wrap:anywhere}
+.clubFeedbackCopy strong{display:block;font-size:14px;margin-bottom:3px}
+.clubFeedbackClose{width:32px;height:32px;border:0;border-radius:9px;background:transparent;color:inherit;font-size:21px;cursor:pointer}
+.clubToast{position:fixed;z-index:45;inset:auto 14px calc(82px + env(safe-area-inset-bottom)) auto;width:min(400px,calc(100vw - 28px));box-sizing:border-box;margin:0;box-shadow:0 14px 32px #4d1c3c26;animation:booking-enter .22s ease-out}
+.clubDialog{width:min(420px,calc(100% - 24px));max-height:calc(100dvh - 28px);box-sizing:border-box;padding:20px;border:1px solid #e9cfe0;border-radius:22px;background:#fff9fc;color:#321b2e;box-shadow:0 22px 66px #3c162d46;text-align:left}
+.clubDialog::backdrop{background:#3013268c;backdrop-filter:blur(3px)}
+.clubDialog[open]{animation:booking-enter .22s ease-out}
+.clubDialogIcon{width:42px;height:42px;margin-bottom:12px;font-size:18px}
+.clubDialog h2{margin:0 0 8px;font-size:24px;line-height:1.14}
+.clubDialog p{margin:0 0 14px;color:#654c5e;line-height:1.45}
+.clubDialog .toolbar{justify-content:flex-end;margin-top:15px}
+.clubDialog .button{min-height:44px}
+.clubDialog button:focus-visible,.clubFeedbackClose:focus-visible{outline:2px solid #8e3d6b;outline-offset:2px}
+@media(max-width:400px){.clubDialog .toolbar>*{flex:1}.clubDialog .button{padding-inline:10px}.clubToast{bottom:calc(75px + env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce){.clubToast,.clubDialog[open]{animation:none}}
 </style>
 <link rel="preload" as="image" href="./images/mona-loader.webp">
 <link rel="manifest" href="./manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"></head><body>
@@ -265,7 +287,36 @@ if(configured&&!new URLSearchParams(window.location.search).has('demo')&&(!auth|
 const demoClient={uid:'demo',displayName:'Clienta de ejemplo',email:'demo@ejemplo.com',points:250,visits:3};
 const demoStartedAt=new Date();
 const demoVisits=[{id:'demo1',serviceName:'Manicura',points:30,redemptionCount:0,createdAt:{toDate:()=>demoStartedAt}}];
-const errMsg=x=>x&&x.message?x.message:String(x);
+class ClubActionError extends Error {}
+function clubError(error,fallback='No pudimos completar la acción. Inténtalo de nuevo.'){
+ if(error instanceof ClubActionError)return error.message;
+ if(typeof error==='string')return error;
+ const code=error?.code?.split('/').pop();
+ if(code==='permission-denied')return 'Tu cuenta no tiene permiso para hacer esto.';
+ if(['unavailable','network-request-failed','deadline-exceeded'].includes(code))return 'Revisa tu conexión e inténtalo de nuevo.';
+ return fallback;
+}
+function ClubFeedback({tone='info',title,message,onDismiss,floating=false}){
+ const icon=tone==='success'?'✓':tone==='error'?'!':'✦';
+ return e('div',{className:'clubFeedback '+tone+(floating?' clubToast':''),role:tone==='error'?'alert':'status'},
+  e('span',{className:'clubFeedbackIcon','aria-hidden':true},icon),
+  e('div',{className:'clubFeedbackCopy'},title?e('strong',null,title):null,message),
+  onDismiss?e('button',{type:'button',className:'clubFeedbackClose','aria-label':'Cerrar aviso',onClick:onDismiss},'×'):null);
+}
+function ClubDialog({id,title,description,onDismiss,danger=false,children}){
+ const ref=useRef(null);
+ useEffect(()=>{
+  const node=ref.current;
+  node.showModal();
+  return()=>{if(node.open)node.close()};
+ },[]);
+ return e('dialog',{ref,className:'clubDialog'+(danger?' danger':''),'aria-labelledby':id,'aria-describedby':description?id+'-description':undefined,
+  onCancel:ev=>{ev.preventDefault();onDismiss()}},
+  e('span',{className:'clubDialogIcon','aria-hidden':true},danger?'!':'✦'),
+  e('h2',{id},title),
+  description?e('p',{id:id+'-description'},description):null,
+  children);
+}
 const ts=x=>x&&x.toDate?x.toDate().toLocaleDateString('es-PE'):'Hoy';
 const limaDayFormat=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'});
 function voidBlockReason(visit,client,now=new Date()){
@@ -313,32 +364,37 @@ function UnlockMoment({moment,onClose,onView}){
     e('p',{className:'unlockHint'},'Tu premio ya está disponible para canjear.'),
     e('button',{type:'button',className:'button full unlockView',onClick:()=>onView(main.id),autoFocus:true},prizes.length===1?'Ver mi recompensa':'Ver mis recompensas'));
 }
-function ClientReminders({uid,demo,bookings}){
+function ClientReminders({uid,demo,bookings,now}){
  const [messages,setMessages]=useState([]),[status,setStatus]=useState(''),[enabled,setEnabled]=useState(false),[working,setWorking]=useState(false);
  useEffect(()=>{if(demo||!uid||!db)return;return db.collection('users').doc(uid).collection('reminders').orderBy('createdAt','desc').limit(20).onSnapshot(s=>setMessages(s.docs.map(x=>({id:x.id,...x.data()}))),()=>setMessages([]))},[uid,demo]);
- useEffect(()=>{setEnabled(false);setStatus('');if(demo||!uid)return;try{setEnabled(localStorage.getItem('monas-push-uid')===uid&&window.Notification?.permission==='granted')}catch(_){}},[uid,demo]);
- const limaNow=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date());
+ useEffect(()=>{setEnabled(false);setStatus('');if(demo||!uid||!window.MANOS_MONAS_VAPID_KEY)return;try{setEnabled(localStorage.getItem('monas-push-uid')===uid&&window.Notification?.permission==='granted')}catch(_){}},[uid,demo]);
+ const limaNow=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(now);
  const today=limaNow.slice(0,10),hhmm=limaNow.slice(11,16).split(':').map(Number),nowMinutes=hhmm[0]*60+hhmm[1];
  const live=messages.filter(m=>m.date===today&&m.start>nowMinutes&&bookings.some(b=>b.id===m.reservationId&&b.date===m.date&&b.start===m.start&&b.status==='confirmed'));
  async function activate(){
   if(working)return;setWorking(true);setStatus('');
   try{
    if(demo){setEnabled(true);setStatus('Simulación: recordatorios activados. No se enviarán avisos reales.');return}
-   if(!window.MANOS_MONAS_VAPID_KEY)throw Error('Los avisos del teléfono aún están pendientes de activación.');
-   if(!('Notification'in window)||!('serviceWorker'in navigator)||!firebase.messaging.isSupported())throw Error('Este navegador no admite avisos. En iPhone, agrega Club Monas a la pantalla de inicio.');
-   const permission=await Notification.requestPermission();if(permission!=='granted')throw Error('No se concedió el permiso de notificaciones.');
+   if(!window.MANOS_MONAS_VAPID_KEY)throw new ClubActionError('Los avisos del teléfono aún están pendientes de activación.');
+   if(!('Notification'in window)||!('serviceWorker'in navigator)||!firebase.messaging.isSupported())throw new ClubActionError('Este navegador no admite avisos. En iPhone, agrega Club Monas a la pantalla de inicio.');
+   const permission=await Notification.requestPermission();if(permission!=='granted')throw new ClubActionError('No se concedió el permiso de notificaciones.');
    const registration=await navigator.serviceWorker.register('./firebase-messaging-sw.js',{scope:'./'});
    const token=await firebase.messaging().getToken({vapidKey:window.MANOS_MONAS_VAPID_KEY,serviceWorkerRegistration:registration});
-   if(!token)throw Error('No se obtuvo el registro del dispositivo.');
+   if(!token)throw new ClubActionError('No se obtuvo el registro del dispositivo.');
    await firebase.app().functions('us-central1').httpsCallable('registerClubPush')({token});
    localStorage.setItem('monas-push-uid',uid);setEnabled(true);setStatus('¡Recordatorios activados en este dispositivo!');
-  }catch(ex){setStatus(ex.message||'No pudimos activar los avisos.')}finally{setWorking(false)}
+  }catch(ex){setStatus(clubError(ex,'No pudimos activar los avisos. Inténtalo de nuevo.'))}finally{setWorking(false)}
  }
- return e('div',{className:'panel bookingReminder'},e('div',{className:'bookingReminderHead'},e('span',{'aria-hidden':true},'🔔'),e('div',null,e('strong',null,'Tus recordatorios'),e('p',{className:'tiny'},'El día de tu cita, a las 8:00 a. m. y una hora antes.'))),
-  e('button',{type:'button',className:'button secondary full',disabled:working||enabled,onClick:activate},working?'Activando…':enabled?'✓ Avisos activados':'Activar avisos en mi celular'),
-  status?e('p',{className:'tiny',role:'status'},status):null,
-  demo&&enabled?e('div',{className:'bookingReminderMessage'},'✨ Ejemplo: ¡Hoy tienes una cita en Manos Monas!'):null,
-  ...live.map(m=>e('div',{key:m.id,className:'bookingReminderMessage',role:'status'},m.kind==='morning'?'💅 ¡Hoy tienes una cita en Manos Monas!':'⏰ ¡Falta una horita para tu cita!',e('div',{className:'tiny'},'Consulta tu reserva confirmada aquí.'))));
+ const canActivate=demo||Boolean(window.MANOS_MONAS_VAPID_KEY);
+ if(!canActivate&&!live.length)return null;
+ const example=demo&&enabled;
+ return e('div',{className:'panel bookingReminder'},e('div',{className:'bookingReminderHead'},e('span',{'aria-hidden':true},'🔔'),e('div',null,e('strong',null,'Tus recordatorios'),e('p',{className:'tiny'},'El día de tu cita, a las 8:00 a. m. y dos horas antes.'))),
+  canActivate?e('button',{type:'button',className:'button secondary full',disabled:working||enabled,onClick:activate},working?'Activando…':enabled?'✓ Avisos activados':'Activar avisos en mi celular'):null,
+  status?e(ClubFeedback,{tone:enabled?'success':'error',message:status}):null,
+  example?e(ClubFeedback,{title:'Ejemplo · 8:00 a. m.',message:'Hoy tienes una cita en Manos Monas.'}):null,
+  example?e(ClubFeedback,{title:'Ejemplo · Dos horas antes',message:'Faltan dos horas para tu cita.'}):null,
+  ...live.map(m=>e(ClubFeedback,{key:m.id,title:m.kind==='morning'?'Hoy tienes una cita':m.kind==='twoHours'?'Faltan dos horas para tu cita':'Tu cita se acerca',
+   message:'Consulta los detalles en Mis reservas.'})));
 }
 const MONTHS=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 function birthdayMax(month,year){return month===2?(year?(year%4===0&&(year%100!==0||year%400===0)?29:28):29):[4,6,9,11].includes(month)?30:31}
@@ -400,7 +456,7 @@ function BirthdayForm({birthday,onClose,initial=false}){
     e('button',{type:'submit',className:'button full',disabled:busy||!day||!month||year.length!==4},busy?'Guardando…':'Guardar'),
     e('button',{type:'button',className:'button secondary full',disabled:busy,onClick:onClose},initial?'Ahora no':'Cancelar'),
     !initial&&saved?e('button',{type:'button',className:'birthdayRemove',disabled:busy,onClick:remove},'Eliminar mi fecha'):null,
-    message?e('p',{className:'tiny',role:'status'},message):null);
+    message?e(ClubFeedback,{tone:'error',message}):null);
 }
 function BirthdayEditor({birthday}){
   const [editing,setEditing]=useState(false);
@@ -408,7 +464,7 @@ function BirthdayEditor({birthday}){
   return e('section',{className:'birthdayCard'},
     e('div',{className:'birthdayHeading'},e('span',{'aria-hidden':true},'🎂'),e('div',{className:'birthdayLabel'},e('h3',null,'Mi cumpleaños'),e('p',null,value?value.day+' de '+MONTHS[value.month-1].toLowerCase()+(value.year?' de '+value.year:''):'Sin registrar')),e('button',{className:'birthdayPencil',type:'button','aria-label':'Editar fecha de nacimiento',title:'Editar cumpleaños',disabled:birthday.status!=='ready',onClick:()=>setEditing(v=>!v)},e('svg',{width:18,height:18,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true},e('path',{d:'M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4L16.5 3.5z'})))),
     editing?e(BirthdayForm,{birthday,onClose:()=>setEditing(false)}):null,
-    birthday.status==='error'?e('p',{className:'tiny'},'Cumpleaños: pendiente de activar los permisos en Firebase.'):null);
+    birthday.status==='error'?e(ClubFeedback,{tone:'error',message:'Por ahora no podemos cargar tu fecha de cumpleaños.'}):null);
 }
 function BirthdayInvite({birthday}){
   const dialog=useRef(null);
@@ -455,8 +511,9 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
  const [rows,setRows]=useState([]),[ready,setReady]=useState(demo),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [date,setDate]=useState(today()),[time,setTime]=useState('15:00'),[duration,setDuration]=useState('60'),[staff,setStaff]=useState('m1'),[service,setService]=useState(''),[client,setClient]=useState(''),[guestMode,setGuestMode]=useState(false),[guestName,setGuestName]=useState(''),[guestPhone,setGuestPhone]=useState(''),[notes,setNotes]=useState(''),[edit,setEdit]=useState(null);
  const [anchor,setAnchor]=useState(today()),[slot,setSlot]=useState(null),[search,setSearch]=useState(''),[customMinutes,setCustomMinutes]=useState('');
- const [clientWeek,setClientWeek]=useState(null);
+ const [clientWeek,setClientWeek]=useState(null),[closeTarget,setCloseTarget]=useState(null);
  const calendarRef=useRef(null),saving=useRef(false);
+ const clientDateLabel=(date,format)=>date===today()?'Hoy':format(date);
  const addDays=(d,n)=>{const v=new Date(d+'T12:00:00Z');v.setUTCDate(v.getUTCDate()+n);return v.toISOString().slice(0,10)};
  const days=Array.from({length:8},(_,i)=>addDays(anchor,i));
  const hours=Array.from({length:7},(_,i)=>900+i*60);
@@ -495,17 +552,17 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
   try{
    if(demo){
     const id=edit||'demo-res-'+Date.now();
-    if(conflict(bookings.filter(x=>x.status==='confirmed'&&x.date===date),{...next,userId:identity},id))throw Error('Este horario se cruza con otra cita de la especialista o de la clienta.');
+    if(conflict(bookings.filter(x=>x.status==='confirmed'&&x.date===date),{...next,userId:identity},id))throw new ClubActionError('Este horario se cruza con otra cita de la especialista o de la clienta.');
     setDemoRows(old=>[...old.filter(x=>x.id!==id),{id,...next}]);
    }else{
     const ref=edit?db.collection('reservations').doc(edit):db.collection('reservations').doc();
     await db.runTransaction(async tx=>{
      const previous=edit?await tx.get(ref):null;
-     if(edit&&(!previous.exists||previous.data().status!=='confirmed'||bookingHasEnded(previous.data(),Date.now())))throw Error('La reserva ya no se puede editar.');
+     if(edit&&(!previous.exists||previous.data().status!=='confirmed'||bookingHasEnded(previous.data(),Date.now())))throw new ClubActionError('La reserva ya no se puede editar.');
      const dayRef=db.collection('reservationDays').doc(date),day=await tx.get(dayRef);
      const oldDate=previous?.data()?.date,oldRef=oldDate&&oldDate!==date?db.collection('reservationDays').doc(oldDate):null,oldDay=oldRef?await tx.get(oldRef):null;
      const slots=(day.exists?day.data().slots:[]).filter(x=>x.id!==ref.id);
-     if(conflict(slots,{...next,userId:identity},ref.id))throw Error('Este horario se cruza con otra cita de la especialista o de la clienta.');
+     if(conflict(slots,{...next,userId:identity},ref.id))throw new ClubActionError('Este horario se cruza con otra cita de la especialista o de la clienta.');
      if(oldRef)tx.set(oldRef,{slots:(oldDay.exists?oldDay.data().slots:[]).filter(x=>x.id!==ref.id)});
      tx.set(dayRef,{slots:[...slots,{id:ref.id,userId:identity,staffId:staff,start,end}]});
      const stamp=firebase.firestore.FieldValue.serverTimestamp();
@@ -513,13 +570,13 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
     });
    }
    setNotice(edit?'Cambio confirmado.':'¡Reserva registrada! La clienta ya puede verla.');reset();
-  }catch(ex){setError(ex.message||'No se pudo guardar.')}finally{setBusy(false);saving.current=false}
+  }catch(ex){setError(clubError(ex,'No pudimos guardar la reserva. Inténtalo de nuevo.'))}finally{setBusy(false);saving.current=false}
  }
  async function closeBooking(booking,status){
   const cancelled=status==='cancelled';
   if(!admin||saving.current||booking.status!=='confirmed')return;
   if(!cancelled&&!bookingHasEnded(booking,Date.now()))return;
-  if(!window.confirm(cancelled?'¿Cancelar esta cita?':'¿Marcar esta cita como realizada?'))return;
+  setCloseTarget(null);
   saving.current=true;
   setBusy(true);setError('');setNotice('');
   const closed={status,rescheduleRequested:false,closedBy:demo?'demo-jefa':uid};
@@ -530,8 +587,8 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
    }else await db.runTransaction(async tx=>{
     const ref=db.collection('reservations').doc(booking.id);
     const snap=await tx.get(ref);
-    if(!snap.exists||snap.data().status!=='confirmed')throw Error('La reserva ya fue cerrada.');
-    if(!cancelled&&!bookingHasEnded(snap.data(),Date.now()))throw Error('La cita todavía no ha terminado.');
+    if(!snap.exists||snap.data().status!=='confirmed')throw new ClubActionError('La reserva ya fue cerrada.');
+    if(!cancelled&&!bookingHasEnded(snap.data(),Date.now()))throw new ClubActionError('La cita todavía no ha terminado.');
     if(cancelled){
      const dayRef=db.collection('reservationDays').doc(snap.data().date);
      const day=await tx.get(dayRef);
@@ -542,7 +599,7 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
    });
    if(edit===booking.id)reset();
    setNotice(cancelled?'Reserva cancelada.':'Cita marcada como realizada.');
-  }catch(ex){setError(ex.message||'No pudimos cerrar la cita.')}finally{setBusy(false);saving.current=false}
+  }catch(ex){setError(clubError(ex,'No pudimos cerrar la cita. Inténtalo de nuevo.'))}finally{setBusy(false);saving.current=false}
  }
  const btn=(label,fn,secondary=false)=>e('button',{type:'button',className:'button'+(secondary?' secondary':''),disabled:busy,onClick:fn},label);
  const field=(label,input)=>e('label',null,label,input);
@@ -557,11 +614,11 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
   return e('article',{key:b.id,className:'panel bookingCard'},
    e('div',{className:'bookingTop'},e('strong',null,b.service),e('span',{className:'pill '+badge},label)),
    admin?e('p',{className:'tiny'},b.clientName,b.guest?e(React.Fragment,null,' · Invitada · ',b.clientPhone):null):null,
-   e('div',{className:'bookingDetails'},[['Fecha',dateText(b.date)],['Hora',bookingTimeLabel(b.start)+' a '+bookingTimeLabel(b.end)],['Especialista',staffNames[b.staffId]],['Duración estimada',(b.end-b.start)+' min']].map(([k,v])=>e('div',{key:k},e('span',null,k),e('strong',null,v)))),
+   e('div',{className:'bookingDetails'},[['Fecha',admin?dateText(b.date):clientDateLabel(b.date,dateText)],['Hora',bookingTimeLabel(b.start)+' a '+bookingTimeLabel(b.end)],['Especialista',staffNames[b.staffId]],['Duración estimada',(b.end-b.start)+' min']].map(([k,v])=>e('div',{key:k},e('span',null,k),e('strong',null,v)))),
    b.notes?e('p',{className:'bookingNotes'},b.notes):null,
    admin&&b.status==='confirmed'?e('div',{className:'toolbar'},
-    pending?btn('Marcar realizada',()=>closeBooking(b,'completed')):btn(b.rescheduleRequested?'Reagendar':'Editar',()=>editBooking(b)),
-    btn('Cancelar cita',()=>closeBooking(b,'cancelled'),true)):null);
+    pending?btn('Marcar realizada',()=>setCloseTarget({booking:b,status:'completed'})):btn(b.rescheduleRequested?'Reagendar':'Editar',()=>editBooking(b)),
+    btn('Cancelar cita',()=>setCloseTarget({booking:b,status:'cancelled'}),true)):null);
  }
  const isUpcoming=b=>b.status==='confirmed'&&!bookingHasEnded(b,bookingNow);
  const upcoming=visible.filter(isUpcoming),past=visible.filter(b=>!isUpcoming(b)).reverse();
@@ -592,7 +649,7 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
    nextBooking?e('article',{className:'panel clientBookingSummary'},
     e('div',{className:'bookingTop'},e('p',{className:'bookingNextLabel'},'Tu próxima cita'),e('span',{className:'pill '+(nextBooking.rescheduleRequested?'request-pending':'request-approved')},nextBooking.rescheduleRequested?'Cambio solicitado':'Confirmada')),
     e('h3',null,nextBooking.service),
-    e('p',{className:'clientBookingDate'},bookingDateFormatter.format(bookingDateTime(nextBooking.date))),
+    e('p',{className:'clientBookingDate'},clientDateLabel(nextBooking.date,date=>bookingDateFormatter.format(bookingDateTime(date)))),
     e('p',{className:'clientBookingTime'},bookingTimeLabel(nextBooking.start)+' a '+bookingTimeLabel(nextBooking.end)),
     e('p',{className:'clientBookingStaff'},'Te atiende ',e('strong',null,staffNames[nextBooking.staffId]||'Por confirmar')),
     nextBooking.notes?e('p',{className:'bookingNotes'},nextBooking.notes):null):null);
@@ -600,7 +657,13 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
  return e('section',{className:'bookingSection'},
   section(admin?'Agenda de reservas':'Mis reservas',admin?'Acuerda por WhatsApp y registra la cita aquí.':'Tus citas confirmadas por el salón.'),
 
-  error?e('div',{className:'notice error',role:'alert'},error):null,notice?e('div',{className:'notice ok',role:'status'},notice):null,
+  error?e(ClubFeedback,{tone:'error',title:'Revisa tu reserva',message:error,floating:ready,onDismiss:ready?()=>setError(''):null}):null,
+  notice?e(ClubFeedback,{tone:'success',title:'Agenda actualizada',message:notice,floating:true,onDismiss:()=>setNotice('')}):null,
+  closeTarget?e(ClubDialog,{id:'closeBookingTitle',title:closeTarget.status==='cancelled'?'¿Cancelar esta cita?':'¿Marcar esta cita como realizada?',
+   description:closeTarget.booking.service+' · '+dateText(closeTarget.booking.date)+' · '+bookingTimeLabel(closeTarget.booking.start)+'.',
+   danger:closeTarget.status==='cancelled',onDismiss:()=>setCloseTarget(null)},
+   e('div',{className:'toolbar'},btn('Volver',()=>setCloseTarget(null),true),
+    btn(closeTarget.status==='cancelled'?'Sí, cancelar cita':'Sí, marcar realizada',()=>closeBooking(closeTarget.booking,closeTarget.status)))):null,
   !ready?e('div',{className:'panel'},error?'Reservas no disponibles.':'Cargando reservas…'):e(React.Fragment,null,
    admin?e(React.Fragment,null,
     e('div',{className:'panel quickCalendar'},
@@ -634,7 +697,7 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
    !admin?clientCalendar():null,
    !upcoming.length?e('div',{className:'panel empty'},admin?'Aún no hay reservas próximas.':'Todavía no tienes una próxima cita. Acuerda tu atención por WhatsApp.'):null,
    (admin?upcoming:upcoming.slice(1)).map(card),
-   !admin&&demo?e(ClientReminders,{uid,demo,bookings:visible}):null,
+   !admin?e(ClientReminders,{uid,demo,bookings:visible,now:bookingNow}):null,
    past.length?e('details',{className:'panel bookingHistory'},e('summary',null,'Historial de reservas'+(admin&&past.some(b=>b.status==='confirmed')?' · Citas pendientes de cierre':'')),past.map(card)):null));
 }
 function ClientPromoSwiper({onExplore}){
@@ -790,14 +853,14 @@ useEffect(()=>{
 const pendingPoints=!!(seenBalance?.uid===balanceUID&&actualBalance!==null&&actualBalance>seenBalance.points);
 const visibleUnlock=unlockMoment?.uid===balanceUID&&rewardsVisible?unlockMoment:null;
 function viewUnlocked(id){setUnlockMoment(null);setTab('recompensas');window.requestAnimationFrame(()=>document.getElementById('reward-'+id)?.scrollIntoView({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'}))}
-const showError=x=>{setError(errMsg(x));setNotice('')};const showNotice=x=>{setNotice(x);setError('')};
+const showError=x=>{setError(clubError(x));setNotice('')};const showNotice=x=>{setNotice(x);setError('')};
 useEffect(()=>{if(!auth||isDemo){setLoading(false);return}const unsub=auth.onAuthStateChanged(u=>{setUser(u);setUnlockMoment(null);setProfileFresh(false);setTab(new URLSearchParams(location.search).get('tab')==='reservas'?'reservas':'recompensas');setProfile(null);setProfileStatus(u?'cargando':'sin sesión');setLoading(false);setAdmin(false);setAdminStatus('comprobando');setClients([]);setVisits([]);setClientRequests([]);setAdminRequests([]);setClientVoids([]);setAdminVisits([]);setAdminVoids([]);setVoidTarget(null);setVoidReason('');setRewardToConfirm(null)});return unsub},[isDemo]);
 useEffect(()=>{if(!db||!user)return;setAdminStatus('comprobando');setProfileStatus('cargando');const ref=db.collection('users').doc(user.uid);
 // Crear un perfil nuevo dentro de una transacción evita borrar puntos acreditados simultáneamente.
 let subscribed=true,initialRoleResolved=false;
 const u1=ref.onSnapshot({includeMetadataChanges:true},s=>{if(!subscribed)return;setProfileFresh(!s.metadata?.fromCache&&!s.metadata?.hasPendingWrites);if(s.exists){setProfile({uid:s.id,...s.data()});setProfileStatus('listo')}else{setProfile(null);setProfileStatus('creando')}},x=>{if(!subscribed)return;setProfileStatus('error');showError(x)});
 db.runTransaction(async t=>{const existing=await t.get(ref);if(!existing.exists)t.set(ref,{displayName:user.displayName||'Clienta',email:user.email||'',photoURL:user.photoURL||'',points:0,visits:0,lastEventId:'',lastEventType:'none',createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()})}).catch(x=>{if(subscribed){setProfileStatus('error');showError(x)}});
-const u2=db.collection('admins').doc(user.uid).onSnapshot({includeMetadataChanges:true},s=>{if(!subscribed)return;if(s.metadata?.fromCache&&!initialRoleResolved)return;const enabled=s.exists&&s.data()?.enabled===true;setAdmin(enabled);setAdminStatus(enabled?'habilitada':s.exists?'enabled no es booleano true':'no existe admins/'+user.uid);if(!initialRoleResolved){initialRoleResolved=true;setTab(enabled?'admin':new URLSearchParams(location.search).get('tab')==='reservas'?'reservas':'recompensas')}else if(!enabled){setTab(t=>t==='admin'?'recompensas':t)}},x=>{if(!subscribed)return;setAdmin(false);setTab(t=>t==='admin'?'recompensas':t);setAdminStatus('error Firebase: '+errMsg(x));showError(x)});
+const u2=db.collection('admins').doc(user.uid).onSnapshot({includeMetadataChanges:true},s=>{if(!subscribed)return;if(s.metadata?.fromCache&&!initialRoleResolved)return;const enabled=s.exists&&s.data()?.enabled===true;setAdmin(enabled);setAdminStatus(enabled?'habilitada':s.exists?'enabled no es booleano true':'no existe admins/'+user.uid);if(!initialRoleResolved){initialRoleResolved=true;setTab(enabled?'admin':new URLSearchParams(location.search).get('tab')==='reservas'?'reservas':'recompensas')}else if(!enabled){setTab(t=>t==='admin'?'recompensas':t)}},x=>{if(!subscribed)return;setAdmin(false);setTab(t=>t==='admin'?'recompensas':t);setAdminStatus('error');showError(x)});
 return()=>{subscribed=false;u1();u2()}},[user]);
 useEffect(()=>{if(!db||!user)return;const a=db.collection('visits').where('userId','==',user.uid).onSnapshot(s=>setVisits(s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0))),showError);
 const b=db.collection('redemptions').where('userId','==',user.uid).onSnapshot(s=>setClientRequests(s.docs.map(d=>({id:d.id,...d.data()}))),showError);
@@ -814,7 +877,11 @@ useEffect(()=>{if(!db||!user||!admin||!canVoid)return;
   const b=db.collection('voids').onSnapshot(s=>setAdminVoids(s.docs.map(d=>({id:d.id,...d.data()}))),showError);
   return()=>{a();b()};
 },[user,admin,canVoid]);
-async function login(provider='google'){if(isDemo){setDemoProvider(provider==='facebook'?'Facebook':'Google');setDemoEntered(true);setTab('recompensas');showNotice('Vista de demostración. No se ha autenticado ninguna cuenta real.');return}setBusy(true);setError('');try{const p=provider==='facebook'?new firebase.auth.FacebookAuthProvider():new firebase.auth.GoogleAuthProvider();if(provider==='facebook')p.addScope('email');await auth.signInWithPopup(p)}catch(x){showError(x)}finally{setBusy(false)}}
+async function login(provider='google'){if(isDemo){setDemoProvider(provider==='facebook'?'Facebook':'Google');setDemoEntered(true);setTab('recompensas');showNotice('Vista de demostración. No se ha autenticado ninguna cuenta real.');return}setBusy(true);setError('');try{const p=provider==='facebook'?new firebase.auth.FacebookAuthProvider():new firebase.auth.GoogleAuthProvider();if(provider==='facebook')p.addScope('email');await auth.signInWithPopup(p)}catch(x){
+ if(['auth/popup-closed-by-user','auth/cancelled-popup-request','auth/user-cancelled'].includes(x?.code))return;
+ const providerName=provider==='facebook'?'Facebook':'Google';
+ setError(x?.code==='auth/popup-blocked'?'Permite las ventanas emergentes para continuar con '+providerName+'.':clubError(x,'No pudimos iniciar sesión con '+providerName+'. Inténtalo de nuevo.'));
+ }finally{setBusy(false)}}
 async function logout(){setBusy(true);setError('');try{if(isDemo){setDemoEntered(false);setDemoRole('clienta')}else if(auth){try{if(localStorage.getItem('monas-push-uid')===user?.uid&&firebase.messaging.isSupported()){const registration=await navigator.serviceWorker.getRegistration('./');const token=registration&&window.MANOS_MONAS_VAPID_KEY?await firebase.messaging().getToken({vapidKey:window.MANOS_MONAS_VAPID_KEY,serviceWorkerRegistration:registration}):null;if(token)await firebase.app().functions('us-central1').httpsCallable('unregisterClubPush')({token});await firebase.messaging().deleteToken();localStorage.removeItem('monas-push-uid')}}catch(ex){console.warn('No se pudo desvincular el aviso',ex)}await auth.signOut()}setProfile(null);setAdmin(false);setTab('recompensas');setNotice('')}catch(x){showError(x)}finally{setBusy(false)}}
 async function addVisit(){
 const target=activeClient;const item=SERVICES.find(s=>s.id===service);
@@ -828,13 +895,13 @@ try{
     showNotice('Simulación: '+item.name+' registrado. +'+item.points+' puntos.');
     return;
   }
-  if(!db||!liveWrites)throw new Error('La conexión con Firebase no está disponible para acreditar puntos.');
-  if(!isAdmin)throw new Error('Solo la jefa de salón puede registrar atenciones.');
+  if(!db||!liveWrites)throw new ClubActionError('Por ahora no podemos registrar puntos. Intenta de nuevo.');
+  if(!isAdmin)throw new ClubActionError('Solo la jefa de salón puede registrar atenciones.');
   const profileRef=db.collection('users').doc(target.uid);
   const visitRef=db.collection('visits').doc();
   await db.runTransaction(async t=>{
     const snap=await t.get(profileRef);
-    if(!snap.exists)throw new Error('La clienta aún no tiene perfil.');
+    if(!snap.exists)throw new ClubActionError('La clienta aún no tiene perfil.');
     const data=snap.data();
     t.set(visitRef,{userId:target.uid,serviceId:item.id,serviceName:item.name,points:item.points,redemptionCount:data.redemptionCount??0,createdAt:firebase.firestore.FieldValue.serverTimestamp(),staffId:user.uid});
     t.update(profileRef,{points:(data.points||0)+item.points,visits:(data.visits||0)+1,lastEventId:visitRef.id,lastEventType:'visit',updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
@@ -850,13 +917,13 @@ async function voidVisit(record){
   try{
     const voidId='void-'+record.id;
     if(isDemo){
-      if(demoVoids.some(v=>v.visitId===record.id))throw Error('La atención ya fue anulada.');
+      if(demoVoids.some(v=>v.visitId===record.id))throw new ClubActionError('La atención ya fue anulada.');
       const blocked=voidBlockReason(record,demoClientState);
-      if(blocked)throw Error(blocked);
+      if(blocked)throw new ClubActionError(blocked);
       setDemoVoids(rows=>[...rows,{id:voidId,visitId:record.id,userId:'demo',points:record.points,reason,staffId:'demo-jefa',createdAt:{toDate:()=>new Date()}}]);
       setDemoClientState(c=>({...c,points:c.points-record.points,visits:c.visits-1}));
     }else{
-      if(!db||!canVoid)throw Error('La conexión con Firebase no está disponible para anular atenciones.');
+      if(!db||!canVoid)throw new ClubActionError('Por ahora no podemos anular atenciones. Intenta de nuevo.');
       const visitRef=db.collection('visits').doc(record.id);
       const voidRef=db.collection('voids').doc(voidId);
       const userRef=db.collection('users').doc(record.userId);
@@ -864,12 +931,12 @@ async function voidVisit(record){
         const original=await t.get(visitRef);
         const previous=await t.get(voidRef);
         const client=await t.get(userRef);
-        if(!original.exists||!client.exists)throw Error('No se encontró la atención o la clienta.');
-        if(previous.exists)throw Error('Esta atención ya fue anulada.');
+        if(!original.exists||!client.exists)throw new ClubActionError('No se encontró la atención o la clienta.');
+        if(previous.exists)throw new ClubActionError('Esta atención ya fue anulada.');
         const visit=original.data(),balance=client.data();
-        if(visit.userId!==record.userId||visit.points!==record.points)throw Error('Los datos de la atención no coinciden.');
+        if(visit.userId!==record.userId||visit.points!==record.points)throw new ClubActionError('Los datos de la atención no coinciden.');
         const blocked=voidBlockReason({...visit,id:original.id},balance);
-        if(blocked)throw Error(blocked);
+        if(blocked)throw new ClubActionError(blocked);
         t.set(voidRef,{visitId:record.id,userId:visit.userId,points:visit.points,reason,staffId:user.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
         t.update(userRef,{points:balance.points-visit.points,visits:balance.visits-1,lastEventId:voidId,lastEventType:'void',updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
       });
@@ -882,8 +949,8 @@ async function requestReward(reward){
 if(!isDemo&&(!db||!user||!pointsReady))return showError('No pudimos cargar tu saldo. Vuelve a intentarlo.');
 setBusy(true);setError('');
 try{
-  if((current?.points||0)<reward.points)throw Error('Puntos insuficientes.');
-  if(visibleClientRequests.some(r=>r.rewardId===reward.id&&r.status==='pending'))throw Error('Ya solicitaste esta recompensa.');
+  if((current?.points||0)<reward.points)throw new ClubActionError('Puntos insuficientes.');
+  if(visibleClientRequests.some(r=>r.rewardId===reward.id&&r.status==='pending'))throw new ClubActionError('Ya solicitaste esta recompensa.');
   if(isDemo){
     setDemoRequestsState(rows=>[...rows,{id:'demo-'+Date.now(),userId:'demo',rewardId:reward.id,status:'pending',createdAt:{toDate:()=>new Date()}}]);
     setRewardToConfirm(null);
@@ -900,28 +967,28 @@ async function resolveReward(request,approve){
 setBusy(true);setError('');
 try{
   const prize=REWARDS.find(z=>z.id===request.rewardId);
-  if(!prize)throw Error('Recompensa no encontrada.');
+  if(!prize)throw new ClubActionError('Recompensa no encontrada.');
   if(isDemo){
     const existing=demoRequestsState.find(r=>r.id===request.id&&r.status==='pending');
-    if(!existing)throw Error('El canje ya fue procesado.');
-    if(approve&&demoClientState.points<prize.points)throw Error('Puntos insuficientes.');
+    if(!existing)throw new ClubActionError('El canje ya fue procesado.');
+    if(approve&&demoClientState.points<prize.points)throw new ClubActionError('Puntos insuficientes.');
     if(approve)setDemoClientState(c=>({...c,points:c.points-prize.points,redemptionCount:(c.redemptionCount??0)+1}));
     setDemoRequestsState(rows=>rows.map(r=>r.id===request.id?{...r,status:approve?'approved':'rejected'}:r));
     showNotice(approve?'Canje simulado aprobado.':'Canje simulado rechazado.');
     return;
   }
-  if(!db||!isAdmin)throw new Error('Solo la jefa de salón puede procesar canjes.');
+  if(!db||!isAdmin)throw new ClubActionError('Solo la jefa de salón puede procesar canjes.');
   const redemptionRef=db.collection('redemptions').doc(request.id);
   const userRef=db.collection('users').doc(request.userId);
   await db.runTransaction(async t=>{
     const redemption=await t.get(redemptionRef);
     const client=await t.get(userRef);
-    if(!redemption.exists||redemption.data().status!=='pending')throw Error('Canje ya procesado.');
-    if(!client.exists)throw Error('Clienta no encontrada.');
+    if(!redemption.exists||redemption.data().status!=='pending')throw new ClubActionError('Canje ya procesado.');
+    if(!client.exists)throw new ClubActionError('Clienta no encontrada.');
     const confirmed=REWARDS.find(r=>r.id===redemption.data().rewardId);
-    if(!confirmed)throw Error('Recompensa desconocida.');
+    if(!confirmed)throw new ClubActionError('Recompensa desconocida.');
     if(approve){
-      if((client.data().points||0)<confirmed.points)throw Error('La clienta no tiene suficientes puntos.');
+      if((client.data().points||0)<confirmed.points)throw new ClubActionError('La clienta no tiene suficientes puntos.');
       const balance=client.data();
       t.update(userRef,{points:balance.points-confirmed.points,redemptionCount:(balance.redemptionCount??0)+1,lastEventId:redemptionRef.id,lastEventType:'redemption',updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
     }
@@ -946,13 +1013,12 @@ function rewardCard(r){
       ()=>{setRewardToConfirm(r.id);setError('');setNotice('')},
       'full',!unlocked||pending||(!isDemo&&(!db||!user||!pointsReady))),
     pending?e('div',{className:'tiny',style:{marginTop:9}},'La jefa debe aprobar la solicitud.'):null,
-    confirming?e('div',{className:'notice',style:{marginTop:12,padding:12}},
-      e('strong',null,'¿Solicitar '+r.name+'?'),
-      e('p',{className:'tiny',style:{margin:'8px 0'}},'Al canjear este servicio se restarán '+r.points+' puntos de tu saldo.'),
+    confirming?e(ClubDialog,{id:'rewardConfirmTitle',title:'¿Solicitar '+r.name+'?',
+      description:'Se descontarán '+r.points+' puntos cuando la jefa apruebe el canje.',onDismiss:()=>setRewardToConfirm(null)},
+      error?e(ClubFeedback,{tone:'error',message:error}):null,
       e('div',{className:'toolbar'},
-        button('Canjear',()=>requestReward(r),'full'),
-        button('Cancelar',()=>setRewardToConfirm(null),'secondary')
-      )
+        button('Cancelar',()=>setRewardToConfirm(null),'secondary'),
+        button('Confirmar canje',()=>requestReward(r)))
     ):null
   );
 }
@@ -1053,18 +1119,18 @@ function adminView(){
             e('div',{className:'tiny'},(v.createdAt?.toDate?.()?.toLocaleDateString('es-PE',{timeZone:'America/Lima'})||'Fecha sin confirmar')+' · '+(clientList.find(c=>c.uid===v.userId)?.displayName||activeClient?.displayName||'Clienta')),
             cancelled?e('div',{className:'tiny'},'Anulada: '+cancelled.reason):null),
           e('div',{className:'toolbar'},e('strong',null,cancelled?'Anulada':'+'+v.points+' pts'),
-            !cancelled&&!voidBlockReason(v,activeClient)?button('Anular',()=>{setVoidTarget(v);setVoidReason('')},'secondary'):null)
+            !cancelled&&!voidBlockReason(v,activeClient)?button('Anular',()=>{setVoidTarget(v);setVoidReason('');setError('');setNotice('')},'secondary'):null)
         )
       }):e('div',{className:'empty'},'Aún no hay atenciones para esta clienta.')
     ):null,
-    canVoid&&voidTarget?e('div',{className:'panel',style:{marginTop:16}},
-      e('h3',null,'Confirmar anulación'),
-      e('p',{className:'muted'},'Se descontarán '+voidTarget.points+' puntos y una visita. Esta operación no borra el historial.'),
-      targetBlocked?e('p',{className:'notice error',role:'status'},targetBlocked):null,
+    canVoid&&voidTarget?e(ClubDialog,{id:'voidConfirmTitle',title:'Confirmar anulación',danger:true,
+      description:'Se descontarán '+voidTarget.points+' puntos y una visita. La atención seguirá en el historial.',
+      onDismiss:()=>{if(!busy){setVoidTarget(null);setVoidReason('');setError('')}}},
+      targetBlocked||error?e(ClubFeedback,{tone:'error',message:targetBlocked||error}):null,
       e('label',null,'Motivo de la anulación',e('input',{value:voidReason,maxLength:200,placeholder:'Ej.: Atención asignada por error',onChange:x=>setVoidReason(x.target.value)})),
       e('div',{className:'toolbar',style:{marginTop:14}},
         button('Confirmar anulación',()=>voidVisit(voidTarget),'',!!targetBlocked||voidReason.trim().length<3),
-        button('Cancelar',()=>{setVoidTarget(null);setVoidReason('')},'secondary'))
+        button('Cancelar',()=>{setVoidTarget(null);setVoidReason('');setError('')},'secondary'))
     ):null
   );
 }
@@ -1079,12 +1145,11 @@ function navButton(id,label,icon){
 }
 if(bootPending)return null;
 return e('div',{className:'page'},e('div',{className:'shell'},e('header',{className:'top'},e('div',{className:'brand'},e('div',{className:'mark'},e('img',{src:'../assets/img/logo.png',alt:'Logo de Manos Monas',loading:'eager'})),e('div',null,e('h2',null,'MANOS MONAS'),e('div',{className:'eyebrow'},'HOME STUDIO'),e('div',{className:'caption'},'Club de recompensas'))),e('div',{className:'toolbar',style:{alignItems:'center',justifyContent:'flex-end'}},(user||isDemo&&demoEntered)?e('button',{className:'headerAccount',onClick:()=>{setTab('perfil');setNotice('');setError('')},'aria-label':'Abrir mi perfil'},avatar(38)):null,e('span',{className:'chip'},isDemo?'◉ Demo':isAdmin?'✦ Jefa de salón':'♡ Mi cuenta'))),
-!isDemo&&user&&db&&new URLSearchParams(window.location.search).get('live')==='1'?e('div',{className:'notice',style:{marginBottom:16}},e('strong',null,'Prueba de permisos Firebase'),e('div',{style:{marginTop:7,overflowWrap:'anywhere'}},'UID de esta sesión: ',e('code',null,user.uid)),e('div',{style:{marginTop:4}},'Acceso al menú Jefa: ',adminStatus),e('div',{className:'tiny',style:{marginTop:5}},'Si no está habilitada, comprueba que el documento admins tenga este mismo UID y enabled de tipo booleano verdadero.')):null,
 isDemo&&demoEntered?e('div',{className:'notice'},'Modo demostración · Ingreso simulado con '+demoProvider+'. Los cambios son simulados y no modifican tu cuenta real. ',e('button',{onClick:()=>{setDemoRole(demoRole==='jefa'?'clienta':'jefa');setTab('recompensas');setNotice('')}},'Cambiar vista: '+(demoRole==='jefa'?'Clienta':'Jefa')+' →'),' ',e('button',{onClick:()=>{setDemoEntered(false);setDemoRole('clienta');setNotice('')}},'Salir de demo')):null,
-(!isDemo&&!user)||(isDemo&&!demoEntered)?e('div',{className:'panel login'},e('img',{className:'loginBrand',src:'../assets/img/logo.png',alt:'Manos Monas Home Studio'}),e('h1',null,'Bienvenida al Club Monas'),e('p',null,'Ingresa con tu cuenta de Google (Gmail) o Facebook para consultar tus puntos y desbloquear recompensas.'),e('div',{className:'stack',style:{maxWidth:310,margin:'25px auto'}},button('✉ Continuar con Google',()=>login('google'),'full',busy),button('ⓕ Continuar con Facebook',()=>login('facebook'),'secondary full',busy)),isDemo?e('div',{className:'notice'},'Modo demostración: los botones solo abren una clienta ficticia. Para usar tu cuenta real, abre el enlace sin ?demo=1.'):e('p',{className:'tiny'},'Solo la jefa registra servicios y aprueba premios.'),error?e('div',{className:'notice error',role:'alert'},error):null):e(React.Fragment,null,
+(!isDemo&&!user)||(isDemo&&!demoEntered)?e('div',{className:'panel login'},e('img',{className:'loginBrand',src:'../assets/img/logo.png',alt:'Manos Monas Home Studio'}),e('h1',null,'Bienvenida al Club Monas'),e('p',null,'Ingresa con tu cuenta de Google (Gmail) o Facebook para consultar tus puntos y desbloquear recompensas.'),e('div',{className:'stack',style:{maxWidth:310,margin:'25px auto'}},button('✉ Continuar con Google',()=>login('google'),'full',busy),button('ⓕ Continuar con Facebook',()=>login('facebook'),'secondary full',busy)),isDemo?e('div',{className:'notice'},'Modo demostración: los botones solo abren una clienta ficticia. Para usar tu cuenta real, abre el enlace sin ?demo=1.'):e('p',{className:'tiny'},'Solo la jefa registra servicios y aprueba premios.'),error?e(ClubFeedback,{tone:'error',title:'Inicio de sesión',message:error,onDismiss:()=>setError('')}):null):e(React.Fragment,null,
 isAdmin?e('section',{className:'hero adminHero'},e('div',null,e('small',null,'Agenda del salón'),e('h1',null,'Gestiona Manos Monas Club'),e('p',null,'Revisa reservas, clientas y recompensas desde un solo lugar.'))):tab==='recompensas'?e(ClientPromoSwiper,{onExplore:()=>setTab('recompensas')}):null,
-error?e('div',{className:'notice error',role:'alert',style:{marginTop:16}},error):null,
-notice?e('div',{className:'notice ok',role:'status',style:{marginTop:16}},notice):null,
+error&&!voidTarget&&!rewardToConfirm?e(ClubFeedback,{tone:'error',title:'Revisa la operación',message:error,floating:true,onDismiss:()=>setError('')}):null,
+notice?e(ClubFeedback,{tone:'success',message:notice,floating:true,onDismiss:()=>setNotice('')}):null,
 e('main',{className:'tabEntrance',key:tab},tab==='recompensas'?rewardsView():tab==='perfil'?profileView():tab==='reservas'?e(BookingPanel,{key:(isDemo?'demo':user?.uid)+'-'+isAdmin,admin:isAdmin,demo:isDemo,uid:user?.uid,clients:clientList,demoRows:demoReservations,setDemoRows:setDemoReservations}):isAdmin&&tab==='admin'?adminView():null),
 e('nav',{className:'nav','aria-label':'Navegación'},isAdmin?navButton('admin','Jefa','⚙️'):null,navButton('recompensas','Recompensas','🎁'),navButton('reservas','Reservas','🗓️'),navButton('perfil','Perfil',''))),
 birthday.prompt&&!isAdmin?e(BirthdayInvite,{birthday}):null,
