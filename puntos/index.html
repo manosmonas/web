@@ -382,7 +382,15 @@ function UnlockMoment({moment,onClose,onView}){
     e('p',{className:'unlockHint'},'Tu premio ya está disponible para canjear.'),
     e('button',{type:'button',className:'button full unlockView',onClick:()=>onView(main.id),autoFocus:true},prizes.length===1?'Ver mi recompensa':'Ver mis recompensas'));
 }
-const reminderDateFormat=new Intl.DateTimeFormat('es-PE',{timeZone:'America/Lima',day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
+const reminderDateFormat=new Intl.DateTimeFormat('es-PE',{timeZone:'UTC',day:'numeric',month:'short'});
+function reminderCopy(message,today){
+ if(message.kind==='points'){
+  return {title:'¡Ganaste '+message.points+' puntos!'};
+ }
+ const label=message.date===today?'Hoy':reminderDateFormat.format(new Date(message.date+'T12:00:00Z'));
+ const time=bookingTimeLabel(message.start).replace('a. m.','a.m.').replace('p. m.','p.m.');
+ return {title:'¡Tienes una Cita Programada!',body:label+' '+time};
+}
 function ClientReminders({uid,demo}){
  const [messages,setMessages]=useState(null),[loadFailed,setLoadFailed]=useState(false),[status,setStatus]=useState(''),[failed,setFailed]=useState(false);
  const [enabled,setEnabled]=useState(false),[working,setWorking]=useState('');
@@ -471,18 +479,20 @@ function ClientReminders({uid,demo}){
   }finally{setWorking('')}
  }
  const canActivate=demo||Boolean(window.MANOS_MONAS_VAPID_KEY);
+ const today=limaDayFormat.format(new Date());
  const history=demo
-  ?(enabled?[{id:'demo-two-hours',kind:'twoHours'},{id:'demo-morning',kind:'morning'}]:[])
+  ?(enabled?[{id:'demo-points',kind:'points',points:30},
+   {id:'demo-two-hours',kind:'twoHours',date:today,start:1080},
+   {id:'demo-morning',kind:'morning',date:today,start:1080}]:[])
   :messages;
  return e('div',{className:'notificationCenter'},
   e('div',{className:'notificationHistory','aria-label':'Avisos recientes'},
    loadFailed?e(ClubFeedback,{tone:'error',message:'No pudimos cargar tus avisos. Vuelve a abrir esta ventana para reintentar.'}):
    history===null?e('p',{className:'tiny',role:'status'},'Cargando avisos…'):
    history.length?e('ul',{className:'notificationList'},history.map(m=>{
-    const date=m.createdAt?.toDate?.();
-    const title=m.kind==='morning'?'Hoy tienes una cita':m.kind==='twoHours'?'Faltan dos horas para tu cita':'Tu cita se acerca';
+    const {title,body}=reminderCopy(m,today);
     return e('li',{key:m.id},e('span',{className:'clubFeedbackIcon','aria-hidden':true},'✦'),
-     e('div',null,e('strong',null,title),date?e('time',{dateTime:date.toISOString()},reminderDateFormat.format(date)):demo?e('small',null,'Aviso de ejemplo'):null));
+     e('div',null,e('strong',null,title),body?e('small',null,body):null));
    })):e('p',{className:'tiny'},'Todavía no tienes avisos.')),
   canActivate?e('section',{className:'notificationPreferences','aria-labelledby':'notificationPreferencesTitle'},
    e('h3',{id:'notificationPreferencesTitle'},'Recordatorios'),
@@ -852,7 +862,10 @@ const [unlockMoment,setUnlockMoment]=useState(null);
 
 const liveWrites=window.MANOS_MONAS_ENABLE_WRITES===true;
 const isDemo=!configured||new URLSearchParams(window.location.search).has('demo');
-useEffect(()=>{if(isDemo||!user||admin||!window.MANOS_MONAS_VAPID_KEY)return;let unsub;try{if(firebase.messaging.isSupported())unsub=firebase.messaging().onMessage(payload=>{try{if(localStorage.getItem('monas-push-uid')!==user.uid)return;setNotice(payload.notification?.body||'Tienes un recordatorio de tu cita en Club Monas.')}catch(_){}})}catch(_){}return()=>unsub?.()},[isDemo,user?.uid,admin]);
+useEffect(()=>{if(isDemo||!user||admin||!window.MANOS_MONAS_VAPID_KEY)return;let unsub;try{if(firebase.messaging.isSupported())unsub=firebase.messaging().onMessage(payload=>{try{if(localStorage.getItem('monas-push-uid')!==user.uid)return;const {title,body}=payload.notification||{};
+ if(payload.data?.kind==='appointment')setNotice([title,body].filter(Boolean).join(' '));
+ else if(payload.data?.kind==='points')setNotice(title||'Ganaste puntos en Manos Monas Club.');
+ else setNotice(body||'Tienes un recordatorio de tu cita en Club Monas.')}catch(_){}})}catch(_){}return()=>unsub?.()},[isDemo,user?.uid,admin]);
 const canVoid=isDemo||liveWrites;
 const current=isDemo?demoClientState:(user?(profile?.uid===user.uid?profile:{uid:user.uid,displayName:user.displayName||'Clienta',email:user.email||'',photoURL:user.photoURL||'',points:null,visits:null}):null);
 const visibleVisits=isDemo?demoVisitsState:visits;
