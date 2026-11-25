@@ -406,7 +406,7 @@ function ClientReminders({uid,demo,bookings,now}){
     try{localStorage.removeItem('monas-push-uid')}catch(_){}
     setStatus(ex instanceof ClubActionError?ex.message:'Vuelve a activar los avisos en este dispositivo.');
    }else if(ex.code==='functions/resource-exhausted'){
-    setStatus('Espera un minuto antes de volver a probar.');
+    setStatus('La prueba anterior aún se está enviando. Vuelve a intentar en unos segundos.');
    }else if(ex.code==='functions/unavailable'){
     setStatus('El servicio de avisos no aceptó el envío. Inténtalo de nuevo.');
    }else{
@@ -420,6 +420,7 @@ function ClientReminders({uid,demo,bookings,now}){
  return e('div',{className:'panel bookingReminder'},e('div',{className:'bookingReminderHead'},e('span',{'aria-hidden':true},'🔔'),e('div',null,e('strong',null,'Tus recordatorios'),e('p',{className:'tiny'},'El día de tu cita, a las 8:00 a. m. y dos horas antes.'))),
   canActivate?e('button',{type:'button',className:'button secondary full',disabled:!!working||enabled,onClick:activate},working==='activate'?'Activando…':enabled?'✓ Avisos activados':'Activar avisos en mi celular'):null,
   canActivate&&enabled?e('button',{type:'button',className:'button secondary full',disabled:!!working,onClick:testPush},working==='test'?'Enviando…':'Enviar aviso de prueba'):null,
+  working==='test'?e(ClubFeedback,{message:'Para verlo fuera del Club, cambia de pestaña ahora. El aviso se enviará en unos segundos.'}):null,
   status?e(ClubFeedback,{tone:failed?'error':'success',message:status}):null,
   example?e(ClubFeedback,{title:'Ejemplo · 8:00 a. m.',message:'Hoy tienes una cita en Manos Monas.'}):null,
   example?e(ClubFeedback,{title:'Ejemplo · Dos horas antes',message:'Faltan dos horas para tu cita.'}):null,
