@@ -729,6 +729,7 @@ function ClientPromoSwiper({onExplore}){
 }
 function App(){
 const [demoEntered,setDemoEntered]=useState(false),[demoProvider,setDemoProvider]=useState('Google');
+const loginAttempt=useRef(0);
 const [demoClientState,setDemoClientState]=useState(demoClient),[demoVisitsState,setDemoVisitsState]=useState(demoVisits),[demoRequestsState,setDemoRequestsState]=useState([]);
 const [user,setUser]=useState(null),[profile,setProfile]=useState(null),[admin,setAdmin]=useState(false),[tab,setTab]=useState('recompensas'),[clients,setClients]=useState([]),[visits,setVisits]=useState([]),[clientRequests,setClientRequests]=useState([]),[adminRequests,setAdminRequests]=useState([]),[loading,setLoading]=useState(configured),[busy,setBusy]=useState(false),[notice,setNotice]=useState(''),[error,setError]=useState(''),[demoRole,setDemoRole]=useState('clienta');
 const [chosenClient,setChosenClient]=useState(''),[service,setService]=useState('manicura');
@@ -877,11 +878,28 @@ useEffect(()=>{if(!db||!user||!admin||!canVoid)return;
   const b=db.collection('voids').onSnapshot(s=>setAdminVoids(s.docs.map(d=>({id:d.id,...d.data()}))),showError);
   return()=>{a();b()};
 },[user,admin,canVoid]);
-async function login(provider='google'){if(isDemo){setDemoProvider(provider==='facebook'?'Facebook':'Google');setDemoEntered(true);setTab('recompensas');showNotice('Vista de demostración. No se ha autenticado ninguna cuenta real.');return}setBusy(true);setError('');try{const p=provider==='facebook'?new firebase.auth.FacebookAuthProvider():new firebase.auth.GoogleAuthProvider();if(provider==='facebook')p.addScope('email');await auth.signInWithPopup(p)}catch(x){
- if(['auth/popup-closed-by-user','auth/cancelled-popup-request','auth/user-cancelled'].includes(x?.code))return;
- const providerName=provider==='facebook'?'Facebook':'Google';
- setError(x?.code==='auth/popup-blocked'?'Permite las ventanas emergentes para continuar con '+providerName+'.':clubError(x,'No pudimos iniciar sesión con '+providerName+'. Inténtalo de nuevo.'));
- }finally{setBusy(false)}}
+async function login(provider='google'){
+ if(isDemo){
+  setDemoProvider(provider==='facebook'?'Facebook':'Google');
+  setDemoEntered(true);
+  setTab('recompensas');
+  showNotice('Vista de demostración. No se ha autenticado ninguna cuenta real.');
+  return;
+ }
+ // El proveedor puede tardar en detectar el cierre de la ventana. Un nuevo intento no espera al anterior.
+ const attempt=++loginAttempt.current;
+ setError('');
+ const facebook=provider==='facebook';
+ try{
+  const authProvider=facebook?new firebase.auth.FacebookAuthProvider():new firebase.auth.GoogleAuthProvider();
+  if(facebook)authProvider.addScope('email');
+  await auth.signInWithPopup(authProvider);
+ }catch(error){
+  if(attempt!==loginAttempt.current||auth.currentUser||['auth/popup-closed-by-user','auth/cancelled-popup-request','auth/user-cancelled'].includes(error?.code))return;
+  const providerName=facebook?'Facebook':'Google';
+  setError(error?.code==='auth/popup-blocked'?'Permite las ventanas emergentes para continuar con '+providerName+'.':clubError(error,'No pudimos iniciar sesión con '+providerName+'. Inténtalo de nuevo.'));
+ }
+}
 async function logout(){setBusy(true);setError('');try{if(isDemo){setDemoEntered(false);setDemoRole('clienta')}else if(auth){try{if(localStorage.getItem('monas-push-uid')===user?.uid&&firebase.messaging.isSupported()){const registration=await navigator.serviceWorker.getRegistration('./');const token=registration&&window.MANOS_MONAS_VAPID_KEY?await firebase.messaging().getToken({vapidKey:window.MANOS_MONAS_VAPID_KEY,serviceWorkerRegistration:registration}):null;if(token)await firebase.app().functions('us-central1').httpsCallable('unregisterClubPush')({token});await firebase.messaging().deleteToken();localStorage.removeItem('monas-push-uid')}}catch(ex){console.warn('No se pudo desvincular el aviso',ex)}await auth.signOut()}setProfile(null);setAdmin(false);setTab('recompensas');setNotice('')}catch(x){showError(x)}finally{setBusy(false)}}
 async function addVisit(){
 const target=activeClient;const item=SERVICES.find(s=>s.id===service);
@@ -1146,7 +1164,7 @@ function navButton(id,label,icon){
 if(bootPending)return null;
 return e('div',{className:'page'},e('div',{className:'shell'},e('header',{className:'top'},e('div',{className:'brand'},e('div',{className:'mark'},e('img',{src:'../assets/img/logo.png',alt:'Logo de Manos Monas',loading:'eager'})),e('div',null,e('h2',null,'MANOS MONAS'),e('div',{className:'eyebrow'},'HOME STUDIO'),e('div',{className:'caption'},'Club de recompensas'))),e('div',{className:'toolbar',style:{alignItems:'center',justifyContent:'flex-end'}},(user||isDemo&&demoEntered)?e('button',{className:'headerAccount',onClick:()=>{setTab('perfil');setNotice('');setError('')},'aria-label':'Abrir mi perfil'},avatar(38)):null,e('span',{className:'chip'},isDemo?'◉ Demo':isAdmin?'✦ Jefa de salón':'♡ Mi cuenta'))),
 isDemo&&demoEntered?e('div',{className:'notice'},'Modo demostración · Ingreso simulado con '+demoProvider+'. Los cambios son simulados y no modifican tu cuenta real. ',e('button',{onClick:()=>{setDemoRole(demoRole==='jefa'?'clienta':'jefa');setTab('recompensas');setNotice('')}},'Cambiar vista: '+(demoRole==='jefa'?'Clienta':'Jefa')+' →'),' ',e('button',{onClick:()=>{setDemoEntered(false);setDemoRole('clienta');setNotice('')}},'Salir de demo')):null,
-(!isDemo&&!user)||(isDemo&&!demoEntered)?e('div',{className:'panel login'},e('img',{className:'loginBrand',src:'../assets/img/logo.png',alt:'Manos Monas Home Studio'}),e('h1',null,'Bienvenida al Club Monas'),e('p',null,'Ingresa con tu cuenta de Google (Gmail) o Facebook para consultar tus puntos y desbloquear recompensas.'),e('div',{className:'stack',style:{maxWidth:310,margin:'25px auto'}},button('✉ Continuar con Google',()=>login('google'),'full',busy),button('ⓕ Continuar con Facebook',()=>login('facebook'),'secondary full',busy)),isDemo?e('div',{className:'notice'},'Modo demostración: los botones solo abren una clienta ficticia. Para usar tu cuenta real, abre el enlace sin ?demo=1.'):e('p',{className:'tiny'},'Solo la jefa registra servicios y aprueba premios.'),error?e(ClubFeedback,{tone:'error',title:'Inicio de sesión',message:error,onDismiss:()=>setError('')}):null):e(React.Fragment,null,
+(!isDemo&&!user)||(isDemo&&!demoEntered)?e('div',{className:'panel login'},e('img',{className:'loginBrand',src:'../assets/img/logo.png',alt:'Manos Monas Home Studio'}),e('h1',null,'Bienvenida al Club Monas'),e('p',null,'Ingresa con tu cuenta de Google (Gmail) o Facebook para consultar tus puntos y desbloquear recompensas.'),e('div',{className:'stack',style:{maxWidth:310,margin:'25px auto'}},e('button',{className:'button full',type:'button',onClick:()=>login('google')},'✉ Continuar con Google'),e('button',{className:'button secondary full',type:'button',onClick:()=>login('facebook')},'ⓕ Continuar con Facebook')),isDemo?e('div',{className:'notice'},'Modo demostración: los botones solo abren una clienta ficticia. Para usar tu cuenta real, abre el enlace sin ?demo=1.'):null,error?e(ClubFeedback,{tone:'error',title:'Inicio de sesión',message:error,onDismiss:()=>setError('')}):null):e(React.Fragment,null,
 isAdmin?e('section',{className:'hero adminHero'},e('div',null,e('small',null,'Agenda del salón'),e('h1',null,'Gestiona Manos Monas Club'),e('p',null,'Revisa reservas, clientas y recompensas desde un solo lugar.'))):tab==='recompensas'?e(ClientPromoSwiper,{onExplore:()=>setTab('recompensas')}):null,
 error&&!voidTarget&&!rewardToConfirm?e(ClubFeedback,{tone:'error',title:'Revisa la operación',message:error,floating:true,onDismiss:()=>setError('')}):null,
 notice?e(ClubFeedback,{tone:'success',message:notice,floating:true,onDismiss:()=>setNotice('')}):null,
