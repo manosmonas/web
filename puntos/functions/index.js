@@ -8,6 +8,7 @@ const {getMessaging}=require('firebase-admin/messaging');
 const {createHash}=require('node:crypto');
 initializeApp();
 const db=getFirestore(),region='us-central1',zone='America/Lima';
+const morningMinute=8*60,advanceMinutes=2*60;
 const hash=t=>createHash('sha256').update(t).digest('hex');
 function validToken(token){return typeof token==='string'&&token.length>=20&&token.length<=4096}
 exports.registerClubPush=onCall({region},async req=>{
@@ -28,19 +29,24 @@ function limaParts(now){
  return {date:p.year+'-'+p.month+'-'+p.day,minute:Number(p.hour)*60+Number(p.minute)};
 }
 function dueKind(b,minute){
- if(b.status!=='confirmed'||b.start<=minute)return null;
- if(minute===480)return 'morning';
- if(b.start===minute+60)return 'hour';
+ if(b.status!=='confirmed'||b.guest===true||typeof b.userId!=='string'||!b.userId||!Number.isInteger(b.start)||b.start<=minute)return null;
+ if(minute===morningMinute)return 'morning';
+ if(b.start===minute+advanceMinutes)return 'twoHours';
  return null;
 }
-exports.bookingReminders=onSchedule({region,schedule:'0 8,14-20 * * *',timeZone:zone,timeoutSeconds:120,retryCount:2},async event=>{
+exports.bookingReminders=onSchedule({region,schedule:'* 8,13-19 * * *',timeZone:zone,timeoutSeconds:120,retryCount:2},async event=>{
  const scheduled=new Date(event.scheduleTime),actual=new Date();
  if(!Number.isFinite(scheduled.getTime())||actual-scheduled>10*60*1000)return;
  const {date,minute}=limaParts(scheduled);
- const snap=await db.collection('reservations').where('date','==',date).get();
+ const now=limaParts(actual);
+ if(now.date!==date||(minute>morningMinute&&minute<13*60))return;
+ let appointments=db.collection('reservations').where('date','==',date);
+ if(minute!==morningMinute)appointments=appointments.where('start','==',minute+advanceMinutes);
+ const snap=await appointments.get();
  for(const doc of snap.docs){
-  const b=doc.data(),kind=dueKind(b,minute);if(!kind)continue;
-  const id=hash(doc.id+'|'+date+'|'+kind+(kind==='hour'?'|'+b.start:''));
+  const b=doc.data(),kind=dueKind(b,minute);if(!kind||b.start<=now.minute)continue;
+  // Reutiliza la clave del aviso previo para evitar duplicados durante una actualización.
+  const id=hash(doc.id+'|'+date+'|'+(kind==='morning'?'morning':'hour|'+b.start));
   const reminder=db.collection('users').doc(b.userId).collection('reminders').doc(id);
   const claimed=await db.runTransaction(async tx=>{
    const [fresh,prior]=await Promise.all([tx.get(doc.ref),tx.get(reminder)]);
@@ -56,7 +62,7 @@ exports.bookingReminders=onSchedule({region,schedule:'0 8,14-20 * * *',timeZone:
    const [fresh,registration]=await Promise.all([doc.ref.get(),device.ref.get()]);
    const f=fresh.data(),reg=registration.data();
    if(!f||f.status!=='confirmed'||f.date!==date||f.start!==b.start||f.userId!==b.userId||!reg||reg.uid!==b.userId)continue;
-   try{await getMessaging().send({token:reg.token,notification:{title:'Club Monas',body:kind==='morning'?'💅 Hoy tienes una cita. Consulta tus reservas.':'⏰ Falta una horita para tu cita. Consulta tus reservas.'},webpush:{headers:{TTL:'600'},notification:{tag:id,icon:'https://manosmonas.github.io/web/assets/img/logo.png'},fcmOptions:{link:'https://manosmonas.github.io/web/puntos/?tab=reservas'}}})}
+   try{await getMessaging().send({token:reg.token,notification:{title:'Manos Monas Club',body:kind==='morning'?'Hoy tienes una cita. Consulta los detalles en Reservas.':'Faltan dos horas para tu cita. Consulta los detalles en Reservas.'},webpush:{headers:{TTL:'600'},notification:{tag:id,icon:'https://manosmonas.github.io/web/assets/img/logo.png'},fcmOptions:{link:'https://manosmonas.github.io/web/puntos/?tab=reservas'}}})}
    catch(err){if(['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(err.code)){await db.runTransaction(async tx=>{const v=await tx.get(device.ref);if(v.exists&&v.data().uid===b.userId&&v.data().token===reg.token)tx.delete(device.ref)})}else console.error('Push delivery failed',err.code||err.message)}
   }
  }

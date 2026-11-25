@@ -72,7 +72,7 @@ En esta fase, **«Aprobada» es el estado final necesario**; no crear un estado 
 **Decisión 12/11/2026:** configurar un canal de notificaciones de Club Monas para avisos de servicio y campañas promocionales, en web y futura app móvil. No limitarlo a recordatorios de reservas.
 
 - [ ] Activar Firebase Cloud Messaging (FCM), configurar Web Push y VAPID, desplegar las funciones programadas y reglas necesarias en el proyecto existente `manos-monas-puntos`; validar permisos, entrega en Android/iOS y navegador, costos y seguridad.
-- [ ] Recordatorios de citas a las 8:00 a. m. del mismo día y una hora antes (America/Lima). La lógica está preparada en `feature/reservas-mvp`, pero no desplegada. Actualizar ante cambios de horario y cancelar avisos de citas anuladas; evitar duplicados.
+- [ ] Activar recordatorios a las 8:00 a. m. del mismo día y dos horas antes (hora de Lima). Consultar los pasos en [RESERVAS-RECORDATORIOS.md](RESERVAS-RECORDATORIOS.md).
 - [ ] Avisos transaccionales: reserva confirmada, reagendamiento confirmado o solicitado (según rol), cancelación, puntos acreditados, recompensa desbloqueada, canje aprobado o rechazado.
 - [ ] Promociones: permitir a la jefa preparar y enviar campañas de Manos Monas (ofertas, novedades y promociones especiales), con título, mensaje, enlace a la app y envío inmediato o programado. Incorporar vista previa y confirmación antes de enviar.
 - [ ] Permitir segmentar promociones por preferencias y consentimiento; gestionar suscripciones y tokens por dispositivo, baja de promociones, frecuencia y horario razonables. Separar avisos de servicio de publicidad, y no exponer datos personales en la pantalla bloqueada.
