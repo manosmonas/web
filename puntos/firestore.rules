@@ -216,7 +216,7 @@ service cloud.firestore {
         && getAfter(userPath(request.resource.data.userId)).data.lastEventType == 'void';
       allow update, delete: if false;
     }
-    // Solo la jefa registra reservas. La clienta puede solicitar un cambio.
+    // La jefa gestiona las reservas. Cada clienta consulta sus propias citas.
     function validReservation() {
       let d = request.resource.data;
       return d.keys().hasAll(['userId','clientName','clientPhone','guest','staffId','service','date','start','end','notes','status','rescheduleRequested','createdAt','updatedAt'])
@@ -233,8 +233,24 @@ service cloud.firestore {
         && d.start is int && d.end is int && d.start >= 900 && d.end <= 1320
         && d.end - d.start >= 15 && d.end - d.start <= 420
         && d.notes is string && d.notes.size() <= 500
-        && (d.status == 'confirmed' || d.status == 'cancelled')
+        && d.status == 'confirmed'
         && d.rescheduleRequested is bool && d.updatedAt == request.time;
+    }
+    function reservationEnded(booking) {
+      let date = booking.date.split('-');
+      let midnight = timestamp.date(int(date[0]), int(date[1]), int(date[2]));
+      return request.time >= midnight + duration.value(booking.end + 300, 'm');
+    }
+    function validReservationClose() {
+      let next = request.resource.data;
+      let fields = ['status','rescheduleRequested','updatedAt','closedAt','closedBy'];
+      return next.diff(resource.data).affectedKeys().hasOnly(fields)
+        && next.status in ['cancelled','completed']
+        && (next.status == 'cancelled' || reservationEnded(resource.data))
+        && next.rescheduleRequested == false
+        && next.closedBy == request.auth.uid
+        && next.closedAt == request.time
+        && next.updatedAt == request.time;
     }
     match /users/{uid}/reminders/{id} {
       allow get, list: if owns(uid);
@@ -247,16 +263,12 @@ service cloud.firestore {
         && request.resource.data.status == 'confirmed'
         && request.resource.data.rescheduleRequested == false
         && request.resource.data.createdAt == request.time;
-      allow update: if (isAdmin() && validReservation()
+      allow update: if isAdmin()
         && resource.data.status == 'confirmed'
-        && request.resource.data.createdAt == resource.data.createdAt
-        && request.resource.data.rescheduleRequested == false)
-        || (owns(resource.data.userId)
-          && resource.data.status == 'confirmed'
-          && resource.data.rescheduleRequested == false
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rescheduleRequested','requestedAt'])
-          && request.resource.data.rescheduleRequested == true
-          && request.resource.data.requestedAt == request.time);
+        && (validReservationClose() || (validReservation()
+          && !reservationEnded(resource.data)
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.rescheduleRequested == false));
       allow delete: if false;
     }
     match /reservationDays/{day} {

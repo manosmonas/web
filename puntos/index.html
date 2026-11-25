@@ -192,6 +192,20 @@
 @keyframes calendar-spark{0%{opacity:0;transform:scale(.3) rotate(-25deg)}45%{opacity:1;transform:scale(1.2) rotate(12deg)}100%{opacity:0;transform:translateY(-7px) scale(.7) rotate(40deg)}}
 @keyframes smile-flash{0%{opacity:0;transform:scale(.25) rotate(-25deg);filter:brightness(1)}35%{opacity:1;transform:scale(1.65) rotate(12deg);filter:brightness(1.5)}68%{opacity:.85;transform:scale(.85) rotate(35deg)}100%{opacity:0;transform:translate(2px,-2px) scale(.35) rotate(60deg)}}
 @media(prefers-reduced-motion:reduce){.calendarNav.active .calendarGlyph,.calendarNav.active .calendarSpark,.profileNav.active .profileGlyph,.profileNav.active .profileSmileGlow{animation:none!important;filter:none}}
+.clientCalendar{margin-bottom:14px;padding:14px}
+.clientCalendarGrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.clientCalendarDay{min-width:0;min-height:94px;padding:7px 0 4px;display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;border:1px solid transparent;border-radius:11px;font-size:17px}
+.clientCalendarWeekday{font-size:11px;color:#695465;text-transform:capitalize}
+.clientCalendarDay.hasBooking{background:#f8deec;border-color:#d795ba}
+.clientCalendarTime{width:100%;max-width:58px;padding:3px 0;display:grid;justify-items:center;background:#8e3d6b;color:white;border-radius:6px;font-size:11px;font-weight:750;line-height:1.3;white-space:nowrap}
+.clientCalendarTime span+span{font-size:9px;font-weight:500}
+.clientBookingSummary{margin-bottom:12px;border-left:4px solid #a95081;background:#fff9fc}
+.clientBookingSummary h3{margin:10px 0;font-size:27px}
+.clientBookingSummary .bookingNextLabel{margin:0}
+.clientBookingDate{font-weight:750;text-transform:capitalize;margin:6px 0}
+.clientBookingTime{color:#8e3d6b;font-size:19px;font-weight:800;margin:6px 0}
+.clientBookingStaff{border-top:1px solid #f0e2e9;margin:12px 0 0;padding-top:9px;color:#695465}
+.clientBookingStaff strong{color:#321b2e}
 </style>
 <link rel="preload" as="image" href="./images/mona-loader.webp">
 <link rel="manifest" href="./manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"></head><body>
@@ -406,6 +420,18 @@ function BirthdayInvite({birthday}){
     e(BirthdayForm,{birthday,initial:true,onClose:()=>birthday.setPrompt(false)}));
 }
 
+const bookingDayFormatter=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'});
+const bookingWeekdayFormatter=new Intl.DateTimeFormat('es-PE',{weekday:'short',timeZone:'UTC'});
+const bookingDateFormatter=new Intl.DateTimeFormat('es-PE',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'});
+const bookingMonthFormatter=new Intl.DateTimeFormat('es-PE',{month:'long',timeZone:'UTC'});
+function bookingDateTime(date){return new Date(date+'T12:00:00Z')}
+function bookingTimeLabel(minute){
+ const hour=Math.floor(minute/60);
+ return (hour%12||12)+':'+String(minute%60).padStart(2,'0')+(hour<12?' a. m.':' p. m.');
+}
+function bookingHasEnded(booking,now){
+ return now>=Date.parse(booking.date+'T00:00:00-05:00')+booking.end*60000;
+}
 function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
  const staffNames={'m1':'Doris','m2':'Miluzka'};
  const services=['Uñas','Pestañas','Cabello'];
@@ -415,13 +441,21 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
   const paths=kind==='nails'?['M8 13V6a1.4 1.4 0 0 1 2.8 0v5','M10.8 11V4.5a1.4 1.4 0 0 1 2.8 0V11','M13.6 11V5.8a1.4 1.4 0 0 1 2.8 0V12','M16.4 12V8a1.4 1.4 0 0 1 2.8 0v7c0 4-2.7 6-6.2 6h-2c-2.6 0-4-1.5-5.1-3.3l-2.1-3.5a1.5 1.5 0 0 1 2.4-1.7L8 15']:kind==='lashes'?['M3 10q9 10 18 0','M5 12l-2 3M8 14l-1 4M12 15v4M16 14l1 4M19 12l2 3']:kind==='hair'?['M7 21c-4-2-4-5-2-9C6 8 5 3 12 3s6 5 7 9c2 4 2 7-2 9','M12 3c0 6-6 7-6 13 0 2 1 4 3 5','M12 3c1 5 5 6 6 11 1 3 0 5-2 7','M10 20c2-2 2-5 2-8']:['M12 3l2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z'];
   return e('span',{key:b.id,className:'calendarServiceIcon staff-'+b.staffId,title:(staffNames[b.staffId]||'')+' · '+(b.service||'Servicio'), 'aria-hidden':true},e('svg',{viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.65,strokeLinecap:'round',strokeLinejoin:'round'},...paths.map((d,i)=>e('path',{key:i,d}))));
  }
- const today=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ const [bookingNow,setBookingNow]=useState(Date.now);
+ useEffect(()=>{
+  const refresh=()=>setBookingNow(Date.now());
+  const timer=window.setInterval(refresh,1000*15);
+  document.addEventListener('visibilitychange',refresh);
+  return()=>{window.clearInterval(timer);document.removeEventListener('visibilitychange',refresh)};
+ },[]);
+ const today=()=>bookingDayFormatter.format(bookingNow);
  const minutes=t=>Number(t.split(':')[0])*60+Number(t.split(':')[1]);
  const clock=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
  const dateText=d=>d.split('-').reverse().join('/');
  const [rows,setRows]=useState([]),[ready,setReady]=useState(demo),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
- const [date,setDate]=useState(today()),[time,setTime]=useState('15:00'),[duration,setDuration]=useState('60'),[staff,setStaff]=useState('m1'),[service,setService]=useState(''),[client,setClient]=useState(''),[guestMode,setGuestMode]=useState(false),[guestName,setGuestName]=useState(''),[guestPhone,setGuestPhone]=useState(''),[notes,setNotes]=useState(''),[edit,setEdit]=useState(null),[ask,setAsk]=useState(null);
+ const [date,setDate]=useState(today()),[time,setTime]=useState('15:00'),[duration,setDuration]=useState('60'),[staff,setStaff]=useState('m1'),[service,setService]=useState(''),[client,setClient]=useState(''),[guestMode,setGuestMode]=useState(false),[guestName,setGuestName]=useState(''),[guestPhone,setGuestPhone]=useState(''),[notes,setNotes]=useState(''),[edit,setEdit]=useState(null);
  const [anchor,setAnchor]=useState(today()),[slot,setSlot]=useState(null),[search,setSearch]=useState(''),[customMinutes,setCustomMinutes]=useState('');
+ const [clientWeek,setClientWeek]=useState(null);
  const calendarRef=useRef(null),saving=useRef(false);
  const addDays=(d,n)=>{const v=new Date(d+'T12:00:00Z');v.setUTCDate(v.getUTCDate()+n);return v.toISOString().slice(0,10)};
  const days=Array.from({length:8},(_,i)=>addDays(anchor,i));
@@ -443,7 +477,7 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
  function clearBooking(){setEdit(null);setNotes('');setClient('');setGuestMode(false);setGuestName('');setGuestPhone('');setStaff('');setService('');setSlot(null);setSearch('');setCustomMinutes('');setClosing(false)}
  function reset(){if(closeTimer.current)window.clearTimeout(closeTimer.current);if(!slot||reduceMotion()){clearBooking();return}setClosing(true);closeTimer.current=window.setTimeout(()=>{closeTimer.current=null;clearBooking()},210)}
  function reopen(){if(closeTimer.current)window.clearTimeout(closeTimer.current);closeTimer.current=null;setClosing(false)}
- function editBooking(b){if(busy)return;reopen();setEdit(b.id);setDate(b.date);setTime(clock(b.start));setSlot({date:b.date,start:b.start});setAnchor(b.date);setDuration(String(b.end-b.start));setStaff(b.staffId);setClient(b.userId||'');setGuestMode(!!b.guest);setGuestName(b.guest?b.clientName:'');setGuestPhone(b.guest?b.clientPhone||'':'');setService(services.includes(b.service)?b.service:'');setNotes(b.notes||'');setError('');setNotice('');window.scrollTo({top:0,behavior:'smooth'})}
+ function editBooking(b){if(busy||bookingHasEnded(b,Date.now()))return;reopen();setEdit(b.id);setDate(b.date);setTime(clock(b.start));setSlot({date:b.date,start:b.start});setAnchor(b.date);setDuration(String(b.end-b.start));setStaff(b.staffId);setClient(b.userId||'');setGuestMode(!!b.guest);setGuestName(b.guest?b.clientName:'');setGuestPhone(b.guest?b.clientPhone||'':'');setService(services.includes(b.service)?b.service:'');setNotes(b.notes||'');setError('');setNotice('');window.scrollTo({top:0,behavior:'smooth'})}
  function pickSlot(day,start){if(busy)return;reopen();setSlot({date:day,start});setDate(day);setTime(clock(start));setStaff('');setClient(edit?client:'');setGuestMode(!!(edit&&bookings.find(b=>b.id===edit)?.guest));setService('');setCustomMinutes('');setSearch('');setError('');setNotice('')}
  function bookingIdentity(b){return b.userId||('guest:'+String(b.clientPhone||'').replace(/\D/g,''))}
  function selectedIdentity(){return guestMode?'guest:'+guestPhone.replace(/\D/g,''):client}
@@ -467,7 +501,7 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
     const ref=edit?db.collection('reservations').doc(edit):db.collection('reservations').doc();
     await db.runTransaction(async tx=>{
      const previous=edit?await tx.get(ref):null;
-     if(edit&&(!previous.exists||previous.data().status!=='confirmed'))throw Error('La reserva ya no está activa.');
+     if(edit&&(!previous.exists||previous.data().status!=='confirmed'||bookingHasEnded(previous.data(),Date.now())))throw Error('La reserva ya no se puede editar.');
      const dayRef=db.collection('reservationDays').doc(date),day=await tx.get(dayRef);
      const oldDate=previous?.data()?.date,oldRef=oldDate&&oldDate!==date?db.collection('reservationDays').doc(oldDate):null,oldDay=oldRef?await tx.get(oldRef):null;
      const slots=(day.exists?day.data().slots:[]).filter(x=>x.id!==ref.id);
@@ -481,29 +515,34 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
    setNotice(edit?'Cambio confirmado.':'¡Reserva registrada! La clienta ya puede verla.');reset();
   }catch(ex){setError(ex.message||'No se pudo guardar.')}finally{setBusy(false);saving.current=false}
  }
- async function cancel(b){
-  if(!admin||busy||!window.confirm('¿Cancelar esta cita y liberar el horario?'))return;
+ async function closeBooking(booking,status){
+  const cancelled=status==='cancelled';
+  if(!admin||saving.current||booking.status!=='confirmed')return;
+  if(!cancelled&&!bookingHasEnded(booking,Date.now()))return;
+  if(!window.confirm(cancelled?'¿Cancelar esta cita?':'¿Marcar esta cita como realizada?'))return;
+  saving.current=true;
   setBusy(true);setError('');setNotice('');
+  const closed={status,rescheduleRequested:false,closedBy:demo?'demo-jefa':uid};
   try{
-   if(demo)setDemoRows(old=>old.map(x=>x.id===b.id?{...x,status:'cancelled',rescheduleRequested:false}:x));
-   else await db.runTransaction(async tx=>{
-    const ref=db.collection('reservations').doc(b.id),snap=await tx.get(ref);
-    if(!snap.exists||snap.data().status!=='confirmed')throw Error('La reserva ya no está activa.');
-    const dayRef=db.collection('reservationDays').doc(snap.data().date),day=await tx.get(dayRef);
-    tx.set(dayRef,{slots:(day.exists?day.data().slots:[]).filter(x=>x.id!==b.id)});
-    tx.update(ref,{status:'cancelled',rescheduleRequested:false,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+   if(demo){
+    const closedAt=new Date();
+    setDemoRows(old=>old.map(row=>row.id===booking.id&&row.status==='confirmed'?{...row,...closed,closedAt}:row));
+   }else await db.runTransaction(async tx=>{
+    const ref=db.collection('reservations').doc(booking.id);
+    const snap=await tx.get(ref);
+    if(!snap.exists||snap.data().status!=='confirmed')throw Error('La reserva ya fue cerrada.');
+    if(!cancelled&&!bookingHasEnded(snap.data(),Date.now()))throw Error('La cita todavía no ha terminado.');
+    if(cancelled){
+     const dayRef=db.collection('reservationDays').doc(snap.data().date);
+     const day=await tx.get(dayRef);
+     tx.set(dayRef,{slots:(day.exists?day.data().slots:[]).filter(slot=>slot.id!==booking.id)});
+    }
+    const stamp=firebase.firestore.FieldValue.serverTimestamp();
+    tx.update(ref,{...closed,closedAt:stamp,updatedAt:stamp});
    });
-   if(edit===b.id)reset();setNotice('Reserva cancelada. Horario liberado.');
-  }catch(ex){setError(ex.message)}finally{setBusy(false)}
- }
- async function request(b){
-  if(admin||busy||b.status!=='confirmed'||b.rescheduleRequested)return;
-  setBusy(true);setError('');setNotice('');
-  try{
-   if(demo)setDemoRows(old=>old.map(x=>x.id===b.id?{...x,rescheduleRequested:true}:x));
-   else await db.collection('reservations').doc(b.id).update({rescheduleRequested:true,requestedAt:firebase.firestore.FieldValue.serverTimestamp()});
-   setAsk(null);setNotice('Solicitud enviada. Tu cita original sigue vigente.');
-  }catch(ex){setError('No pudimos enviar la solicitud. Intenta nuevamente.')}finally{setBusy(false)}
+   if(edit===booking.id)reset();
+   setNotice(cancelled?'Reserva cancelada.':'Cita marcada como realizada.');
+  }catch(ex){setError(ex.message||'No pudimos cerrar la cita.')}finally{setBusy(false);saving.current=false}
  }
  const btn=(label,fn,secondary=false)=>e('button',{type:'button',className:'button'+(secondary?' secondary':''),disabled:busy,onClick:fn},label);
  const field=(label,input)=>e('label',null,label,input);
@@ -511,17 +550,53 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
  const input=(value,set,props={})=>e('input',{value,onChange:ev=>set(ev.target.value),required:true,...props});
  const section=(title,sub)=>e('div',{className:'sectionTitle'},e('div',null,e('h2',null,title),sub?e('p',null,sub):null));
  function card(b){
-  const cancelled=b.status==='cancelled';
-  return e('article',{key:b.id,className:'panel bookingCard'+(!admin&&!cancelled?' clientBookingHero':'')},
-   !admin&&!cancelled?e('p',{className:'bookingNextLabel'},'✦ Tu cita confirmada'):null,
-   e('div',{className:'bookingTop'},e('strong',null,b.service),e('span',{className:'pill '+(cancelled?'request-rejected':b.rescheduleRequested?'request-pending':'request-approved')},cancelled?'Cancelada':b.rescheduleRequested?'Cambio solicitado':'Confirmada')),
+  const cancelled=b.status==='cancelled',completed=b.status==='completed';
+  const pending=b.status==='confirmed'&&bookingHasEnded(b,bookingNow);
+  const label=cancelled?'Cancelada':completed?'Realizada':pending?'Pendiente de cierre':b.rescheduleRequested?'Cambio solicitado':'Confirmada';
+  const badge=cancelled?'request-rejected':pending||b.status==='confirmed'&&b.rescheduleRequested?'request-pending':'request-approved';
+  return e('article',{key:b.id,className:'panel bookingCard'},
+   e('div',{className:'bookingTop'},e('strong',null,b.service),e('span',{className:'pill '+badge},label)),
    admin?e('p',{className:'tiny'},b.clientName,b.guest?e(React.Fragment,null,' · Invitada · ',b.clientPhone):null):null,
-   e('div',{className:'bookingDetails'},[['Fecha',dateText(b.date)],['Hora',clock(b.start)+' – '+clock(b.end)],['Especialista',staffNames[b.staffId]],['Duración estimada',(b.end-b.start)+' min']].map(([k,v])=>e('div',{key:k},e('span',null,k),e('strong',null,v)))),
+   e('div',{className:'bookingDetails'},[['Fecha',dateText(b.date)],['Hora',bookingTimeLabel(b.start)+' a '+bookingTimeLabel(b.end)],['Especialista',staffNames[b.staffId]],['Duración estimada',(b.end-b.start)+' min']].map(([k,v])=>e('div',{key:k},e('span',null,k),e('strong',null,v)))),
    b.notes?e('p',{className:'bookingNotes'},b.notes):null,
-   !cancelled&&admin?e('div',{className:'toolbar'},btn(b.rescheduleRequested?'Reagendar':'Editar',()=>editBooking(b)),btn('Cancelar cita',()=>cancel(b),true)):null,
-   !cancelled&&!admin?b.rescheduleRequested?e('p',{className:'tiny'},'La jefa revisará tu solicitud. Tu horario sigue vigente.'):ask===b.id?e('div',{className:'notice'},'¿Solicitar otro horario? Tu cita original se mantiene.',e('div',{className:'toolbar',style:{marginTop:8}},btn('Enviar solicitud',()=>request(b)),btn('Volver',()=>setAsk(null),true))):btn('Solicitar reagendar',()=>setAsk(b.id),true):null);
+   admin&&b.status==='confirmed'?e('div',{className:'toolbar'},
+    pending?btn('Marcar realizada',()=>closeBooking(b,'completed')):btn(b.rescheduleRequested?'Reagendar':'Editar',()=>editBooking(b)),
+    btn('Cancelar cita',()=>closeBooking(b,'cancelled'),true)):null);
  }
- const upcoming=visible.filter(b=>b.status==='confirmed'&&b.date>=today()),past=visible.filter(b=>b.status==='cancelled'||b.date<today()).reverse();
+ const isUpcoming=b=>b.status==='confirmed'&&!bookingHasEnded(b,bookingNow);
+ const upcoming=visible.filter(isUpcoming),past=visible.filter(b=>!isUpcoming(b)).reverse();
+ const nextBooking=upcoming[0];
+ function clientCalendar(){
+  const date=nextBooking?.date||today();
+  const dayOfWeek=(bookingDateTime(date).getUTCDay()+6)%7;
+  const week=clientWeek||addDays(date,-dayOfWeek);
+  const weekDays=Array.from({length:7},(_,index)=>addDays(week,index));
+  const last=weekDays[6];
+  const month=date=>bookingMonthFormatter.format(bookingDateTime(date));
+  const range=week.slice(0,7)===last.slice(0,7)
+   ?Number(week.slice(-2))+'–'+Number(last.slice(-2))+' de '+month(week)
+   :Number(week.slice(-2))+' '+month(week)+' – '+Number(last.slice(-2))+' '+month(last);
+  return e(React.Fragment,null,
+   e('section',{className:'panel clientCalendar','aria-label':'Calendario de mis reservas'},
+    e('div',{className:'calendarBar'},
+     e('button',{type:'button',className:'calendarArrow','aria-label':'Semana anterior',onClick:()=>setClientWeek(addDays(week,-7))},'‹'),
+     e('div',{'aria-live':'polite'},e('strong',null,range),e('span',null,week.slice(0,4)===last.slice(0,4)?week.slice(0,4):week.slice(0,4)+'–'+last.slice(0,4))),
+     e('button',{type:'button',className:'calendarArrow','aria-label':'Semana siguiente',onClick:()=>setClientWeek(addDays(week,7))},'›')),
+    e('div',{className:'clientCalendarGrid'},weekDays.map(day=>{
+     const own=visible.filter(b=>b.date===day&&b.status==='confirmed'&&!bookingHasEnded(b,bookingNow));
+     return e('div',{className:'clientCalendarDay'+(own.length?' hasBooking':''),key:day},
+      e('span',{className:'clientCalendarWeekday'},bookingWeekdayFormatter.format(bookingDateTime(day)).replace('.','')),
+      e('strong',null,Number(day.slice(-2))),
+      ...own.map(b=>e('time',{className:'clientCalendarTime',key:b.id,dateTime:b.date+'T'+clock(b.start)+'-05:00'},...bookingTimeLabel(b.start).split(/(?= [ap]\. m\.)/).map((part,i)=>e('span',{key:i},part.trim())))));
+    }))),
+   nextBooking?e('article',{className:'panel clientBookingSummary'},
+    e('div',{className:'bookingTop'},e('p',{className:'bookingNextLabel'},'Tu próxima cita'),e('span',{className:'pill '+(nextBooking.rescheduleRequested?'request-pending':'request-approved')},nextBooking.rescheduleRequested?'Cambio solicitado':'Confirmada')),
+    e('h3',null,nextBooking.service),
+    e('p',{className:'clientBookingDate'},bookingDateFormatter.format(bookingDateTime(nextBooking.date))),
+    e('p',{className:'clientBookingTime'},bookingTimeLabel(nextBooking.start)+' a '+bookingTimeLabel(nextBooking.end)),
+    e('p',{className:'clientBookingStaff'},'Te atiende ',e('strong',null,staffNames[nextBooking.staffId]||'Por confirmar')),
+    nextBooking.notes?e('p',{className:'bookingNotes'},nextBooking.notes):null):null);
+ }
  return e('section',{className:'bookingSection'},
   section(admin?'Agenda de reservas':'Mis reservas',admin?'Acuerda por WhatsApp y registra la cita aquí.':'Tus citas confirmadas por el salón.'),
 
@@ -556,9 +631,11 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
       (client||guestMode)&&staff&&service?e('div',{className:'quickStep',key:'duration'},e('strong',null,'4. Duración · toca para reservar'),e('p',{className:'tiny'},'Al elegir el tiempo se guarda automáticamente la cita.'),e('div',{className:'quickChoices three'},[30,45,60,90,120,180].map(m=>e('button',{type:'button',key:m,className:'choice durationChoice',disabled:busy||closing||!staffFree(staff,m),onClick:()=>save(m)},m<60?m+' min':Math.floor(m/60)+' h'+(m%60?' '+m%60+' min':'')))),e('div',{className:'customDuration'},e('input',{type:'number',inputMode:'numeric',min:15,max:420,placeholder:'Otros min',value:customMinutes,onChange:ev=>setCustomMinutes(ev.target.value),'aria-label':'Duración personalizada en minutos'}),e('button',{type:'button',className:'button',disabled:busy||closing||!Number.isInteger(Number(customMinutes))||Number(customMinutes)<15||!staffFree(staff,Number(customMinutes)),onClick:()=>save(Number(customMinutes))},busy?'Guardando…':'Reservar')),busy?e('p',{role:'status',className:'tiny'},'Guardando reserva…'):null):null
      ):null,
     section('Próximas reservas')):null,
-   upcoming.length?upcoming.map(card):e('div',{className:'panel empty'},admin?'Aún no hay reservas próximas.':'Todavía no tienes una próxima cita. Acuerda tu atención por WhatsApp.'),
+   !admin?clientCalendar():null,
+   !upcoming.length?e('div',{className:'panel empty'},admin?'Aún no hay reservas próximas.':'Todavía no tienes una próxima cita. Acuerda tu atención por WhatsApp.'):null,
+   (admin?upcoming:upcoming.slice(1)).map(card),
    !admin&&demo?e(ClientReminders,{uid,demo,bookings:visible}):null,
-   past.length?e('details',{className:'panel bookingHistory'},e('summary',null,'Historial de reservas'),past.map(card)):null));
+   past.length?e('details',{className:'panel bookingHistory'},e('summary',null,'Historial de reservas'+(admin&&past.some(b=>b.status==='confirmed')?' · Citas pendientes de cierre':'')),past.map(card)):null));
 }
 function ClientPromoSwiper({onExplore}){
  const slides=[
