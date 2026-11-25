@@ -249,9 +249,25 @@ let auth=null,db=null;
 try{if(configured){firebase.initializeApp(window.MANOS_MONAS_FIREBASE);auth=firebase.auth();if(window.MANOS_MONAS_ENABLE_DATA===true)db=firebase.firestore();}}catch(ex){console.error(ex)}
 if(configured&&!new URLSearchParams(window.location.search).has('demo')&&(!auth||(window.MANOS_MONAS_ENABLE_DATA===true&&!db))){window.monasBootError?.();return;}
 const demoClient={uid:'demo',displayName:'Clienta de ejemplo',email:'demo@ejemplo.com',points:250,visits:3};
-const demoVisits=[{id:'demo1',serviceName:'Manicura',points:30,createdAt:{toDate:()=>new Date()}}];
+const demoStartedAt=new Date();
+const demoVisits=[{id:'demo1',serviceName:'Manicura',points:30,redemptionCount:0,createdAt:{toDate:()=>demoStartedAt}}];
 const errMsg=x=>x&&x.message?x.message:String(x);
 const ts=x=>x&&x.toDate?x.toDate().toLocaleDateString('es-PE'):'Hoy';
+const limaDayFormat=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'});
+function voidBlockReason(visit,client,now=new Date()){
+  const created=visit.createdAt?.toDate?.();
+  if(!created||!Number.isFinite(created.getTime())||created>now||limaDayFormat.format(created)!==limaDayFormat.format(now)){
+    return 'Solo se puede anular el mismo día de la acreditación (hora de Lima).';
+  }
+  if(!client)return 'No se encontró el saldo de la clienta.';
+  if(Number.isInteger(visit.redemptionCount)){
+    if(visit.redemptionCount!==(client.redemptionCount??0))return 'Hubo un canje aprobado después de esta acreditación.';
+  }else if(client.lastEventType!=='visit'||client.lastEventId!==visit.id){
+    return 'Esta atención anterior no tiene un registro que permita verificar si se usaron sus puntos.';
+  }
+  if(!(client.points>=visit.points&&client.visits>=1))return 'La clienta no tiene saldo o visitas suficientes para anular esta atención.';
+  return '';
+}
 function RewardPhoto({id,alt,kind='card',eager=false}){
   const [state,setState]=useState('loading');
   const src=id==='manicura'?'../assets/img/premio_manicura.png':id==='pedicura'?'../assets/img/premio_pedicura.png':'./images/rewards/'+id+'.webp';
@@ -601,6 +617,28 @@ const visibleAdminVoids=isDemo?demoVoids:adminVoids;
 const visibleClientRequests=isDemo?demoRequestsState:clientRequests;
 const visibleAdminRequests=isDemo?demoRequestsState:adminRequests;
 const isAdmin=isDemo?demoRole==='jefa':admin;
+const [,refreshVoidDay]=useState(null);
+useEffect(()=>{
+  if(!isAdmin||tab!=='admin')return;
+  // La medianoche de Lima cae a las 05:00 UTC.
+  const oneDay=86400000,limaOffset=18000000;
+  let timer;
+  function schedule(){
+    const nextMidnight=(Math.floor((Date.now()-limaOffset)/oneDay)+1)*oneDay+limaOffset;
+    timer=window.setTimeout(()=>{
+      refreshVoidDay(limaDayFormat.format(new Date()));
+      schedule();
+    },Math.max(0,nextMidnight-Date.now()));
+  }
+  function refresh(){
+    window.clearTimeout(timer);
+    refreshVoidDay(limaDayFormat.format(new Date()));
+    schedule();
+  }
+  refresh();
+  document.addEventListener('visibilitychange',refresh);
+  return()=>{window.clearTimeout(timer);document.removeEventListener('visibilitychange',refresh)};
+},[isAdmin,tab]);
 const birthday=useBirthday(isDemo?'demo':user?.uid,isDemo,isDemo?(demoEntered&&!isAdmin):!!user&&!isAdmin&&adminStatus!=='comprobando'&&!adminStatus.startsWith('error'));
 const clientList=isDemo?[demoClientState]:clients;
 const activeClient=clientList.find(c=>c.uid===chosenClient)||clientList[0];
@@ -707,8 +745,9 @@ if(!target||!item)return showError('Selecciona una clienta y un servicio.');
 setBusy(true);setError('');
 try{
   if(isDemo){
+    const createdAt=new Date();
     setDemoClientState(c=>({...c,points:c.points+item.points,visits:c.visits+1}));
-    setDemoVisitsState(rows=>[{id:'demo-'+Date.now(),serviceName:item.name,points:item.points,createdAt:{toDate:()=>new Date()}},...rows]);
+    setDemoVisitsState(rows=>[{id:'demo-'+createdAt.getTime(),serviceName:item.name,points:item.points,redemptionCount:demoClientState.redemptionCount??0,createdAt:{toDate:()=>createdAt}},...rows]);
     showNotice('Simulación: '+item.name+' registrado. +'+item.points+' puntos.');
     return;
   }
@@ -720,7 +759,7 @@ try{
     const snap=await t.get(profileRef);
     if(!snap.exists)throw new Error('La clienta aún no tiene perfil.');
     const data=snap.data();
-    t.set(visitRef,{userId:target.uid,serviceId:item.id,serviceName:item.name,points:item.points,createdAt:firebase.firestore.FieldValue.serverTimestamp(),staffId:user.uid});
+    t.set(visitRef,{userId:target.uid,serviceId:item.id,serviceName:item.name,points:item.points,redemptionCount:data.redemptionCount??0,createdAt:firebase.firestore.FieldValue.serverTimestamp(),staffId:user.uid});
     t.update(profileRef,{points:(data.points||0)+item.points,visits:(data.visits||0)+1,lastEventId:visitRef.id,lastEventType:'visit',updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
   });
   showNotice('Atención registrada: +'+item.points+' puntos para '+(target.displayName||'clienta')+'.');
@@ -735,7 +774,8 @@ async function voidVisit(record){
     const voidId='void-'+record.id;
     if(isDemo){
       if(demoVoids.some(v=>v.visitId===record.id))throw Error('La atención ya fue anulada.');
-      if((demoClientState.points||0)<record.points||demoClientState.visits<1)throw Error('No se puede anular: saldo o visitas insuficientes.');
+      const blocked=voidBlockReason(record,demoClientState);
+      if(blocked)throw Error(blocked);
       setDemoVoids(rows=>[...rows,{id:voidId,visitId:record.id,userId:'demo',points:record.points,reason,staffId:'demo-jefa',createdAt:{toDate:()=>new Date()}}]);
       setDemoClientState(c=>({...c,points:c.points-record.points,visits:c.visits-1}));
     }else{
@@ -751,7 +791,8 @@ async function voidVisit(record){
         if(previous.exists)throw Error('Esta atención ya fue anulada.');
         const visit=original.data(),balance=client.data();
         if(visit.userId!==record.userId||visit.points!==record.points)throw Error('Los datos de la atención no coinciden.');
-        if((balance.points||0)<visit.points||(balance.visits||0)<1)throw Error('La clienta ya usó esos puntos o no tiene visitas suficientes. No se puede anular automáticamente.');
+        const blocked=voidBlockReason({...visit,id:original.id},balance);
+        if(blocked)throw Error(blocked);
         t.set(voidRef,{visitId:record.id,userId:visit.userId,points:visit.points,reason,staffId:user.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
         t.update(userRef,{points:balance.points-visit.points,visits:balance.visits-1,lastEventId:voidId,lastEventType:'void',updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
       });
@@ -787,7 +828,7 @@ try{
     const existing=demoRequestsState.find(r=>r.id===request.id&&r.status==='pending');
     if(!existing)throw Error('El canje ya fue procesado.');
     if(approve&&demoClientState.points<prize.points)throw Error('Puntos insuficientes.');
-    if(approve)setDemoClientState(c=>({...c,points:c.points-prize.points}));
+    if(approve)setDemoClientState(c=>({...c,points:c.points-prize.points,redemptionCount:(c.redemptionCount??0)+1}));
     setDemoRequestsState(rows=>rows.map(r=>r.id===request.id?{...r,status:approve?'approved':'rejected'}:r));
     showNotice(approve?'Canje simulado aprobado.':'Canje simulado rechazado.');
     return;
@@ -804,7 +845,8 @@ try{
     if(!confirmed)throw Error('Recompensa desconocida.');
     if(approve){
       if((client.data().points||0)<confirmed.points)throw Error('La clienta no tiene suficientes puntos.');
-      t.update(userRef,{points:client.data().points-confirmed.points,lastEventId:redemptionRef.id,lastEventType:'redemption',updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+      const balance=client.data();
+      t.update(userRef,{points:balance.points-confirmed.points,redemptionCount:(balance.redemptionCount??0)+1,lastEventId:redemptionRef.id,lastEventType:'redemption',updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
     }
     t.update(redemptionRef,{status:approve?'approved':'rejected',processedBy:user.uid,processedAt:firebase.firestore.FieldValue.serverTimestamp()});
   });
@@ -898,6 +940,8 @@ function profileView(){
 
 function adminView(){
   const recent=visibleAdminVisits.filter(v=>!activeClient||!v.userId||v.userId===activeClient.uid).slice(0,20);
+  const targetBlocked=voidTarget&&(visibleAdminVoids.some(v=>v.visitId===voidTarget.id)
+    ? 'Esta atención ya fue anulada.' : voidBlockReason(voidTarget,activeClient));
   return e(React.Fragment,null,
     e('div',{className:'sectionTitle'},e('div',null,e('h2',null,'Panel de la jefa'),e('p',null,'Servicios, puntos y solicitudes.'))),
     e('div',{className:'adminGrid'},
@@ -923,25 +967,26 @@ function adminView(){
       visibleAdminRequests.filter(r=>r.status==='pending').map(r=>e('div',{className:'listEntry',key:r.id},
         e('div',null,e('strong',null,clientList.find(c=>c.uid===r.userId)?.displayName||r.userId),e('div',{className:'tiny'},REWARDS.find(z=>z.id===r.rewardId)?.name||r.rewardId)),
         e('div',{className:'toolbar'},button('Aprobar',()=>resolveReward(r,true)),button('Rechazar',()=>resolveReward(r,false),'secondary')))):e('div',{className:'empty'},'No hay solicitudes pendientes.')),
-    canVoid?e('div',{className:'sectionTitle'},e('div',null,e('h2',null,'Historial de atenciones'),e('p',null,'Selecciona una clienta para ver sus últimas atenciones.'))):null,
+    canVoid?e('div',{className:'sectionTitle'},e('div',null,e('h2',null,'Historial de atenciones'),e('p',null,'Puedes anular una atención el día en que se acreditó, siempre que no haya un canje aprobado después.'))):null,
     canVoid?e('div',{className:'panel'},
       recent.length?recent.map(v=>{
         const cancelled=visibleAdminVoids.find(c=>c.visitId===v.id);
         return e('div',{className:'listEntry',key:v.id},
           e('div',null,e('strong',null,v.serviceName||v.serviceId),
-            e('div',{className:'tiny'},ts(v.createdAt)+' · '+(clientList.find(c=>c.uid===v.userId)?.displayName||activeClient?.displayName||'Clienta')),
+            e('div',{className:'tiny'},(v.createdAt?.toDate?.()?.toLocaleDateString('es-PE',{timeZone:'America/Lima'})||'Fecha sin confirmar')+' · '+(clientList.find(c=>c.uid===v.userId)?.displayName||activeClient?.displayName||'Clienta')),
             cancelled?e('div',{className:'tiny'},'Anulada: '+cancelled.reason):null),
           e('div',{className:'toolbar'},e('strong',null,cancelled?'Anulada':'+'+v.points+' pts'),
-            !cancelled?button('Anular',()=>{setVoidTarget(v);setVoidReason('')},'secondary'):null)
+            !cancelled&&!voidBlockReason(v,activeClient)?button('Anular',()=>{setVoidTarget(v);setVoidReason('')},'secondary'):null)
         )
       }):e('div',{className:'empty'},'Aún no hay atenciones para esta clienta.')
     ):null,
     canVoid&&voidTarget?e('div',{className:'panel',style:{marginTop:16}},
       e('h3',null,'Confirmar anulación'),
       e('p',{className:'muted'},'Se descontarán '+voidTarget.points+' puntos y una visita. Esta operación no borra el historial.'),
+      targetBlocked?e('p',{className:'notice error',role:'status'},targetBlocked):null,
       e('label',null,'Motivo de la anulación',e('input',{value:voidReason,maxLength:200,placeholder:'Ej.: Atención asignada por error',onChange:x=>setVoidReason(x.target.value)})),
       e('div',{className:'toolbar',style:{marginTop:14}},
-        button('Confirmar anulación',()=>voidVisit(voidTarget),'',voidReason.trim().length<3),
+        button('Confirmar anulación',()=>voidVisit(voidTarget),'',!!targetBlocked||voidReason.trim().length<3),
         button('Cancelar',()=>{setVoidTarget(null);setVoidReason('')},'secondary'))
     ):null
   );
