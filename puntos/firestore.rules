@@ -28,10 +28,11 @@ service cloud.firestore {
         : serviceId == 'alisado' ? 'Alisado' : '';
     }
     function rewardPoints(rewardId) {
-      return rewardId == 'manicura' ? 200
-        : rewardId == 'pedicura' ? 400
-        : rewardId == 'lifting' ? 650
-        : rewardId == 'alisado' ? 1000 : -1;
+      return rewardId in ['manicura', 'pedicura'] ? 250
+        : rewardId in ['lifting', 'laminado-cejas'] ? 200
+        : rewardId == 'limpieza-facial' ? 300
+        : rewardId == 'depilacion-hindu' ? 50
+        : rewardId == 'alisado' ? 750 : -1;
     }
     function visitPath(id) {
       return /databases/$(database)/documents/visits/$(id);
@@ -55,6 +56,8 @@ service cloud.firestore {
         && v.staffId == request.auth.uid
         && v.points == servicePoints(v.serviceId)
         && v.createdAt == request.time
+        && v.redemptionCount is int
+        && v.redemptionCount == resource.data.get('redemptionCount', 0)
         && request.resource.data.points == resource.data.points + v.points
         && request.resource.data.visits == resource.data.visits + 1;
     }
@@ -71,8 +74,21 @@ service cloud.firestore {
         && next.processedBy == request.auth.uid
         && next.processedAt == request.time
         && rewardPoints(next.rewardId) > 0
+        && request.resource.data.redemptionCount is int
+        && request.resource.data.redemptionCount == resource.data.get('redemptionCount', 0) + 1
         && request.resource.data.points == resource.data.points - rewardPoints(next.rewardId)
         && request.resource.data.visits == resource.data.visits;
+    }
+    function sameLimaDay(createdAt) {
+      let limaOffset = duration.value(5, 'h');
+      return createdAt is timestamp && createdAt <= request.time
+        && (createdAt - limaOffset).date() == (request.time - limaOffset).date();
+    }
+    function noRedemptionSinceVisit(visit, visitId) {
+      // Para registros antiguos, solo la última acreditación prueba su orden.
+      return 'redemptionCount' in visit
+        ? visit.redemptionCount == resource.data.get('redemptionCount', 0)
+        : resource.data.lastEventType == 'visit' && resource.data.lastEventId == visitId;
     }
     // Anular una atención exige crear un comprobante único y ajustar saldo y
     // visitas en una sola transacción. La visita original nunca se elimina.
@@ -85,6 +101,8 @@ service cloud.firestore {
         && cancellation.userId == uid
         && cancellation.staffId == request.auth.uid
         && visit.userId == uid
+        && sameLimaDay(visit.createdAt)
+        && noRedemptionSinceVisit(visit, cancellation.visitId)
         && cancellation.points == visit.points
         && cancellation.points == servicePoints(visit.serviceId)
         && cancellation.createdAt == request.time
@@ -114,7 +132,7 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time;
       allow update: if isAdmin()
         && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['points','visits','updatedAt','lastEventId','lastEventType'])
+          .hasOnly(['points','visits','updatedAt','lastEventId','lastEventType','redemptionCount'])
         && request.resource.data.points is int
         && request.resource.data.visits is int
         && request.resource.data.points >= 0
@@ -124,6 +142,8 @@ service cloud.firestore {
         && request.resource.data.lastEventId.size() < 128
         && request.resource.data.lastEventId != resource.data.lastEventId
         && request.resource.data.updatedAt == request.time
+        && (request.resource.data.lastEventType == 'redemption'
+          || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['redemptionCount']))
         && ((request.resource.data.lastEventType == 'visit' && validVisitBalance(uid))
           || (request.resource.data.lastEventType == 'redemption' && validRedeemBalance(uid))
           || (request.resource.data.lastEventType == 'void' && validVoidBalance(uid)));
@@ -158,8 +178,8 @@ service cloud.firestore {
     match /visits/{id} {
       allow get, list: if signedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
       allow create: if isAdmin()
-        && request.resource.data.keys().hasAll(['userId','serviceId','serviceName','points','createdAt','staffId'])
-        && request.resource.data.keys().hasOnly(['userId','serviceId','serviceName','points','createdAt','staffId'])
+        && request.resource.data.keys().hasAll(['userId','serviceId','serviceName','points','createdAt','staffId','redemptionCount'])
+        && request.resource.data.keys().hasOnly(['userId','serviceId','serviceName','points','createdAt','staffId','redemptionCount'])
         && request.resource.data.staffId == request.auth.uid
         && request.resource.data.createdAt == request.time
         && request.resource.data.userId is string
@@ -191,6 +211,7 @@ service cloud.firestore {
         && exists(visitPath(request.resource.data.visitId))
         && get(visitPath(request.resource.data.visitId)).data.userId == request.resource.data.userId
         && get(visitPath(request.resource.data.visitId)).data.points == request.resource.data.points
+        && get(userPath(request.resource.data.userId)).data.lastEventId != id
         && getAfter(userPath(request.resource.data.userId)).data.lastEventId == id
         && getAfter(userPath(request.resource.data.userId)).data.lastEventType == 'void';
       allow update, delete: if false;
