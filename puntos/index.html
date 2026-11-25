@@ -228,6 +228,24 @@
 .clubDialog button:focus-visible,.clubFeedbackClose:focus-visible{outline:2px solid #8e3d6b;outline-offset:2px}
 @media(max-width:400px){.clubDialog .toolbar>*{flex:1}.clubDialog .button{padding-inline:10px}.clubToast{bottom:calc(75px + env(safe-area-inset-bottom))}}
 @media(prefers-reduced-motion:reduce){.clubToast,.clubDialog[open]{animation:none}}
+.notificationTrigger{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:44px;min-height:44px;padding:0 11px;border:1px solid #ecd1e1;border-radius:15px;background:#fff8fc;color:#84345e;font:inherit;font-size:12px;font-weight:750;cursor:pointer}
+.notificationTrigger svg{flex:none}
+.notificationTrigger:hover{background:#f7e1ee}
+.notificationTrigger:focus-visible,.notificationDialogClose:focus-visible{outline:2px solid #a54374;outline-offset:2px}
+.notificationDialog{position:fixed;inset:0;margin:auto;width:min(485px,calc(100% - 24px));max-height:calc(100dvh - 32px);overflow:auto}
+.notificationDialog h2{padding-right:42px}
+.notificationDialogClose{position:absolute;right:13px;top:13px;width:42px;height:42px;border:1px solid #edd4e3;border-radius:13px;background:#fff5fb;color:#84345e;font-size:24px;cursor:pointer}
+.notificationCenter{display:grid;gap:16px}
+.notificationHistory{min-height:52px}
+.notificationList{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.notificationList li{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #ead5e2;background:#fff6fb;border-radius:13px;color:#552640;font-size:13px}
+.notificationList li strong{display:block}
+.notificationList time,.notificationList small{display:block;color:#6e5266;font-size:12px;margin-top:3px}
+.notificationPreferences{display:grid;gap:9px;padding-top:13px;border-top:1px solid #eed9e6}
+.notificationPreferences h3,.notificationDialog .notificationEnabled{margin:0}
+.notificationDialog .notificationEnabled{color:#685124;font-size:13px;font-weight:700}
+.notificationPreferences .clubFeedback{margin:0}
+@media(max-width:520px){.notificationTrigger{padding:0}.notificationTrigger span{display:none}}
 </style>
 <link rel="preload" as="image" href="./images/mona-loader.webp">
 <link rel="manifest" href="./manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"></head><body>
@@ -303,14 +321,14 @@ function ClubFeedback({tone='info',title,message,onDismiss,floating=false}){
   e('div',{className:'clubFeedbackCopy'},title?e('strong',null,title):null,message),
   onDismiss?e('button',{type:'button',className:'clubFeedbackClose','aria-label':'Cerrar aviso',onClick:onDismiss},'×'):null);
 }
-function ClubDialog({id,title,description,onDismiss,danger=false,children}){
+function ClubDialog({id,title,description,onDismiss,danger=false,variant='',children}){
  const ref=useRef(null);
  useEffect(()=>{
   const node=ref.current;
   node.showModal();
   return()=>{if(node.open)node.close()};
  },[]);
- return e('dialog',{ref,className:'clubDialog'+(danger?' danger':''),'aria-labelledby':id,'aria-describedby':description?id+'-description':undefined,
+ return e('dialog',{ref,className:'clubDialog'+(danger?' danger':'')+(variant?' '+variant:''),'aria-labelledby':id,'aria-describedby':description?id+'-description':undefined,
   onCancel:ev=>{ev.preventDefault();onDismiss()}},
   e('span',{className:'clubDialogIcon','aria-hidden':true},danger?'!':'✦'),
   e('h2',{id},title),
@@ -364,8 +382,9 @@ function UnlockMoment({moment,onClose,onView}){
     e('p',{className:'unlockHint'},'Tu premio ya está disponible para canjear.'),
     e('button',{type:'button',className:'button full unlockView',onClick:()=>onView(main.id),autoFocus:true},prizes.length===1?'Ver mi recompensa':'Ver mis recompensas'));
 }
-function ClientReminders({uid,demo,bookings,now}){
- const [messages,setMessages]=useState([]),[status,setStatus]=useState(''),[failed,setFailed]=useState(false);
+const reminderDateFormat=new Intl.DateTimeFormat('es-PE',{timeZone:'America/Lima',day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
+function ClientReminders({uid,demo}){
+ const [messages,setMessages]=useState(null),[loadFailed,setLoadFailed]=useState(false),[status,setStatus]=useState(''),[failed,setFailed]=useState(false);
  const [enabled,setEnabled]=useState(false),[working,setWorking]=useState('');
  const diagnostics=!demo&&new URLSearchParams(location.search).get('diagnostico')==='push';
  const [testStarted,setTestStarted]=useState(0),[receivedInBackground,setReceivedInBackground]=useState(false);
@@ -385,11 +404,13 @@ function ClientReminders({uid,demo,bookings,now}){
   document.addEventListener('visibilitychange',check);
   return()=>{active=false;window.clearInterval(timer);window.clearTimeout(expiry);document.removeEventListener('visibilitychange',check)};
  },[diagnostics,testStarted,receivedInBackground]);
- useEffect(()=>{if(demo||!uid||!db)return;return db.collection('users').doc(uid).collection('reminders').orderBy('createdAt','desc').limit(20).onSnapshot(s=>setMessages(s.docs.map(x=>({id:x.id,...x.data()}))),()=>setMessages([]))},[uid,demo]);
+ useEffect(()=>{
+  if(demo||!uid||!db)return;
+  return db.collection('users').doc(uid).collection('reminders').orderBy('createdAt','desc').limit(20).onSnapshot(
+   snapshot=>{setLoadFailed(false);setMessages(snapshot.docs.map(doc=>({id:doc.id,...doc.data()})))},
+   ()=>setLoadFailed(true));
+ },[uid,demo]);
  useEffect(()=>{setEnabled(false);setStatus('');if(demo||!uid||!window.MANOS_MONAS_VAPID_KEY)return;try{setEnabled(localStorage.getItem('monas-push-uid')===uid&&window.Notification?.permission==='granted')}catch(_){}},[uid,demo]);
- const limaNow=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(now);
- const today=limaNow.slice(0,10),hhmm=limaNow.slice(11,16).split(':').map(Number),nowMinutes=hhmm[0]*60+hhmm[1];
- const live=messages.filter(m=>m.date===today&&m.start>nowMinutes&&bookings.some(b=>b.id===m.reservationId&&b.date===m.date&&b.start===m.start&&b.status==='confirmed'));
  async function activate(){
   if(working)return;setWorking('activate');setStatus('');setFailed(false);
   try{
@@ -450,19 +471,28 @@ function ClientReminders({uid,demo,bookings,now}){
   }finally{setWorking('')}
  }
  const canActivate=demo||Boolean(window.MANOS_MONAS_VAPID_KEY);
- if(!canActivate&&!live.length)return null;
- const example=demo&&enabled;
- return e('div',{className:'panel bookingReminder'},e('div',{className:'bookingReminderHead'},e('span',{'aria-hidden':true},'🔔'),e('div',null,e('strong',null,'Tus recordatorios'),e('p',{className:'tiny'},'El día de tu cita, a las 8:00 a. m. y dos horas antes.'))),
-  canActivate?e('button',{type:'button',className:'button secondary full',disabled:!!working||enabled,onClick:activate},working==='activate'?'Activando…':enabled?'✓ Avisos activados':'Activar avisos en mi celular'):null,
-  canActivate&&enabled?e('button',{type:'button',className:'button secondary full',disabled:!!working,onClick:testPush},working==='test'?'Enviando…':'Enviar aviso de prueba'):null,
-  diagnostics&&enabled?e('button',{type:'button',className:'button secondary full',disabled:!!working,onClick:testSystemNotification},'Probar notificación de Windows'):null,
-  working==='test'?e(ClubFeedback,{message:'Para verlo fuera del Club, cambia de pestaña ahora. El aviso se enviará en unos segundos.'}):null,
-  status?e(ClubFeedback,{tone:failed?'error':'success',message:status}):null,
-  diagnostics&&receivedInBackground?e(ClubFeedback,{tone:'success',message:'El navegador recibió el push en segundo plano y pidió a Windows que lo mostrara.'}):null,
-  example?e(ClubFeedback,{title:'Ejemplo · 8:00 a. m.',message:'Hoy tienes una cita en Manos Monas.'}):null,
-  example?e(ClubFeedback,{title:'Ejemplo · Dos horas antes',message:'Faltan dos horas para tu cita.'}):null,
-  ...live.map(m=>e(ClubFeedback,{key:m.id,title:m.kind==='morning'?'Hoy tienes una cita':m.kind==='twoHours'?'Faltan dos horas para tu cita':'Tu cita se acerca',
-   message:'Consulta los detalles en Mis reservas.'})));
+ const history=demo
+  ?(enabled?[{id:'demo-two-hours',kind:'twoHours'},{id:'demo-morning',kind:'morning'}]:[])
+  :messages;
+ return e('div',{className:'notificationCenter'},
+  e('div',{className:'notificationHistory','aria-label':'Avisos recientes'},
+   loadFailed?e(ClubFeedback,{tone:'error',message:'No pudimos cargar tus avisos. Vuelve a abrir esta ventana para reintentar.'}):
+   history===null?e('p',{className:'tiny',role:'status'},'Cargando avisos…'):
+   history.length?e('ul',{className:'notificationList'},history.map(m=>{
+    const date=m.createdAt?.toDate?.();
+    const title=m.kind==='morning'?'Hoy tienes una cita':m.kind==='twoHours'?'Faltan dos horas para tu cita':'Tu cita se acerca';
+    return e('li',{key:m.id},e('span',{className:'clubFeedbackIcon','aria-hidden':true},'✦'),
+     e('div',null,e('strong',null,title),date?e('time',{dateTime:date.toISOString()},reminderDateFormat.format(date)):demo?e('small',null,'Aviso de ejemplo'):null));
+   })):e('p',{className:'tiny'},'Todavía no tienes avisos.')),
+  canActivate?e('section',{className:'notificationPreferences','aria-labelledby':'notificationPreferencesTitle'},
+   e('h3',{id:'notificationPreferencesTitle'},'Recordatorios'),
+   enabled?e('p',{className:'notificationEnabled'},'✓ Avisos activados en este dispositivo'):
+    e('button',{type:'button',className:'button full',disabled:!!working,onClick:activate},working==='activate'?'Activando…':'Activar avisos en este dispositivo'),
+   enabled?e('button',{type:'button',className:'button secondary full',disabled:!!working,onClick:testPush},working==='test'?'Enviando…':'Enviar aviso de prueba'):null,
+   diagnostics&&enabled?e('button',{type:'button',className:'button secondary full',disabled:!!working,onClick:testSystemNotification},'Probar notificación de Windows'):null,
+   working==='test'?e(ClubFeedback,{message:'Para verlo fuera del Club, cambia de pestaña ahora. El aviso se enviará en unos segundos.'}):null,
+   status?e(ClubFeedback,{tone:failed?'error':'success',message:status}):null,
+   diagnostics&&receivedInBackground?e(ClubFeedback,{tone:'success',message:'El navegador recibió el push en segundo plano y pidió a Windows que lo mostrara.'}):null):null);
 }
 const MONTHS=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 function birthdayMax(month,year){return month===2?(year?(year%4===0&&(year%100!==0||year%400===0)?29:28):29):[4,6,9,11].includes(month)?30:31}
@@ -765,7 +795,6 @@ function BookingPanel({admin,demo,uid,clients,demoRows,setDemoRows}){
    !admin?clientCalendar():null,
    !upcoming.length?e('div',{className:'panel empty'},admin?'Aún no hay reservas próximas.':'Todavía no tienes una próxima cita. Acuerda tu atención por WhatsApp.'):null,
    (admin?upcoming:upcoming.slice(1)).map(card),
-   !admin?e(ClientReminders,{uid,demo,bookings:visible,now:bookingNow}):null,
    past.length?e('details',{className:'panel bookingHistory'},e('summary',null,'Historial de reservas'+(admin&&past.some(b=>b.status==='confirmed')?' · Citas pendientes de cierre':'')),past.map(card)):null));
 }
 function ClientPromoSwiper({onExplore}){
@@ -798,6 +827,12 @@ function ClientPromoSwiper({onExplore}){
 function App(){
 const [demoEntered,setDemoEntered]=useState(false),[demoProvider,setDemoProvider]=useState('Google');
 const loginAttempt=useRef(0);
+const notificationTrigger=useRef(null);
+const [notificationsOpen,setNotificationsOpen]=useState(false);
+function dismissNotifications(){
+ setNotificationsOpen(false);
+ window.requestAnimationFrame(()=>notificationTrigger.current?.focus());
+}
 const [demoClientState,setDemoClientState]=useState(demoClient),[demoVisitsState,setDemoVisitsState]=useState(demoVisits),[demoRequestsState,setDemoRequestsState]=useState([]);
 const [user,setUser]=useState(null),[profile,setProfile]=useState(null),[admin,setAdmin]=useState(false),[tab,setTab]=useState('recompensas'),[clients,setClients]=useState([]),[visits,setVisits]=useState([]),[clientRequests,setClientRequests]=useState([]),[adminRequests,setAdminRequests]=useState([]),[loading,setLoading]=useState(configured),[busy,setBusy]=useState(false),[notice,setNotice]=useState(''),[error,setError]=useState(''),[demoRole,setDemoRole]=useState('clienta');
 const [chosenClient,setChosenClient]=useState(''),[service,setService]=useState('manicura');
@@ -810,6 +845,7 @@ const [giftTap,setGiftTap]=useState(0);
 const [activityExpanded,setActivityExpanded]=useState(false);
 const [demoReservations,setDemoReservations]=useState([]);
 useEffect(()=>{setActivityExpanded(false)},[user?.uid,demoEntered,tab]);
+useEffect(()=>{setNotificationsOpen(false)},[user?.uid,demoEntered,demoRole,admin]);
 
 const [animatedPoints,setAnimatedPoints]=useState(null),[celebration,setCelebration]=useState(null);
 const [unlockMoment,setUnlockMoment]=useState(null);
@@ -865,7 +901,7 @@ const [seenBalance,setSeenBalance]=useState(null),[profileFresh,setProfileFresh]
 const [pageVisible,setPageVisible]=useState(document.visibilityState!=='hidden');
 const seenRef=useRef(null);
 useEffect(()=>{const change=()=>setPageVisible(document.visibilityState!=='hidden');document.addEventListener('visibilitychange',change);return()=>document.removeEventListener('visibilitychange',change)},[]);
-const rewardsVisible=tab==='recompensas'&&pageVisible&&!bootPending&&!rewardToConfirm&&(isDemo?demoEntered:!!user);
+const rewardsVisible=tab==='recompensas'&&pageVisible&&!bootPending&&!rewardToConfirm&&!notificationsOpen&&(isDemo?demoEntered:!!user);
 useEffect(()=>{
   if(!balanceUID||actualBalance===null||!(isDemo||profileFresh)){return}
   const key='monas-seen-points-v1-'+balanceUID;
@@ -1230,7 +1266,11 @@ function navButton(id,label,icon){
       gift&&selected?e('span',{className:'giftSparkBurst',key:'spark-'+giftTap,'aria-hidden':true},[0,1,2,3,4,5].map(n=>e('i',{key:n,style:{'--n':n}},n%2?'✧':'✦'))):null),label);
 }
 if(bootPending)return null;
-return e('div',{className:'page'},e('div',{className:'shell'},e('header',{className:'top'},e('div',{className:'brand'},e('div',{className:'mark'},e('img',{src:'../assets/img/logo.png',alt:'Logo de Manos Monas',loading:'eager'})),e('div',null,e('h2',null,'MANOS MONAS'),e('div',{className:'eyebrow'},'HOME STUDIO'),e('div',{className:'caption'},'Club de recompensas'))),e('div',{className:'toolbar',style:{alignItems:'center',justifyContent:'flex-end'}},(user||isDemo&&demoEntered)?e('button',{className:'headerAccount',onClick:()=>{setTab('perfil');setNotice('');setError('')},'aria-label':'Abrir mi perfil'},avatar(38)):null,e('span',{className:'chip'},isDemo?'◉ Demo':isAdmin?'✦ Jefa de salón':'♡ Mi cuenta'))),
+return e('div',{className:'page'},e('div',{className:'shell'},e('header',{className:'top'},e('div',{className:'brand'},e('div',{className:'mark'},e('img',{src:'../assets/img/logo.png',alt:'Logo de Manos Monas',loading:'eager'})),e('div',null,e('h2',null,'MANOS MONAS'),e('div',{className:'eyebrow'},'HOME STUDIO'),e('div',{className:'caption'},'Club de recompensas'))),e('div',{className:'toolbar',style:{alignItems:'center',justifyContent:'flex-end'}},(user||isDemo&&demoEntered)?e('button',{className:'headerAccount',onClick:()=>{setTab('perfil');setNotice('');setError('')},'aria-label':'Abrir mi perfil'},avatar(38)):null,isAdmin?e('span',{className:'chip'},isDemo?'◉ Demo':'✦ Jefa de salón'):
+ (isDemo?demoEntered:!!user)?e('button',{ref:notificationTrigger,type:'button',className:'notificationTrigger','aria-label':'Notificaciones','aria-haspopup':'dialog','aria-expanded':notificationsOpen,onClick:()=>setNotificationsOpen(true)},
+  e('svg',{viewBox:'0 0 24 24',width:20,height:20,fill:'none',stroke:'currentColor',strokeWidth:1.8,strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true},
+   e('path',{d:'M18 8a6 6 0 0 0-12 0c0 6-2 7-2 8h16c0-1-2-2-2-8M10 20a2 2 0 0 0 4 0'})),
+  e('span',null,'Notificaciones')):null)),
 isDemo&&demoEntered?e('div',{className:'notice'},'Modo demostración · Ingreso simulado con '+demoProvider+'. Los cambios son simulados y no modifican tu cuenta real. ',e('button',{onClick:()=>{setDemoRole(demoRole==='jefa'?'clienta':'jefa');setTab('recompensas');setNotice('')}},'Cambiar vista: '+(demoRole==='jefa'?'Clienta':'Jefa')+' →'),' ',e('button',{onClick:()=>{setDemoEntered(false);setDemoRole('clienta');setNotice('')}},'Salir de demo')):null,
 (!isDemo&&!user)||(isDemo&&!demoEntered)?e('div',{className:'panel login'},e('img',{className:'loginBrand',src:'../assets/img/logo.png',alt:'Manos Monas Home Studio'}),e('h1',null,'Bienvenida al Club Monas'),e('p',null,'Ingresa con tu cuenta de Google (Gmail) o Facebook para consultar tus puntos y desbloquear recompensas.'),e('div',{className:'stack',style:{maxWidth:310,margin:'25px auto'}},e('button',{className:'button full',type:'button',onClick:()=>login('google')},'✉ Continuar con Google'),e('button',{className:'button secondary full',type:'button',onClick:()=>login('facebook')},'ⓕ Continuar con Facebook')),isDemo?e('div',{className:'notice'},'Modo demostración: los botones solo abren una clienta ficticia. Para usar tu cuenta real, abre el enlace sin ?demo=1.'):null,error?e(ClubFeedback,{tone:'error',title:'Inicio de sesión',message:error,onDismiss:()=>setError('')}):null):e(React.Fragment,null,
 isAdmin?e('section',{className:'hero adminHero'},e('div',null,e('small',null,'Agenda del salón'),e('h1',null,'Gestiona Manos Monas Club'),e('p',null,'Revisa reservas, clientas y recompensas desde un solo lugar.'))):tab==='recompensas'?e(ClientPromoSwiper,{onExplore:()=>setTab('recompensas')}):null,
@@ -1238,7 +1278,10 @@ error&&!voidTarget&&!rewardToConfirm?e(ClubFeedback,{tone:'error',title:'Revisa 
 notice?e(ClubFeedback,{tone:'success',message:notice,floating:true,onDismiss:()=>setNotice('')}):null,
 e('main',{className:'tabEntrance',key:tab},tab==='recompensas'?rewardsView():tab==='perfil'?profileView():tab==='reservas'?e(BookingPanel,{key:(isDemo?'demo':user?.uid)+'-'+isAdmin,admin:isAdmin,demo:isDemo,uid:user?.uid,clients:clientList,demoRows:demoReservations,setDemoRows:setDemoReservations}):isAdmin&&tab==='admin'?adminView():null),
 e('nav',{className:'nav','aria-label':'Navegación'},isAdmin?navButton('admin','Jefa','⚙️'):null,navButton('recompensas','Recompensas','🎁'),navButton('reservas','Reservas','🗓️'),navButton('perfil','Perfil',''))),
-birthday.prompt&&!isAdmin?e(BirthdayInvite,{birthday}):null,
+notificationsOpen&&!isAdmin&&(isDemo?demoEntered:!!user)?e(ClubDialog,{id:'club-notifications-title',title:'Notificaciones',variant:'notificationDialog',onDismiss:dismissNotifications},
+ e('button',{type:'button',className:'notificationDialogClose','aria-label':'Cerrar notificaciones',onClick:dismissNotifications,autoFocus:true},'×'),
+ e(ClientReminders,{key:isDemo?'demo':user.uid,uid:user?.uid,demo:isDemo})):null,
+birthday.prompt&&!isAdmin&&!notificationsOpen?e(BirthdayInvite,{birthday}):null,
 visibleUnlock&&!birthday.prompt?e(UnlockMoment,{key:visibleUnlock.uid,moment:visibleUnlock,onClose:()=>setUnlockMoment(null),onView:viewUnlocked}):null,
 e('div',{className:'footer'},'Hecho con ♡ para Manos Monas Home Studio · San Juan de Lurigancho')));
 }
